@@ -1,2041 +1,2843 @@
+/**
+ * E2E tests for `pallet-multi-asset-bounties`.
+ *
+ * The pallet funds bounties in any asset the treasury holds and the `AssetRate` pallet can price
+ * in the native token. Each bounty gets its own account, derived from the treasury's pallet id,
+ * and the treasury pays the bounty's value into that account when the bounty is funded. A curator
+ * then pays the value out to a beneficiary, splits part of it into child bounties, or closes the
+ * bounty so the value returns to the treasury.
+ *
+ * Payments go through `LocalPay`, which transfers at once and always reports success. Every
+ * funding, payout and refund therefore completes inside the call that starts it, and leaves the
+ * bounty in a `*Attempted` state until a `check_status` call confirms the payment. The tests make
+ * that second call explicitly.
+ *
+ * Origins:
+ * - `fund_bounty`, and `propose_curator` on a parent bounty, take the treasury's spend origin: Root
+ *   or a spender track, each capped at a native amount that the bounty value is converted to first.
+ * - `unassign_curator` and `close_bounty` accept the reject origin (Root or `Treasurer`), as well
+ *   as the curator.
+ * - `check_status` and `retry_payment` accept any signed account. Every other call is signed, and
+ *   checked against the bounty's curator or its parent's curator.
+ *
+ * Privileged origins are injected through the scheduler. The pallet has no block-number logic, so
+ * no test moves time. Bounty indices and bounty accounts depend on how many bounties the live
+ * chain has created, so snapshots redact the index and keep events that name bounty accounts out.
+ */
+
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
+import type { Client, RootTestTree } from '@e2e-test/shared'
 
-import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import type { Option } from '@polkadot/types'
-import type { PalletReferendaReferendumInfoConvictionVotingTally } from '@polkadot/types/lookup'
+import type { SpRuntimeDispatchError } from '@polkadot/types/lookup'
+import { bnToU8a, stringToHex, stringToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
+import { blake2AsHex, encodeAddress } from '@polkadot/util-crypto'
 
-import { expect } from 'vitest'
+import { assert, expect, type TestContext } from 'vitest'
 
-import { logAllEvents } from './helpers/helpers.js'
 import {
-  check,
-  checkEvents,
   checkSystemEvents,
-  getFreeFunds,
+  nextSchedulableBlockNum,
   scheduleInlineCallWithOrigin,
+  scheduleLookupCallWithOrigin,
   type TestConfig,
 } from './helpers/index.js'
-import type { DescribeNode } from './types.js'
 
 /// -------
-/// Constants & Configuration
-/// -------
-
-/**
- * WHY THESE CONSTANTS?
- *
- * Multi-asset bounties use multipliers to ensure test values are:
- * 1. Realistic - proportional to actual chain configuration
- * 2. Maintainable - change once, affects all tests
- * 3. Safe - large enough to avoid existential deposit issues
- */
-
-// Account funding: 100k x ED ensures accounts can pay fees + deposits
-const TEST_ACCOUNT_BALANCE_MULTIPLIER = 100_000n
-
-// Bounty amounts: Use substantial values to test realistic scenarios
-const BOUNTY_MULTIPLIER = 1000n // Parent bounty: 1000x minimum
-const CHILD_BOUNTY_MULTIPLIER = 100n // Child bounty: 100x minimum (10% of parent)
-
-// Asset IDs for testing
-const USDT_ASSET_ID = 1984 // USDT on Kusama Asset Hub
-
-/** DOT as foreign asset on Asset Hub: MultiLocation pointing to Polkadot (parents: 2, X1(GlobalConsensus(Polkadot))). */
-const DOT_FOREIGN_ASSET_LOCATION = {
-  parents: 2,
-  interior: {
-    X1: [{ GlobalConsensus: 'Polkadot' }],
-  },
-} as const
-
-/// Note: TREASURY_SETUP_OFFSET might be needed in future tests
-
-/// -------
-/// Helper Functions: Storage Queries
+/// Constants
 /// -------
 
 /**
- * Get the current bounty count
+ * Value of the parent bounties most tests create, as a multiple of `BountyValueMinimum`.
  *
- * WHY THIS MATTERS:
- * The bounty index is derived from BountyCount, so we need this to:
- * - Predict the next bounty index before creation
- * - Verify that bounties are actually being created
- * - Track total bounties in the system
+ * Three times the minimum keeps the curator deposit strictly between its floor and its cap on
+ * every chain the suite runs on, so the deposit formula is exercised rather than a bound, and keeps
+ * the value within the `SmallTipper` spend limit.
  */
-async function getBountyCount(client: Client<any, any>): Promise<number> {
-  const count = await client.api.query.multiAssetBounties.bountyCount()
-  return (count as any).toNumber()
-}
+const PARENT_VALUE_MULTIPLE = 3n
 
 /**
- * Get a bounty by index
- *
- * WHY CHECK FOR .isSome?
- * Storage items in Substrate can be empty (None). Always check before unwrapping
- * to avoid runtime errors. This is a common pattern in Substrate APIs.
+ * Native balance given to every signer, as a multiple of `BountyValueMinimum`. Covers the largest
+ * curator deposit, which the runtimes cap well below this, plus transaction fees.
  */
-async function getBounty(client: Client<any, any>, bountyIndex: number): Promise<any | null> {
-  const bounty = await client.api.query.multiAssetBounties.bounties(bountyIndex)
-  return (bounty as any).isSome ? (bounty as any).unwrap() : null
-}
+const ENDOWMENT_MULTIPLE = 1_000n
+
+/** `FixedU128` representation of 1, the scale of `AssetRate` conversion rates. */
+const RATE_ONE = 10n ** 18n
+
+/** `Permill` representation of 100%. */
+const PERMILL_ONE = 1_000_000n
 
 /**
- * Get a child bounty by parent and child index
- *
- * WHY DOUBLE MAP?
- * Child bounties are indexed by (parentId, childId) because:
- * - Multiple parents can each have their own child bounties
- * - Child IDs only need to be unique within a parent
- * - Enables efficient queries for all children of a parent
+ * Payment id `LocalPay` returns for every payment. It pays at once, so the id is never needed to
+ * find a payment again.
  */
-async function getChildBounty(client: Client<any, any>, parentIndex: number, childIndex: number): Promise<any | null> {
-  const childBounty = await client.api.query.multiAssetBounties.childBounties(parentIndex, childIndex)
-  return (childBounty as any).isSome ? (childBounty as any).unwrap() : null
-}
+const LOCAL_PAY_ID = 2n ** 64n - 1n
+
+/** Index of the trust-backed `Assets` pallet on every Asset Hub, as asset locations name it. */
+const ASSETS_PALLET_INSTANCE = 50
 
 /**
- * Get curator deposit for a bounty or child bounty
- *
- * WHY CURATOR DEPOSITS?
- * Curators must lock native tokens as a deposit to:
- * - Ensure skin in the game (they'll lose deposit if they misbehave)
- * - Prevent spam curator proposals
- * - Incentivize proper bounty management
- *
- * The deposit is returned when the bounty completes successfully.
+ * Bounty description, noted as a preimage before every test. `fund_bounty` and
+ * `fund_child_bounty` take only its hash, and reject a hash with no noted preimage.
  */
-async function getCuratorDeposit(
-  client: Client<any, any>,
-  parentIndex: number,
-  childIndex?: number,
-): Promise<any | null> {
-  const deposit = await client.api.query.multiAssetBounties.curatorDeposit(parentIndex, childIndex ?? null)
-  return (deposit as any).isSome ? (deposit as any).unwrap() : null
-}
+const METADATA = stringToHex('multi-asset bounties e2e')
+const METADATA_HASH = blake2AsHex(METADATA, 256)
+
+/** Origins injected through the scheduler. */
+const ROOT = { system: 'Root' }
+const TREASURER = { Origins: 'Treasurer' }
+const SMALL_TIPPER = { Origins: 'SmallTipper' }
+
+/**
+ * Roles of the test accounts:
+ * - alice curates parent bounties;
+ * - bob is the beneficiary of every payout;
+ * - charlie curates child bounties, or takes over a parent bounty;
+ * - dave holds no role, and settles payments with `check_status`;
+ * - eve is a curator who cannot afford the deposit.
+ */
+const { alice, bob, charlie, dave, eve } = testAccounts
+const SIGNERS = [alice, bob, charlie, dave]
 
 /// -------
-/// Helper Functions: Test Setup
+/// Test configuration
 /// -------
 
 /**
- * Setup test accounts with both native and asset balances
+ * An asset a bounty can be denominated in, and the pallet that holds its balances.
  *
- * WHY SETUP BOTH?
- * - Native balance: Needed for transaction fees and curator deposits
- * - Asset balance: Needed for USDT bounty funding and payouts
- *
- * WHY USE dev.setStorage?
- * In Chopsticks (our test framework), we can directly modify chain storage
- * to quickly setup test scenarios without waiting for transactions.
+ * `LocalPay` only pays assets held on this chain, so every bounty asset is located `Here`.
  */
-async function setupTestAccounts(
-  client: Client<any, any>,
-  accounts: string[] = ['alice', 'bob'],
-  includeUSDT: boolean = false,
-) {
-  const accountMap = {
-    alice: testAccounts.alice.address,
-    bob: testAccounts.bob.address,
-    charlie: testAccounts.charlie.address,
-  }
-
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const testAccountBalance = TEST_ACCOUNT_BALANCE_MULTIPLIER * existentialDeposit
-
-  // Setup native balances
-  const accountData = accounts
-    .filter((account) => accountMap[account as keyof typeof accountMap])
-    .map((account) => [
-      [accountMap[account as keyof typeof accountMap]],
-      { providers: 1, data: { free: testAccountBalance } },
-    ])
-
-  const storageUpdates: any = {
-    System: {
-      account: accountData,
-    },
-  }
-
-  // Setup USDT balances if requested
-  if (includeUSDT) {
-    const assetAccountData = accounts
-      .filter((account) => accountMap[account as keyof typeof accountMap])
-      .map((account) => [
-        [USDT_ASSET_ID, accountMap[account as keyof typeof accountMap]],
-        { balance: testAccountBalance * 1000n }, // USDT typically has more decimals
-      ])
-
-    storageUpdates.Assets = {
-      account: assetAccountData,
-    }
-  }
-
-  await client.dev.setStorage(storageUpdates)
-}
+export type BountyAsset =
+  | { symbol: string; pallet: 'balances' }
+  | { symbol: string; pallet: 'assets'; id: number }
+  | { symbol: string; pallet: 'foreignAssets'; location: Record<string, any> }
 
 /**
- * Create an asset kind for native token
+ * Multi-asset bounty test parameters.
  *
- * WHY THIS STRUCTURE?
- * XCM uses MultiLocation to identify assets:
- * - V4: Current XCM version
- * - location: { parents: 0, interior: 'Here' } = "this chain's native token"
+ * Values not exposed in metadata (spend limits and curator deposit parameters) are runtime
+ * configuration. Each network file cites where it read them.
  */
-function createNativeAssetKind(): any {
-  return {
-    V5: {
-      location: {
-        parents: 0,
-        interior: 'Here',
-      },
-      assetId: {
-        parents: 1,
-        interior: 'Here',
-      },
-    },
-  }
+export interface MultiAssetBountiesTestConfig extends TestConfig {
+  /**
+   * Asset of the lifecycle tests. It must be native or have an `AssetRate` entry, and the
+   * treasury must hold at least a few bounties' worth of it.
+   */
+  primaryAsset: BountyAsset
+  /**
+   * A second fundable asset, priced through `AssetRate`. Leave it out on chains with no second
+   * priced asset in the treasury; the tests that need it then skip.
+   */
+  secondaryAsset?: BountyAsset
+  /** An asset with no `AssetRate` entry, so its value cannot be converted to native. */
+  unratedAsset: BountyAsset
+  /** Native spend limit of the `SmallTipper` track. */
+  smallTipperLimit: bigint
+  /**
+   * Curator deposit: `multiplier` (parts per million) of the bounty's native value, clamped to
+   * `[min, max]`.
+   */
+  curatorDeposit: { multiplier: bigint; min: bigint; max: bigint }
+  /**
+   * Whether closing a parent bounty refunds its value minus the value already paid out to child
+   * bounties. When false, the runtime asks for the full value, which the bounty account no longer
+   * holds, and the close fails with `RefundError`.
+   */
+  parentRefundNetOfChildren: boolean
 }
 
-/**
- * Create an asset kind for USDT (asset ID 1984) using V5 AssetKind
- *
- * Matches the runtime's multi-asset bounties AssetKind:
- * - location: current chain (parents: 0, interior: Here)
- * - assetId: MultiLocation pointing to Assets pallet (50) + GeneralIndex 1984
- */
-function createUSDTAssetKind(): any {
-  return {
-    V5: {
-      location: {
-        parents: 0,
-        interior: 'Here',
-      },
-      assetId: {
-        parents: 0,
-        interior: {
-          X2: [
-            { PalletInstance: 50 }, // Assets pallet
-            { GeneralIndex: USDT_ASSET_ID },
-          ],
-        },
-      },
-    },
-  }
-}
+/// -------
+/// Helpers
+/// -------
 
 /**
- * AssetKind for DOT as foreign asset on Asset Hub (ForeignAssets pallet).
- * Location: current chain (Here). AssetId: MultiLocation for DOT on Polkadot (parents: 2, X1(GlobalConsensus(Polkadot))).
+ * The pallet's extrinsics, storage and constants. The installed `@polkadot/api-augment` predates
+ * the pallet, so these are untyped.
  */
-function createDOTAssetKind(): any {
-  return {
-    V5: {
-      location: {
-        parents: 0,
-        interior: 'Here',
-      },
-      assetId: {
-        parents: DOT_FOREIGN_ASSET_LOCATION.parents,
-        interior: DOT_FOREIGN_ASSET_LOCATION.interior,
-      },
-    },
-  }
+const bountiesTx = (client: Client<any, any>) => (client.api.tx as any).multiAssetBounties
+const bountiesQuery = (client: Client<any, any>) => (client.api.query as any).multiAssetBounties
+const bountiesConsts = (client: Client<any, any>) => (client.api.consts as any).multiAssetBounties
+
+/** Smallest native value a parent bounty may have. */
+const bountyMinimum = (client: Client<any, any>): bigint => bountiesConsts(client).bountyValueMinimum.toBigInt()
+
+/** Smallest native value a child bounty may have. */
+const childBountyMinimum = (client: Client<any, any>): bigint =>
+  bountiesConsts(client).childBountyValueMinimum.toBigInt()
+
+/** `who`'s address in the chain's SS58 format, as storage and events render it. */
+function addressOf(client: Client<any, any>, who: KeyringPair | string): string {
+  return encodeAddress(typeof who === 'string' ? who : who.address, client.config.properties.addressEncoding)
 }
 
-/**
- * Get treasury pot account ID (used as funding source for bounties).
- */
-function getTreasuryPotAccount(client: Client<any, any>): string {
+/** The treasury pot, which funds every bounty and receives every refund. */
+function treasuryPot(client: Client<any, any>): string {
   return client.api.consts.treasury.potAccount.toString()
 }
 
 /**
- * Query asset rate for an asset kind (AssetRate pallet).
- * Returns the rate if set, otherwise undefined. Used to avoid FailedToConvertBalance.
- * Tries both common storage names (assetRate / conversionRateToNative); runtime encoding
- * of the key can differ from our JS object so the query may still miss a rate we just created.
- */
-async function getAssetRate(client: Client<any, any>, assetKind: any): Promise<{ rate: any } | undefined> {
-  const q = (client.api.query as any).assetRate
-  if (!q) return undefined
-  const storageName = q.assetRate ? 'assetRate' : q.conversionRateToNative ? 'conversionRateToNative' : null
-  if (!storageName) return undefined
-  const rate = await q[storageName](assetKind)
-  if (!rate?.isSome) return undefined
-  return { rate: rate.unwrap() }
-}
-
-/**
- * Query treasury's balance of a given asset (Assets pallet).
- * Returns 0n if no account or balance.
- */
-async function getTreasuryAssetBalance(client: Client<any, any>, assetId: number): Promise<bigint> {
-  const treasuryPot = getTreasuryPotAccount(client)
-  const account = await client.api.query.assets.account(assetId, treasuryPot)
-  if (!account?.isSome) return 0n
-  return (account as any).unwrap().balance.toBigInt()
-}
-
-/**
- * Query an account's balance of a foreign asset (ForeignAssets pallet).
- * assetLocation: MultiLocation identifying the foreign asset (e.g. DOT on Polkadot).
- * Returns 0n if no account or balance.
- */
-async function getForeignAssetBalance(
-  client: Client<any, any>,
-  assetLocation: { parents: number; interior: any },
-  accountId: string,
-): Promise<bigint> {
-  const q = (client.api.query as any).foreignAssets
-  if (!q?.account) return 0n
-  const account = await q.account(assetLocation, accountId)
-  if (!account?.isSome) return 0n
-  return (account as any).unwrap().balance.toBigInt()
-}
-
-/**
- * Query treasury's balance of a foreign asset (ForeignAssets pallet).
- * assetLocation: MultiLocation identifying the foreign asset (e.g. DOT on Polkadot).
- * Returns 0n if no account or balance.
- */
-async function getTreasuryForeignAssetBalance(
-  client: Client<any, any>,
-  assetLocation: { parents: number; interior: any },
-): Promise<bigint> {
-  const treasuryPot = getTreasuryPotAccount(client)
-  return getForeignAssetBalance(client, assetLocation, treasuryPot)
-}
-
-/**
- * Create beneficiary from account
+ * Account holding a bounty's funds.
  *
- * Based on Westend Asset Hub runtime configuration:
- * type Beneficiary = VersionedLocatableAccount (from parachains_common)
- *
- * VersionedLocatableAccount::V5 { location, account_id }
- * - location: Location::here() (current chain)
- * - account_id: Location with AccountId32 junction
- *
- * Returns a plain object so the API encodes it when building the call;
- * passing api.createType() instances can cause encoding errors (e.g. toLowerCase on undefined).
- * Uses camelCase keys (x1, accountId32) to match polkadot.js encoding expectations.
+ * Mirrors the runtime's derivation: the treasury's pallet id as a sub-account, with the prefix
+ * `mbt` and the bounty index for a parent, or `mcb`, the parent index and the child index for a
+ * child bounty, padded with zeroes to 32 bytes.
  */
-export function createBeneficiary(_api: ApiPromise, account: KeyringPair) {
+function bountyAccount(client: Client<any, any>, index: number, childIndex?: number): string {
+  const palletId = client.api.consts.treasury.palletId.toU8a()
+  const sub =
+    childIndex === undefined
+      ? u8aConcat(stringToU8a('mbt'), bnToU8a(index, { bitLength: 32 }))
+      : u8aConcat(stringToU8a('mcb'), bnToU8a(index, { bitLength: 32 }), bnToU8a(childIndex, { bitLength: 32 }))
+  const raw = u8aConcat(stringToU8a('modl'), palletId, sub, new Uint8Array(32)).slice(0, 32)
+  return encodeAddress(raw, client.config.properties.addressEncoding)
+}
+
+/** The asset's id as an XCM location relative to this chain. */
+function assetIdOf(asset: BountyAsset): Record<string, any> {
+  switch (asset.pallet) {
+    case 'balances':
+      return { parents: 1, interior: 'Here' }
+    case 'assets':
+      return { parents: 0, interior: { X2: [{ PalletInstance: ASSETS_PALLET_INSTANCE }, { GeneralIndex: asset.id }] } }
+    case 'foreignAssets':
+      return asset.location
+  }
+}
+
+/**
+ * The `asset_kind` naming `asset` in calls and storage. `LocalPay` pays only from this chain, and
+ * `AssetRate` keys its rates by the exact versioned value, so this always uses V5 located `Here`.
+ */
+function assetKind(asset: BountyAsset) {
+  return { V5: { location: { parents: 0, interior: 'Here' }, assetId: assetIdOf(asset) } }
+}
+
+/** A payout target: `who`'s account on this chain. */
+function localBeneficiary(who: KeyringPair) {
   return {
     V5: {
       location: { parents: 0, interior: 'Here' },
-      accountId: {
-        parents: 0,
-        interior: {
-          x1: [{ accountId32: { network: null, id: account.addressRaw } }],
-        },
-      },
+      accountId: { parents: 0, interior: { X1: [{ AccountId32: { network: null, id: who.addressRaw } }] } },
     },
   }
 }
 
-/**
- * Create a preimage for bounty metadata
- *
- * WHY PREIMAGES?
- * Instead of storing large metadata on-chain directly:
- * 1. Store metadata content in Preimage pallet
- * 2. Store only the hash in the bounty
- * 3. Saves storage space and reduces costs
- *
- * The metadata typically contains:
- * - Bounty description
- * - Requirements
- * - Deliverables
- * - Contact information
- */
-async function createPreimage(client: Client<any, any>, content: string): Promise<string> {
-  const notePreimageTx = client.api.tx.preimage.notePreimage(`0x${Buffer.from(content).toString('hex')}`)
-  await sendTransaction(notePreimageTx.signAsync(testAccounts.alice))
-  await client.dev.newBlock()
+/** `who`'s spendable balance of `asset`. For the native token this is the free balance. */
+async function balanceOf(client: Client<any, any>, asset: BountyAsset, who: string): Promise<bigint> {
+  switch (asset.pallet) {
+    case 'balances':
+      return (await client.api.query.system.account(who)).data.free.toBigInt()
+    case 'assets': {
+      const entry = await client.api.query.assets.account(asset.id, who)
+      return entry.isSome ? entry.unwrap().balance.toBigInt() : 0n
+    }
+    case 'foreignAssets': {
+      const entry = (await client.api.query.foreignAssets.account(asset.location as any, who)) as any
+      return entry.isSome ? entry.unwrap().balance.toBigInt() : 0n
+    }
+  }
+}
 
-  // Get the hash from the event
+/**
+ * How many native units one unit of `asset` is worth, scaled by `RATE_ONE`. The native token
+ * converts one to one; any other asset needs an `AssetRate` entry, which this asserts.
+ */
+async function rateOf(client: Client<any, any>, asset: BountyAsset): Promise<bigint> {
+  if (asset.pallet === 'balances') {
+    return RATE_ONE
+  }
+  const rate = (await client.api.query.assetRate.conversionRateToNative(assetKind(asset) as any)) as any
+  assert(rate.isSome, `no AssetRate for ${asset.symbol}`)
+  return rate.unwrap().toBigInt()
+}
+
+/** Native value of `amount` units at `rate`, rounded down as the runtime's converter does. */
+function toNative(amount: bigint, rate: bigint): bigint {
+  return (amount * rate) / RATE_ONE
+}
+
+/** Smallest amount of an asset at `rate` whose native value is at least `native`. */
+function fromNative(native: bigint, rate: bigint): bigint {
+  return (native * RATE_ONE + rate - 1n) / rate
+}
+
+/** Value, in `asset` units, of the parent bounties most tests create. */
+async function parentValue(client: Client<any, any>, asset: BountyAsset): Promise<bigint> {
+  return fromNative(PARENT_VALUE_MULTIPLE * bountyMinimum(client), await rateOf(client, asset))
+}
+
+/** Curator deposit the runtime takes for a bounty worth `native`. */
+function curatorDepositFor(testConfig: MultiAssetBountiesTestConfig, native: bigint): bigint {
+  const { multiplier, min, max } = testConfig.curatorDeposit
+  const deposit = (native * multiplier) / PERMILL_ONE
+  return deposit < min ? min : deposit > max ? max : deposit
+}
+
+/** Balance `who` has on hold as curator deposits, across all of their bounties. */
+async function curatorHold(client: Client<any, any>, who: KeyringPair): Promise<bigint> {
+  const holds = await client.api.query.balances.holds(who.address)
+  const entry = holds.find((hold) => (hold.id.toJSON() as any)?.multiAssetBounties === 'CuratorDeposit')
+  return entry ? entry.amount.toBigInt() : 0n
+}
+
+/** Stored bounty `index`, asserting it exists. */
+async function getBounty(client: Client<any, any>, index: number) {
+  const bounty = await bountiesQuery(client).bounties(index)
+  assert(bounty.isSome, `bounty ${index} does not exist`)
+  return bounty.unwrap()
+}
+
+/** Index the next funded bounty will get. */
+async function nextBountyIndex(client: Client<any, any>): Promise<number> {
+  return (await bountiesQuery(client).bountyCount()).toNumber()
+}
+
+/**
+ * The pallet event `method` about bounty `index` in the latest block.
+ *
+ * Fails if the runtime has no such event, so a renamed variant cannot pass unnoticed.
+ */
+async function bountyEvent(client: Client<any, any>, method: string, index: number): Promise<any> {
+  const type = (client.api.events as any).multiAssetBounties[method]
+  assert(type, `runtime has no multiAssetBounties.${method} event`)
   const events = await client.api.query.system.events()
-  const preimageEvent = events.find(({ event }: any) => event.section === 'preimage' && event.method === 'Noted')
-
-  if (!preimageEvent) {
-    throw new Error('Preimage creation failed')
-  }
-
-  return preimageEvent.event.data[0].toString()
+  const record = events.find(({ event }) => type.is(event) && (event.data as any).index.toNumber() === index)
+  assert(record, `no multiAssetBounties.${method} for bounty ${index}`)
+  return record.event
 }
 
-/// -------
-/// Test Functions
-/// -------
-
 /**
- * Test 1: Fund a Multi-Asset Bounty with Native Token
+ * Dispatch `call` from `origin` through the scheduler in a new block, and return the dispatch
+ * result.
  *
- * WHAT THIS TESTS:
- * - Creating a bounty directly via SpendOrigin (no proposal phase!)
- * - Async payment initiation (FundingAttempted state)
- * - Proper event emission
- * - Storage updates
- *
- * WHY THIS IS DIFFERENT FROM TRADITIONAL BOUNTIES:
- * - No proposeBounty → approveBounty flow
- * - Directly funded via Treasurer origin (same as bounties.ts)
- * - Payment happens asynchronously via Paymaster
+ * The scheduler drops inline calls above 128 bytes without a trace, so this refuses them; larger
+ * calls go through `notePreimage` and a lookup instead.
  */
-export async function fundNativeBountyTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
-  // Setup: Fund Alice's account
-  await setupTestAccounts(client, ['alice', 'bob'])
-
-  // log balance of alice and bob (use system.account; balances.freeBalance is deprecated)
-  const aliceAccount = await client.api.query.system.account(testAccounts.alice.address)
-  const bobAccount = await client.api.query.system.account(testAccounts.bob.address)
-  console.log('Alice balance:', aliceAccount.data.free.toString())
-  console.log('Bob balance:', bobAccount.data.free.toString())
-
-  const initialBountyCount = await getBountyCount(client)
-
-  // Calculate bounty value
-  const bountyValueMinimum = (client.api.consts.multiAssetBounties.bountyValueMinimum as any).toBigInt()
-  const bountyValue = bountyValueMinimum * BOUNTY_MULTIPLIER
-
-  // Create metadata preimage
-  const metadata = await createPreimage(client, 'Build a DEX frontend for Kusama Asset Hub')
-
-  await logAllEvents(client)
-
-  // Create asset kind for native token
-  const assetKind = createNativeAssetKind()
-
-  // Fund the bounty with Treasurer origin (same as bounties.ts)
-  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
-    assetKind,
-    bountyValue,
-    testAccounts.bob.address, // curator
-    metadata,
-  )
-
-  await scheduleInlineCallWithOrigin(
-    client,
-    fundBountyTx.method.toHex(),
-    { Origins: 'Treasurer' },
-    chain.properties.schedulerBlockProvider,
-  )
-
+async function dispatchAs(client: Client<any, any>, call: any, origin: object) {
+  assert(call.method.encodedLength <= 128, `call is ${call.method.encodedLength} bytes, too long to schedule inline`)
+  const provider = client.config.properties.schedulerBlockProvider
+  const when = await nextSchedulableBlockNum(client.api, provider)
+  await scheduleInlineCallWithOrigin(client, call.method.toHex(), origin, provider)
   await client.dev.newBlock()
-
-  await logAllEvents(client)
-
-  // Verify BountyCreated event
-  await checkSystemEvents(client, { section: 'multiAssetBounties', method: 'BountyCreated' })
-    .redact({ redactKeys: /index/ })
-    .toMatchSnapshot('native bounty creation events')
-
-  // Verify Paid event (funding payment initiated)
-  await checkSystemEvents(client, { section: 'multiAssetBounties', method: 'Paid' }).toMatchSnapshot(
-    'native bounty funding payment events',
-  )
-
-  // Verify bounty count increased
-  const newBountyCount = await getBountyCount(client)
-  expect(newBountyCount).toBe(initialBountyCount + 1)
-
-  // Verify bounty storage
-  const bountyIndex = initialBountyCount
-  const bounty = await getBounty(client, bountyIndex)
-  expect(bounty).toBeTruthy()
-  expect(bounty.value.toBigInt()).toBe(bountyValue)
-  expect(bounty.status.isFundingAttempted).toBe(true)
+  return dispatchResultAt(client, when)
 }
 
 /**
- * USDT bounty value in asset 1984's smallest units (6 decimals: 1 USDT = 1e6).
- * This is the amount of USDT we fund the bounty with; it is NOT the native minimum.
+ * Result of the call the suite scheduled for agenda block `when`. The suite schedules one call
+ * per block, so it is the first task of that agenda.
  */
-const USDT_BOUNTY_VALUE = 1_000_000_000n // 1000 USDT (1000 * 1e6)
-
-/** DOT uses same scale as native (bountyValueMinimum * BOUNTY_MULTIPLIER) so chain accepts it (avoids InvalidValue). */
-
-/**
- * FixedU128 in Substrate uses 10^18 as the denominator (DIV).
- * Conversion: native = (asset * rate_inner) / 1e18.
- * We need (usdtAmount * rate) / 1e18 >= bountyValueMinimum => rate >= bountyValueMinimum * 1e18 / usdtAmount.
- */
-const FIXED_U128_DENOM = 10n ** 18n
-
-function getUSDTToNativeRate(bountyValueMinimum: bigint, usdtAmount: bigint): bigint {
-  const minRate = (bountyValueMinimum * FIXED_U128_DENOM) / usdtAmount
-  return minRate + FIXED_U128_DENOM / 10n ** 9n // add ~0.001 so we're safely above minimum
-}
-
-/** Multiplier for treasury USDT seed (seed = USDT_BOUNTY_VALUE * this) */
-const TREASURY_USDT_SEED_MULTIPLIER = 100n
-
-/**
- * Ensures the chain is ready for USDT bounties: asset rate set for USDT (so BalanceConverter works)
- * and treasury has enough USDT. Call before fundBounty with USDT asset kind.
- */
-async function ensureUSDTBountySetup(client: Client<any, any>, chain: Chain<any, any>): Promise<{ assetKind: any }> {
-  const assetKind = createUSDTAssetKind()
-  const treasuryPot = getTreasuryPotAccount(client)
-  const bountyValueMinimum = (client.api.consts.multiAssetBounties.bountyValueMinimum as any).toBigInt()
-  const treasuryUsdtSeedAmount = USDT_BOUNTY_VALUE * TREASURY_USDT_SEED_MULTIPLIER
-
-  const assetRateInfo = await getAssetRate(client, assetKind)
-  let weCreatedRate = false
-  if (!assetRateInfo) {
-    const createRateTx = (client.api.tx as any).assetRate?.create
-    if (createRateTx) {
-      const rate = getUSDTToNativeRate(bountyValueMinimum, USDT_BOUNTY_VALUE)
-      await scheduleInlineCallWithOrigin(
-        client,
-        createRateTx(assetKind, rate).method.toHex(),
-        { system: 'Root' },
-        chain.properties.schedulerBlockProvider,
-      )
-      await client.dev.newBlock()
-      weCreatedRate = true
-    }
-  }
-  expect(
-    assetRateInfo || weCreatedRate,
-    'Asset rate must be set for USDT so BalanceConverter can convert for origin check',
-  ).toBeTruthy()
-
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[USDT_ASSET_ID, treasuryPot], { balance: treasuryUsdtSeedAmount }]],
-    },
+async function dispatchResultAt(client: Client<any, any>, when: number) {
+  const events = await client.api.query.system.events()
+  const record = events.find(({ event }) => {
+    if (!client.api.events.scheduler.Dispatched.is(event)) return false
+    const [block, position] = event.data.task
+    return block.toNumber() === when && position.toNumber() === 0
   })
-  const treasuryUsdtAfterSeed = await getTreasuryAssetBalance(client, USDT_ASSET_ID)
-  expect(
-    treasuryUsdtAfterSeed >= USDT_BOUNTY_VALUE,
-    `Treasury must have at least ${USDT_BOUNTY_VALUE} USDT, got ${treasuryUsdtAfterSeed}`,
-  ).toBe(true)
-
-  return { assetKind }
+  assert(record, `the scheduler did not dispatch the call scheduled for ${when}`)
+  assert(client.api.events.scheduler.Dispatched.is(record.event))
+  return record.event.data.result
 }
 
-/** Multiplier for treasury DOT seed. */
-const TREASURY_DOT_SEED_MULTIPLIER = 100n
+/** Assert a scheduled call succeeded. */
+function expectDispatchOk(result: any) {
+  expect(result.isOk, `scheduled call failed: ${JSON.stringify(result.toHuman())}`).toBe(true)
+}
 
 /**
- * Possible reasons for multiAssetBounties.FundingError / InsufficientPermission:
- *
- * 1. InsufficientPermission: native_amount > max_amount (SpendOrigin limit).
- * 2. FundingError: Paymaster::pay failed (treasury has no/insufficient foreign asset, or asset not created).
+ * Assert `error` is the pallet error `name`. The name is looked up in the runtime's metadata, so a
+ * renamed or removed variant fails the test rather than matching nothing.
  */
-const DOT_BOUNTY_MULTIPLIER = 10n // Keep below Treasurer spend limit
+function expectBountyError(client: Client<any, any>, error: SpRuntimeDispatchError, name: string) {
+  assert(error.isModule, `expected a module error, got ${JSON.stringify(error.toHuman())}`)
+  const variant = (client.api.errors as any).multiAssetBounties[name]
+  assert(variant, `runtime has no multiAssetBounties error named ${name}`)
+  expect(variant.is(error.asModule), `expected ${name}, got ${JSON.stringify(error.toHuman())}`).toBe(true)
+}
+
+/** The dispatch error of the only failed extrinsic in the latest block. */
+async function extrinsicError(client: Client<any, any>): Promise<SpRuntimeDispatchError> {
+  const events = await client.api.query.system.events()
+  const failures = events.filter(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
+  expect(failures).toHaveLength(1)
+  const { event } = failures[0]
+  assert(client.api.events.system.ExtrinsicFailed.is(event))
+  return event.data.dispatchError
+}
+
+/** Assert no extrinsic failed in the latest block. `sendTransaction` resolves even when dispatch fails. */
+async function expectNoExtrinsicFailure(client: Client<any, any>) {
+  const events = await client.api.query.system.events()
+  const failures = events.filter(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
+  expect(failures.map(({ event }) => event.toHuman())).toEqual([])
+}
 
 /**
- * Ensures the chain is ready for DOT (foreign asset, Polkadot location) bounties:
- * - If no asset rate for this asset kind: sets rate so 1 DOT = 1 KSM (1:1 FixedU128).
- * - Ensures the foreign asset exists (ForeignAssets.create with Root if missing).
- * - Seeds treasury with the foreign DOT; tops up if below dotBountyValue.
+ * Events a step snapshot keeps: the pallet's own, plus the outcome of the step's dispatch, so a
+ * failed step never records as an empty list.
  */
-async function ensureDOTBountySetup(
+const BOUNTY_EVENTS = [
+  'multiAssetBounties',
+  { section: 'scheduler', method: 'Dispatched' },
+  { section: 'system', method: 'ExtrinsicFailed' },
+] as const
+
+/**
+ * `BOUNTY_EVENTS` plus balance holds, for steps that take, release or burn a curator deposit.
+ * Steps that empty a bounty account leave these out: the account's removal releases an empty
+ * hold whose event names the account, and the account depends on the live bounty count.
+ */
+const DEPOSIT_EVENTS = [
+  ...BOUNTY_EVENTS,
+  { section: 'balances', method: 'Held' },
+  { section: 'balances', method: 'Released' },
+  { section: 'balances', method: 'BurnedHeld' },
+] as const
+
+/**
+ * Snapshot transform replacing the bounty index in the pallet's own events, since it depends on
+ * how many bounties the live chain has. Other `index` fields, such as the pallet index inside a
+ * module error, are kept.
+ */
+function redactBountyIndex(events: any[]) {
+  return events.map((event) =>
+    event.section === 'multiAssetBounties' ? { ...event, data: { ...event.data, index: '(bounty index)' } } : event,
+  )
+}
+
+/** Snapshot redaction of a scheduled task's agenda block, which follows the live relay chain. */
+const VOLATILE_KEYS = { redactKeys: /^task$/ }
+
+/**
+ * Fund a bounty as `Treasurer`, and return its index as `BountyCreated` reports it. The bounty
+ * is left `FundingAttempted`, with `curator` proposed.
+ */
+async function fundBounty(
   client: Client<any, any>,
-  chain: Chain<any, any>,
-): Promise<{ assetKind: any; dotBountyValue: bigint }> {
-  const assetKind = createDOTAssetKind()
-  const treasuryPot = getTreasuryPotAccount(client)
+  asset: BountyAsset,
+  value: bigint,
+  curator: KeyringPair,
+): Promise<number> {
+  const index = await nextBountyIndex(client)
+  const call = bountiesTx(client).fundBounty(assetKind(asset), value, curator.address, METADATA_HASH)
+  expectDispatchOk(await dispatchAs(client, call, TREASURER))
+  const created = await bountyEvent(client, 'BountyCreated', index)
+  return created.data.index.toNumber()
+}
 
-  const palletConsts = (client.api.consts as any).multiAssetBounties
-  if (!palletConsts) {
-    console.error('[ensureDOTBountySetup] api.consts.multiAssetBounties is UNDEFINED')
-    console.error('Available consts pallets:', Object.keys(client.api.consts as any))
-    const palletTx = (client.api.tx as any).multiAssetBounties
-    console.error('api.tx.multiAssetBounties exists?', !!palletTx)
-    if (palletTx) console.error('tx methods:', Object.keys(palletTx))
-    const palletQuery = (client.api.query as any).multiAssetBounties
-    console.error('api.query.multiAssetBounties exists?', !!palletQuery)
-    if (palletQuery) console.error('query methods:', Object.keys(palletQuery))
-    throw new Error('multiAssetBounties pallet constants not found in runtime metadata. Check pallet name.')
+/** Fund a bounty and settle the funding, leaving it `Funded` with `curator` proposed. */
+async function fundedBounty(
+  client: Client<any, any>,
+  asset: BountyAsset,
+  value: bigint,
+  curator: KeyringPair,
+): Promise<number> {
+  const index = await fundBounty(client, asset, value, curator)
+  await sendTransaction(bountiesTx(client).checkStatus(index, null).signAsync(dave))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  return index
+}
+
+/**
+ * Fund a bounty and have `curator` settle the funding and accept in one batch, leaving it `Active`
+ * with the curator's deposit on hold.
+ */
+async function activeBounty(
+  client: Client<any, any>,
+  asset: BountyAsset,
+  value: bigint,
+  curator: KeyringPair,
+): Promise<number> {
+  const index = await fundBounty(client, asset, value, curator)
+  const settleAndAccept = client.api.tx.utility.batchAll([
+    bountiesTx(client).checkStatus(index, null),
+    bountiesTx(client).acceptCurator(index, null),
+  ])
+  await sendTransaction(settleAndAccept.signAsync(curator))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  return index
+}
+
+/** Value, in `asset` units, of the child bounties tests create: the smallest a child may have. */
+async function childValue(client: Client<any, any>, asset: BountyAsset): Promise<bigint> {
+  return fromNative(childBountyMinimum(client), await rateOf(client, asset))
+}
+
+/**
+ * Fund a child bounty of `parent` as the parent's curator, alice, and return its index as
+ * `ChildBountyCreated` reports it. With no `curator`, alice curates the child as well.
+ */
+async function fundChildBounty(
+  client: Client<any, any>,
+  parent: number,
+  value: bigint,
+  curator: KeyringPair | null,
+): Promise<number> {
+  const call = bountiesTx(client).fundChildBounty(parent, value, METADATA_HASH, curator?.address ?? null)
+  await sendTransaction(call.signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  const created = await bountyEvent(client, 'ChildBountyCreated', parent)
+  return created.data.childIndex.toNumber()
+}
+
+/**
+ * Fund a child bounty curated by the parent's curator, alice, and settle the funding. A child
+ * whose curator already curates the parent goes straight to `Active`, with no deposit.
+ */
+async function childOfParentCurator(client: Client<any, any>, parent: number, value: bigint): Promise<number> {
+  const child = await fundChildBounty(client, parent, value, null)
+  await sendTransaction(bountiesTx(client).checkStatus(parent, child).signAsync(dave))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  return child
+}
+
+/**
+ * Fund a child bounty proposing `curator`, who settles the funding and accepts in one batch,
+ * leaving the child `Active` with the curator's deposit on hold.
+ */
+async function childWithOwnCurator(
+  client: Client<any, any>,
+  parent: number,
+  value: bigint,
+  curator: KeyringPair,
+): Promise<number> {
+  const child = await fundChildBounty(client, parent, value, curator)
+  const settleAndAccept = client.api.tx.utility.batchAll([
+    bountiesTx(client).checkStatus(parent, child),
+    bountiesTx(client).acceptCurator(parent, child),
+  ])
+  await sendTransaction(settleAndAccept.signAsync(curator))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  return child
+}
+
+/**
+ * The `balances` event `method` naming `who` in the latest block. The installed type augmentation
+ * lacks the hold events, so they are looked up by name, and a missing one fails the test.
+ */
+async function balancesEvent(client: Client<any, any>, method: string, who: KeyringPair): Promise<any> {
+  const type = (client.api.events as any).balances[method]
+  assert(type, `runtime has no balances.${method} event`)
+  const events = await client.api.query.system.events()
+  const records = events.filter(
+    ({ event }) => type.is(event) && (event.data as any).who.toString() === addressOf(client, who),
+  )
+  expect(records).toHaveLength(1)
+  return records[0].event
+}
+
+/**
+ * Native tokens the treasury inflation pallet (`dap`) minted in the latest block. Zero on chains
+ * without it.
+ */
+async function mintedInLatestBlock(client: Client<any, any>): Promise<bigint> {
+  const issuanceMinted = (client.api.events as any).dap?.IssuanceMinted
+  if (!issuanceMinted) {
+    return 0n
   }
+  const events = await client.api.query.system.events()
+  return events
+    .filter(({ event }) => issuanceMinted.is(event))
+    .reduce((sum, { event }) => sum + (event.data[0] as any).toBigInt(), 0n)
+}
 
-  const bountyValueMinimum = (palletConsts.bountyValueMinimum as any).toBigInt()
-  const assetLocation = DOT_FOREIGN_ASSET_LOCATION
-
-  // 1. Asset rate for this asset kind (BalanceConverter)
-  const assetRateInfo = await getAssetRate(client, assetKind)
-  let weCreatedRate = false
-  if (!assetRateInfo) {
-    const createRateTx = (client.api.tx as any).assetRate?.create
-    if (createRateTx) {
-      const rateOneToOne = FIXED_U128_DENOM
-      await scheduleInlineCallWithOrigin(
-        client,
-        createRateTx(assetKind, rateOneToOne).method.toHex(),
-        { system: 'Root' },
-        chain.properties.schedulerBlockProvider,
-      )
-      await client.dev.newBlock()
-      weCreatedRate = true
-    }
-  }
-  expect(
-    assetRateInfo || weCreatedRate,
-    'Asset rate must be set for DOT (foreign) so BalanceConverter can convert for origin check',
-  ).toBeTruthy()
-
-  const dotBountyValue = bountyValueMinimum * DOT_BOUNTY_MULTIPLIER
-  const treasuryDotSeedAmount = dotBountyValue * TREASURY_DOT_SEED_MULTIPLIER
-
-  // 2. Ensure foreign asset exists (ForeignAssets pallet)
-  const faQuery = (client.api.query as any).foreignAssets
-  const existingForeign = faQuery?.asset ? await faQuery.asset(assetLocation) : null
-  if (!existingForeign?.isSome) {
-    const createTx = (client.api.tx as any).foreignAssets?.create
-    if (createTx) {
-      // create(assetId, admin, minBalance, isFrozen) – admin treasury so it can hold balance
-      const minBalance = 1n
-      await scheduleInlineCallWithOrigin(
-        client,
-        createTx(assetLocation, treasuryPot, minBalance, false).method.toHex(),
-        { system: 'Root' },
-        chain.properties.schedulerBlockProvider,
-      )
-      await client.dev.newBlock()
-      console.log('[DOT setup] Created foreign asset (DOT on Polkadot) via ForeignAssets.create')
-    }
-  }
-
-  // 3. Seed treasury with foreign DOT
-  console.log('[DOT setup] Treasury pot:', treasuryPot)
-  console.log('[DOT setup] Asset kind (foreign DOT):', JSON.stringify(assetKind, null, 2))
-  console.log(
-    '[DOT setup] (skipped) Would have set ForeignAssets::account key (assetLocation, accountId), balance:',
-    treasuryDotSeedAmount.toString(),
-  )
-
-  // NOTE: Treasury foreign-DOT seeding intentionally disabled to verify whether the on-chain
-  // treasury already holds enough foreign DOT to fund a 1 DOT bounty without test pre-seeding.
-  // Re-enable the block below if fund_bounty fails with a Paymaster/funding error.
-  // await client.dev.setStorage({
-  //   ForeignAssets: {
-  //     account: [[[assetLocation, treasuryPot], { balance: treasuryDotSeedAmount }]],
-  //   },
-  // })
-  const treasuryDotAfterSeed = await getTreasuryForeignAssetBalance(client, assetLocation)
-  const rawAccountAfterSet = faQuery?.account ? await faQuery.account(assetLocation, treasuryPot) : null
-  console.log('[DOT setup] (no seed) treasury foreign DOT balance:', treasuryDotAfterSeed.toString())
-  console.log('[DOT setup] (no seed) raw foreignAssets.account isSome:', (rawAccountAfterSet as any)?.isSome)
-
-  // if (treasuryDotAfterSeed < dotBountyValue) {
-  //   await client.dev.setStorage({
-  //     ForeignAssets: {
-  //       account: [[[assetLocation, treasuryPot], { balance: dotBountyValue * 2n }]],
-  //     },
-  //   })
-  //   treasuryDotAfterSeed = await getTreasuryForeignAssetBalance(client, assetLocation)
-  // }
-  // expect(
-  //   treasuryDotAfterSeed >= dotBountyValue,
-  //   `Treasury must have at least ${dotBountyValue} foreign DOT for bounties, got ${treasuryDotAfterSeed}`,
-  // ).toBe(true)
-  console.log(
-    '[DOT setup] (no seed) treasury vs bounty value:',
-    treasuryDotAfterSeed.toString(),
-    'vs',
-    dotBountyValue.toString(),
-    treasuryDotAfterSeed >= dotBountyValue ? '(SUFFICIENT)' : '(INSUFFICIENT — fund_bounty likely to fail)',
-  )
-  console.log('[DOT setup] bounty value for DOT:', dotBountyValue.toString())
-  console.log(
-    '[DOT setup] asset rate for DOT:',
-    assetRateInfo?.rate?.toString() ?? 'undefined (we may have created it)',
-  )
-  console.log('[DOT setup] bounty value minimum:', bountyValueMinimum.toString())
-  console.log('[DOT setup] Calling newBlock() to commit state before lifecycle test schedules fund_bounty...')
-  await client.dev.newBlock()
-
-  const treasuryAfterCommit = await getTreasuryForeignAssetBalance(client, assetLocation)
-  console.log('[DOT setup] After newBlock() - treasury foreign DOT balance:', treasuryAfterCommit.toString())
-
-  return { assetKind, dotBountyValue }
+/** Assert `beneficiary` names `who`'s account on this chain. */
+function expectLocalBeneficiary(beneficiary: any, who: KeyringPair) {
+  assert(beneficiary.isV5, `expected a V5 beneficiary, got ${beneficiary.type}`)
+  const { location, accountId } = beneficiary.asV5
+  expect(location.parents.toNumber()).toBe(0)
+  expect(location.interior.isHere).toBe(true)
+  expect(accountId.interior.asX1[0].asAccountId32.id.toHex()).toBe(u8aToHex(who.addressRaw))
 }
 
 /**
- * Test: Fund a Multi-Asset Bounty with USDT (asset 1984)
- *
- * WHAT THIS TESTS:
- * - Funding a bounty with a non-native asset (USDT, asset ID 1984)
- * - AssetKind V5 with location (current chain) + assetId (PalletInstance 50, GeneralIndex 1984)
- * - Treasurer origin via Scheduler (same as native)
- * - Async payment initiation and BountyCreated / Paid events
+ * One-off setup shared by every test: endow the signers with native tokens, and note the bounty
+ * metadata. It runs before the suite's snapshot is taken, so no test spends a block on it.
  */
-export async function fundUSDTBountyTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
-  await setupTestAccounts(client, ['alice', 'bob'], true)
-
-  const initialBountyCount = await getBountyCount(client)
-
-  const metadata = await createPreimage(client, 'Build a USDT-funded integration for Kusama Asset Hub')
-
-  const { assetKind } = await ensureUSDTBountySetup(client, chain)
-
-  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
-    assetKind,
-    USDT_BOUNTY_VALUE,
-    testAccounts.bob.address,
-    metadata,
-  )
-
-  await scheduleInlineCallWithOrigin(
-    client,
-    fundBountyTx.method.toHex(),
-    { Origins: 'Treasurer' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  logAllEvents(client)
-
-  await checkSystemEvents(client, { section: 'multiAssetBounties', method: 'BountyCreated' })
-    .redact({ redactKeys: /index/ })
-    .toMatchSnapshot('USDT bounty creation events')
-
-  await checkSystemEvents(client, { section: 'multiAssetBounties', method: 'Paid' }).toMatchSnapshot(
-    'USDT bounty funding payment events',
-  )
-
-  const newBountyCount = await getBountyCount(client)
-  expect(newBountyCount).toBe(initialBountyCount + 1)
-
-  const bountyIndex = initialBountyCount
-  const bounty = await getBounty(client, bountyIndex)
-  expect(bounty).toBeTruthy()
-  expect(bounty.value.toBigInt()).toBe(USDT_BOUNTY_VALUE)
-  expect(bounty.status.isFundingAttempted).toBe(true)
-}
-
-/**
- * Test 2: Check Funding Status and Transition to Funded
- *
- * WHAT THIS TESTS:
- * - Checking payment status via checkStatus extrinsic
- * - Transition from FundingAttempted → Funded
- * - Proper event emission on successful funding
- *
- * WHY THIS STEP EXISTS:
- * Multi-asset bounties use async payments. After initiating payment:
- * 1. Payment goes to "Attempted" state with a payment ID
- * 2. Anyone calls checkStatus to query the Paymaster
- * 3. If successful, bounty becomes "Funded" and ready for curator
- */
-export async function checkFundingStatusTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-  await setupTestAccounts(client, ['alice', 'bob'])
-
-  // First, create a bounty
-  const bountyValueMinimum = (client.api.consts.multiAssetBounties.bountyValueMinimum as any).toBigInt()
-  const bountyValue = bountyValueMinimum * BOUNTY_MULTIPLIER
-  const metadata = await createPreimage(client, 'Test bounty for funding status check')
-  const assetKind = createNativeAssetKind()
-
-  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
-    assetKind,
-    bountyValue,
-    testAccounts.bob.address,
-    metadata,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    fundBountyTx.method.toHex(),
-    { Origins: 'Treasurer' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  const bountyIndex = (await getBountyCount(client)) - 1
-
-  // Now check the funding status
-  const checkStatusTx = client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null)
-  const statusEvents = await sendTransaction(checkStatusTx.signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  // Verify BountyFundingProcessed event
-  await checkEvents(statusEvents, { section: 'multiAssetBounties', method: 'BountyFundingProcessed' }).toMatchSnapshot(
-    'bounty funding processed events',
-  )
-
-  // Verify bounty is now in Funded state
-  const bounty = await getBounty(client, bountyIndex)
-  expect(bounty.status.isFunded).toBe(true)
-}
-
-/**
- * Test 3: Curator Accepts Role
- *
- * WHAT THIS TESTS:
- * - Curator accepting their role via acceptCurator extrinsic
- * - Curator deposit being locked (in native token)
- * - Transition from Funded → Active state
- *
- * WHY CURATOR DEPOSITS MATTER:
- * - Ensures curators have "skin in the game"
- * - Deposit is calculated as % of bounty value
- * - Returned when bounty completes successfully
- * - Slashed if curator misbehaves
- */
-export async function acceptCuratorTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-  await setupTestAccounts(client, ['alice', 'bob'])
-
-  // Setup: Create and fund a bounty
-  const bountyValueMinimum = (client.api.consts.multiAssetBounties.bountyValueMinimum as any).toBigInt()
-  const bountyValue = bountyValueMinimum * BOUNTY_MULTIPLIER
-  const metadata = await createPreimage(client, 'Test bounty for curator acceptance')
-  const assetKind = createNativeAssetKind()
-
-  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
-    assetKind,
-    bountyValue,
-    testAccounts.bob.address,
-    metadata,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    fundBountyTx.method.toHex(),
-    { Origins: 'Treasurer' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  const bountyIndex = (await getBountyCount(client)) - 1
-
-  // Check funding status to move to Funded state
-  const checkStatusTx = client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null)
-  await sendTransaction(checkStatusTx.signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  // Curator (Bob) accepts the role
-  const acceptCuratorTx = client.api.tx.multiAssetBounties.acceptCurator(bountyIndex, null)
-  const acceptEvents = await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
-  await client.dev.newBlock()
-
-  // Verify BountyBecameActive event
-  await checkEvents(acceptEvents, { section: 'multiAssetBounties', method: 'BountyBecameActive' }).toMatchSnapshot(
-    'curator acceptance events',
-  )
-
-  // Verify bounty is now Active
-  const bounty = await getBounty(client, bountyIndex)
-  expect(bounty.status.isActive).toBe(true)
-
-  // Verify curator deposit was created
-  const curatorDeposit = await getCuratorDeposit(client, bountyIndex)
-  expect(curatorDeposit).toBeTruthy()
-}
-
-/**
- * Test 4: Award Bounty to Beneficiary
- *
- * WHAT THIS TESTS:
- * - Curator awarding bounty to a beneficiary
- * - Payout payment initiation
- * - Transition to PayoutAttempted state
- *
- * WHY TWO PAYMENT PHASES?
- * 1. Funding payment: Treasury → Bounty account
- * 2. Payout payment: Bounty account → Beneficiary
- *
- * This separation allows bounties to hold funds and create child bounties.
- */
-export async function awardBountyTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
-
-  // Setup: Create funded, active bounty
-  const bountyValueMinimum = (client.api.consts.multiAssetBounties.bountyValueMinimum as any).toBigInt()
-  const bountyValue = bountyValueMinimum * BOUNTY_MULTIPLIER
-  const metadata = await createPreimage(client, 'Test bounty for awarding')
-  const assetKind = createNativeAssetKind()
-
-  // Create and fund bounty
-  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
-    assetKind,
-    bountyValue,
-    testAccounts.bob.address,
-    metadata,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    fundBountyTx.method.toHex(),
-    { Origins: 'Treasurer' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  const bountyIndex = (await getBountyCount(client)) - 1
-
-  // Check funding and accept curator
-  await sendTransaction(client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null).signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  await sendTransaction(client.api.tx.multiAssetBounties.acceptCurator(bountyIndex, null).signAsync(testAccounts.bob))
-  await client.dev.newBlock()
-
-  // Award bounty to Charlie
-  const beneficiary = createBeneficiary(client.api, testAccounts.charlie)
-  const awardBountyTx = client.api.tx.multiAssetBounties.awardBounty(
-    bountyIndex,
-    null, // no child bounty
-    beneficiary,
-  )
-  const awardEvents = await sendTransaction(awardBountyTx.signAsync(testAccounts.bob))
-  await client.dev.newBlock()
-
-  // Verify BountyAwarded event
-  await checkEvents(awardEvents, { section: 'multiAssetBounties', method: 'BountyAwarded' }).toMatchSnapshot(
-    'bounty awarded events',
-  )
-
-  // Verify Paid event (payout initiated)
-  await checkEvents(awardEvents, { section: 'multiAssetBounties', method: 'Paid' }).toMatchSnapshot(
-    'bounty payout payment events',
-  )
-
-  // Verify bounty is in PayoutAttempted state
-  const bounty = await getBounty(client, bountyIndex)
-  expect(bounty.status.isPayoutAttempted).toBe(true)
-}
-
-/**
- * Test 5: Complete Bounty Lifecycle
- *
- * WHAT THIS TESTS:
- * - Full lifecycle from creation to completion
- * - Final payout status check
- * - Bounty removal from storage
- * - Curator deposit return
- *
- * WHY THIS TEST?
- * Ensures all pieces work together:
- * Fund → Check → Accept → Award → Check → Complete
- */
-export async function completeBountyLifecycleTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
-
-  const bountyValueMinimum = (client.api.consts.multiAssetBounties.bountyValueMinimum as any).toBigInt()
-  const bountyValue = bountyValueMinimum * BOUNTY_MULTIPLIER
-  const metadata = await createPreimage(client, 'Complete lifecycle test bounty')
-  const assetKind = createNativeAssetKind()
-
-  // log the bounty params
-  console.log('bounty value minimum:', bountyValueMinimum.toString())
-  console.log('bounty value:', bountyValue.toString())
-  console.log('metadata:', metadata.toString())
-  console.log('asset kind:', JSON.stringify(assetKind, null, 2))
-
-  // Step 1: Fund bounty
-  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
-    assetKind,
-    bountyValue,
-    testAccounts.bob.address,
-    metadata,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    fundBountyTx.method.toHex(),
-    { Origins: 'Treasurer' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  // log all events
-  await logAllEvents(client)
-
-  const bountyIndex = (await getBountyCount(client)) - 1
-
-  // log bounty to human readable format
-  const bountyAfterFund = await getBounty(client, bountyIndex)
-  console.log('bounty after fund:', JSON.stringify(bountyAfterFund, null, 2))
-
-  // Step 2: Check funding status
-  await sendTransaction(client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null).signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  await logAllEvents(client)
-
-  // log bounty to human readable format after checkStatus
-  const bountyAfterCheckStatus = await getBounty(client, bountyIndex)
-  console.log('bounty after checkStatus:', JSON.stringify(bountyAfterCheckStatus, null, 2))
-
-  // Step 3: Accept curator
-  await sendTransaction(client.api.tx.multiAssetBounties.acceptCurator(bountyIndex, null).signAsync(testAccounts.bob))
-  await client.dev.newBlock()
-
-  await logAllEvents(client)
-
-  // log bounty to human readable format after acceptCurator
-  const bountyAfterAcceptCurator = await getBounty(client, bountyIndex)
-  console.log('bounty after acceptCurator:', JSON.stringify(bountyAfterAcceptCurator, null, 2))
-
-  // get charlies native balance before awardBounty
-  const charlieNativeBalanceBeforeAwardBounty = await getFreeFunds(client, testAccounts.charlie.address)
-  console.log('charlie native balance before awardBounty:', charlieNativeBalanceBeforeAwardBounty.toString())
-
-  // Step 4: Award bounty
-  const beneficiary = createBeneficiary(client.api, testAccounts.charlie)
-  await sendTransaction(
-    client.api.tx.multiAssetBounties.awardBounty(bountyIndex, null, beneficiary).signAsync(testAccounts.bob),
-  )
-  await client.dev.newBlock()
-
-  await logAllEvents(client)
-
-  // log bounty to human readable format after awardBounty
-  const bountyAfterAwardBounty = await getBounty(client, bountyIndex)
-  console.log('bounty after awardBounty:', JSON.stringify(bountyAfterAwardBounty, null, 2))
-
-  // get charlies native balance after awardBounty
-  const charlieNativeBalanceAfterAwardBounty = await getFreeFunds(client, testAccounts.charlie.address)
-  console.log('charlie native balance after awardBounty:', charlieNativeBalanceAfterAwardBounty.toString())
-
-  // Step 5: Check payout status (completes the bounty)
-  const finalCheckTx = client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null)
-  const finalEvents = await sendTransaction(finalCheckTx.signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  await logAllEvents(client)
-
-  // log bounty to human readable format after final checkStatus
-  const bountyAfterFinalCheckStatus = await getBounty(client, bountyIndex)
-  console.log('bounty after final checkStatus:', JSON.stringify(bountyAfterFinalCheckStatus, null, 2))
-
-  // Verify BountyPayoutProcessed event
-  await checkEvents(finalEvents, { section: 'multiAssetBounties', method: 'BountyPayoutProcessed' }).toMatchSnapshot(
-    'bounty completed events',
-  )
-
-  // verify charlies native balance after payout increased
-  expect(charlieNativeBalanceAfterAwardBounty).toBeGreaterThan(charlieNativeBalanceBeforeAwardBounty)
-
-  // Verify bounty is removed from storage
-  const bounty = await getBounty(client, bountyIndex)
-  expect(bounty).toBeNull()
-
-  // get curator deposit
-  const curatorDeposit = await getCuratorDeposit(client, bountyIndex)
-  console.log('curator deposit:', JSON.stringify(curatorDeposit, null, 2))
-
-  // verify curator deposit is removed (returned to curator)
-  expect(curatorDeposit).toBeNull()
-}
-
-/**
- * Test: Complete USDT Bounty Lifecycle
- *
- * WHAT THIS TESTS:
- * - Full lifecycle with USDT (asset 1984): Fund → Check funding → Accept curator → Award → Check payout
- * - Asset rate and treasury USDT setup (same as fundUSDTBountyTest)
- * - Bounty removal and curator deposit return after completion
- */
-export async function completeUSDTBountyLifecycleTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-  await setupTestAccounts(client, ['alice', 'bob', 'charlie'], true)
-
-  const metadata = await createPreimage(client, 'Complete USDT bounty lifecycle')
-  const { assetKind } = await ensureUSDTBountySetup(client, chain)
-
-  // Step 1: Fund bounty with USDT
-  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
-    assetKind,
-    USDT_BOUNTY_VALUE,
-    testAccounts.bob.address,
-    metadata,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    fundBountyTx.method.toHex(),
-    { Origins: 'Treasurer' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  logAllEvents(client)
-
-  // get bounty index
-  const bountyIndex = (await getBountyCount(client)) - 1
-
-  // log bounty in human readable format
-  const bountyAfterFund = await getBounty(client, bountyIndex)
-  console.log('bounty after fund_bounty(tx):', JSON.stringify(bountyAfterFund, null, 2))
-
-  // Step 2: Check funding status
-  await sendTransaction(client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null).signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  logAllEvents(client)
-
-  // log bounty in human readable format after checkStatus
-  const bountyAfterCheckStatus = await getBounty(client, bountyIndex)
-  console.log('bounty after checkStatus:', JSON.stringify(bountyAfterCheckStatus, null, 2))
-
-  // Step 3: Accept curator
-  await sendTransaction(client.api.tx.multiAssetBounties.acceptCurator(bountyIndex, null).signAsync(testAccounts.bob))
-  await client.dev.newBlock()
-
-  logAllEvents(client)
-
-  // check if treasury has enough USDT for the bounty
-  const treasuryUsdtBalance = await getTreasuryAssetBalance(client, USDT_ASSET_ID)
-  console.log('treasury USDT balance:', treasuryUsdtBalance.toString())
-  console.log('USDT bounty value:', USDT_BOUNTY_VALUE.toString())
-  if (treasuryUsdtBalance < USDT_BOUNTY_VALUE) {
-    console.log('treasury USDT balance is less than USDT bounty value, adding more USDT to treasury')
-    const treasuryPot = getTreasuryPotAccount(client)
-    console.log('treasury pot address:', treasuryPot)
-    await client.dev.setStorage({
-      Assets: {
-        account: [[[USDT_ASSET_ID, treasuryPot], { balance: USDT_BOUNTY_VALUE * 2n }]],
-      },
-    })
-  }
-  expect(treasuryUsdtBalance).toBeGreaterThan(USDT_BOUNTY_VALUE)
-
-  // add some USDT to the benefia
-  // await client.dev.setStorage({
-  //   Assets: {
-  //     account: [[[USDT_ASSET_ID, testAccounts.charlie.address], { balance: USDT_BOUNTY_VALUE }]],
-  //   },
-  // })
-
-  // log charlie's USDT balance
-  // const charlieUsdtBalance = await getFreeFunds(client, testAccounts.charlie.address)
-  // get charlie's USDT balance in asset 1984 using assets pallet
-  const charlieUsdtBalanceInAsset1984 = await client.api.query.assets.account(
-    USDT_ASSET_ID,
-    testAccounts.charlie.address,
-  )
-  // console.log('charlie USDT balance:', charlieUsdtBalance.toString())
-  console.log('charlie USDT balance in asset 1984:', charlieUsdtBalanceInAsset1984.toString())
-  // log charlies native balance
-  const charlieNativeBalance = await getFreeFunds(client, testAccounts.charlie.address)
-  console.log('charlie native balance:', charlieNativeBalance.toString())
-  // log charlies address
-  console.log('charlie address:', testAccounts.charlie.address)
-
-  // log bounty in human readable format after acceptCurator
-  const bountyAfterAcceptCurator = await getBounty(client, bountyIndex)
-  console.log('bounty after acceptCurator:', JSON.stringify(bountyAfterAcceptCurator, null, 2))
-
-  // Step 4: Award bounty to charlie
-  const beneficiary = createBeneficiary(client.api, testAccounts.charlie)
-  await sendTransaction(
-    client.api.tx.multiAssetBounties.awardBounty(bountyIndex, null, beneficiary).signAsync(testAccounts.bob),
-  )
-  await client.dev.newBlock()
-
-  logAllEvents(client)
-
-  // log bounty in human readable format after awardBounty
-  const bountyAfterAwardBounty = await getBounty(client, bountyIndex)
-  console.log('bounty after awardBounty:', JSON.stringify(bountyAfterAwardBounty, null, 2))
-
-  // Step 5: Check payout status (completes the bounty)
-  const finalCheckTx = client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null)
-  const finalEvents = await sendTransaction(finalCheckTx.signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  logAllEvents(client)
-
-  // log bounty in human readable format after checkStatus
-  const bountyAfterFinalCheckStatus = await getBounty(client, bountyIndex)
-  console.log('bounty after final checkStatus:', JSON.stringify(bountyAfterFinalCheckStatus, null, 2))
-
-  await checkEvents(finalEvents, { section: 'multiAssetBounties', method: 'BountyPayoutProcessed' }).toMatchSnapshot(
-    'USDT bounty completed events',
-  )
-
-  await client.dev.newBlock()
-  await client.dev.newBlock()
-
-  // log charlies USDT balance after final checkStatus using the assets pallet
-  const charlieAfterFinalCheckStatus = await client.api.query.assets.account(
-    USDT_ASSET_ID,
-    testAccounts.charlie.address,
-  )
-  console.log('charlie USDT balance after final checkStatus in asset 1984:', charlieAfterFinalCheckStatus.toString())
-
-  const bounty = await getBounty(client, bountyIndex)
-  // log in human readable format
-  console.log('bounty:', JSON.stringify(bounty, null, 2))
-  //   expect(bounty).toBeNull()
-
-  const curatorDeposit = await getCuratorDeposit(client, bountyIndex)
-  // log in human readable format
-  console.log('curatorDeposit:', JSON.stringify(curatorDeposit, null, 2))
-  //   expect(curatorDeposit).toBeNull()
-}
-
-/**
- * Test: Complete DOT (asset 14) Bounty Lifecycle
- *
- * Full lifecycle with DOT on Kusama Asset Hub: Fund → Check funding → Accept curator → Award → Check payout.
- */
-export async function completeDOTBountyLifecycleTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-  await setupTestAccounts(client, ['alice', 'bob', 'charlie'], true)
-
-  const metadata = await createPreimage(client, 'Complete DOT bounty lifecycle')
-  const { assetKind, dotBountyValue } = await ensureDOTBountySetup(client, chain)
-
-  const initialBountyCount = await getBountyCount(client)
-  const headerBefore = await client.api.rpc.chain.getHeader()
-  console.log(
-    '[DOT lifecycle] Initial bounty count:',
-    initialBountyCount,
-    '| current block number:',
-    headerBefore.number.toString(),
-  )
-
-  const assetLocation = DOT_FOREIGN_ASSET_LOCATION
-  const treasuryPot = getTreasuryPotAccount(client)
-  const seedAmount = dotBountyValue * TREASURY_DOT_SEED_MULTIPLIER
-  console.log(
-    '[DOT lifecycle] Re-applying treasury foreign DOT: pot=',
-    treasuryPot,
-    '| assetLocation=',
-    JSON.stringify(assetLocation),
-    '| seedAmount=',
-    seedAmount.toString(),
-  )
-
-  await client.dev.setStorage({
-    ForeignAssets: {
-      account: [[[assetLocation, treasuryPot], { balance: seedAmount }]],
-    },
-  })
-  const treasuryDotBeforeSchedule = await getTreasuryForeignAssetBalance(client, assetLocation)
-  const faQuery = (client.api.query as any).foreignAssets
-  const rawBeforeSchedule = faQuery?.account ? await faQuery.account(assetLocation, treasuryPot) : null
-  expect(
-    treasuryDotBeforeSchedule >= dotBountyValue,
-    `Treasury must have >= ${dotBountyValue} DOT before scheduling fund_bounty, got ${treasuryDotBeforeSchedule}`,
-  ).toBe(true)
-  console.log(
-    '[DOT lifecycle] Before schedule - treasury DOT balance:',
-    treasuryDotBeforeSchedule.toString(),
-    '| bounty value:',
-    dotBountyValue.toString(),
-  )
-  console.log(
-    '[DOT lifecycle] Before schedule - raw foreignAssets.account(assetLocation, treasuryPot) isSome:',
-    (rawBeforeSchedule as any)?.isSome,
-    '| value:',
-    rawBeforeSchedule?.toString(),
-  )
-
-  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
-    assetKind,
-    dotBountyValue,
-    testAccounts.bob.address,
-    metadata,
-  )
-  console.log('[DOT lifecycle] fundBountyTx (hex):', fundBountyTx.method.toHex())
-  console.log('[DOT lifecycle] Asset kind passed to fund_bounty:', JSON.stringify(assetKind))
-
-  const scheduledBlock = (await client.api.rpc.chain.getHeader()).number.toNumber() + 1
-  console.log(
-    '[DOT lifecycle] Scheduling fund_bounty for block',
-    scheduledBlock,
-    '| blockProvider:',
-    chain.properties.schedulerBlockProvider,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    fundBountyTx.method.toHex(),
-    { Origins: 'Treasurer' },
-    chain.properties.schedulerBlockProvider,
-  )
-  console.log('[DOT lifecycle] Calling newBlock() - scheduler will run fund_bounty in this block...')
-  await client.dev.newBlock()
-
-  const headerAfter = await client.api.rpc.chain.getHeader()
-  console.log(
-    '[DOT lifecycle] After newBlock() - block number:',
-    headerAfter.number.toString(),
-    '(expected scheduler to run at',
-    scheduledBlock + ')',
-  )
-  const treasuryDotAfterBlock = await getTreasuryForeignAssetBalance(client, assetLocation)
-  const rawAfterBlock = faQuery?.account ? await faQuery.account(assetLocation, treasuryPot) : null
-  console.log(
-    '[DOT lifecycle] After newBlock() - treasury foreign DOT balance:',
-    treasuryDotAfterBlock.toString(),
-    '| (if FundingError: Paymaster did not debit; if lower than before: payment may have been attempted)',
-  )
-  console.log('[DOT lifecycle] After newBlock() - raw foreignAssets.account isSome:', (rawAfterBlock as any)?.isSome)
-
-  await logAllEvents(client)
-
-  const newBountyCount = await getBountyCount(client)
-  console.log(
-    '[DOT lifecycle] Bounty count after fund_bounty block:',
-    newBountyCount,
-    '(expected',
-    initialBountyCount + 1,
-    ')',
-  )
-
-  if (newBountyCount === initialBountyCount) {
-    const rateAtFailure = await getAssetRate(client, assetKind)
-    console.log('[DOT lifecycle] *** FundingError diagnosis (fund_bounty did not create a bounty) ***')
-    console.log('[DOT lifecycle] Treasury pot account we seeded:', treasuryPot)
-    console.log(
-      '[DOT lifecycle] Treasury DOT before block:',
-      treasuryDotBeforeSchedule.toString(),
-      '| after block:',
-      treasuryDotAfterBlock.toString(),
-      '| (unchanged => Paymaster::pay likely failed before debit)',
-    )
-    console.log('[DOT lifecycle] Asset rate for DOT at failure:', rateAtFailure?.rate?.toString() ?? 'undefined')
-    console.log('[DOT lifecycle] Possible reasons:')
-    console.log(
-      '[DOT lifecycle] 1. FundingSource in runtime may resolve to a different account than treasury.potAccount for this chain (check PalletIdAsFundingSource vs Treasury::potAccount).',
-    )
-    console.log('[DOT lifecycle] 2. Paymaster::pay for foreign DOT may use different storage or fail on Asset Hub.')
-    console.log(
-      '[DOT lifecycle] 3. Chopsticks: setStorage may not be visible in the same block when the scheduler runs (block built from snapshot state).',
-    )
-    console.log(
-      '[DOT lifecycle] 4. BalanceConverter requires an asset rate; missing/wrong rate can cause different errors.',
-    )
-    console.log(
-      '[DOT lifecycle] 5. Check runtime: MultiAssetBounties FundingSource and Paymaster implementation for asset kind',
-      JSON.stringify(assetKind),
-    )
-  }
-
-  expect(newBountyCount, 'fund_bounty must succeed (bounty value >= minimum)').toBe(initialBountyCount + 1)
-  const bountyIndex = initialBountyCount
-
-  // log bounty in human readable format after fundBounty
-  const bountyAfterFundBounty = await getBounty(client, bountyIndex)
-  console.log('bounty after fundBounty:', JSON.stringify(bountyAfterFundBounty, null, 2))
-
-  await sendTransaction(client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null).signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  logAllEvents(client)
-
-  await sendTransaction(client.api.tx.multiAssetBounties.acceptCurator(bountyIndex, null).signAsync(testAccounts.bob))
-  await client.dev.newBlock()
-
-  logAllEvents(client)
-
-  // log bounty in human readable format after acceptCurator
-  const bountyAfterAcceptCurator = await getBounty(client, bountyIndex)
-  console.log('bounty after acceptCurator:', JSON.stringify(bountyAfterAcceptCurator, null, 2))
-
-  let treasuryDotBalance = await getTreasuryForeignAssetBalance(client, assetLocation)
-  if (treasuryDotBalance < dotBountyValue) {
-    const treasuryPot = getTreasuryPotAccount(client)
-    await client.dev.setStorage({
-      ForeignAssets: {
-        account: [[[assetLocation, treasuryPot], { balance: dotBountyValue * 2n }]],
-      },
-    })
-    treasuryDotBalance = await getTreasuryForeignAssetBalance(client, assetLocation)
-  }
-  expect(treasuryDotBalance).toBeGreaterThanOrEqual(dotBountyValue)
-
-  const beneficiaryBalanceBeforeAward = await getForeignAssetBalance(
-    client,
-    assetLocation,
-    testAccounts.charlie.address,
-  )
-  console.log(
-    '[DOT lifecycle] Beneficiary (Charlie) foreign DOT balance before award:',
-    beneficiaryBalanceBeforeAward.toString(),
-  )
-
-  const beneficiary = createBeneficiary(client.api, testAccounts.charlie)
-  await sendTransaction(
-    client.api.tx.multiAssetBounties.awardBounty(bountyIndex, null, beneficiary).signAsync(testAccounts.bob),
-  )
-  await client.dev.newBlock()
-
-  logAllEvents(client)
-
-  // log bounty in human readable format after awardBounty
-  const bountyAfterAwardBounty = await getBounty(client, bountyIndex)
-  console.log('bounty after awardBounty:', JSON.stringify(bountyAfterAwardBounty, null, 2))
-
-  const finalCheckTx = client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null)
-  const finalEvents = await sendTransaction(finalCheckTx.signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  logAllEvents(client)
-
-  // log bounty in human readable format after final checkStatus
-  const bountyAfterFinalCheckStatus = await getBounty(client, bountyIndex)
-  console.log('bounty after final checkStatus:', JSON.stringify(bountyAfterFinalCheckStatus, null, 2))
-
-  await checkEvents(finalEvents, { section: 'multiAssetBounties', method: 'BountyPayoutProcessed' }).toMatchSnapshot(
-    'DOT bounty completed events',
-  )
-
-  const beneficiaryBalanceAfterPayout = await getForeignAssetBalance(
-    client,
-    assetLocation,
-    testAccounts.charlie.address,
-  )
-  console.log(
-    '[DOT lifecycle] Beneficiary (Charlie) foreign DOT balance after payout:',
-    beneficiaryBalanceAfterPayout.toString(),
-  )
-  console.log(
-    '[DOT lifecycle] Bounty value paid:',
-    dotBountyValue.toString(),
-    '| balance before award:',
-    beneficiaryBalanceBeforeAward.toString(),
-  )
-  expect(
-    beneficiaryBalanceAfterPayout,
-    `Beneficiary must have received the bounty: balance before ${beneficiaryBalanceBeforeAward}, after ${beneficiaryBalanceAfterPayout}, bounty value ${dotBountyValue}`,
-  ).toBeGreaterThanOrEqual(beneficiaryBalanceBeforeAward + dotBountyValue)
-
-  const bounty = await getBounty(client, bountyIndex)
-  const curatorDeposit = await getCuratorDeposit(client, bountyIndex)
-  expect(bounty).toBeNull()
-  expect(curatorDeposit).toBeNull()
-}
-
-/**
- * Test: Complete DOT Bounty Lifecycle with caller-supplied values
- *
- * Uses the exact values from the user's `fund_bounty` call:
- *   - asset_kind = V5 DOT-on-Polkadot foreign asset (createDOTAssetKind matches the supplied JSON)
- *   - value      = 10_000_000_000 (1 DOT, 10 decimals)
- *   - curator    = 0xe104b438e7893a9f9cbc59e7d057d61a85ed1b88e3a0ebc59733cb89637a5e7c
- *   - metadata   = freshly noted preimage hash (we don't have the original preimage for the user's
- *                  hash, so we note arbitrary content and use the resulting hash so on-chain lookup
- *                  works during the lifecycle)
- *
- * Because we don't have the private key for the supplied curator pubkey, we override the bounty's
- * curator field in storage to testAccounts.bob.publicKey AFTER fund_bounty + checkStatus succeed.
- * The override is a raw 32-byte substitution at the bounty's storage key — the supplied pubkey is
- * the only place those exact bytes appear in the encoded bounty, so a single replace is safe.
- */
-const CUSTOM_DOT_BOUNTY_VALUE = 20_000_000_000n // 2 DOT (10 decimals) — equal to treasury foreign DOT balance at pin block
-const CUSTOM_DOT_CURATOR_PUBKEY = '0xe104b438e7893a9f9cbc59e7d057d61a85ed1b88e3a0ebc59733cb89637a5e7c'
-const CUSTOM_DOT_BOUNTY_PREIMAGE_TEXT = 'Custom-values DOT bounty lifecycle'
-
-export async function completeDOTBountyLifecycleCustomTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-  await setupTestAccounts(client, ['alice', 'bob', 'charlie'], true)
-
-  const metadata = await createPreimage(client, CUSTOM_DOT_BOUNTY_PREIMAGE_TEXT)
-  const { assetKind } = await ensureDOTBountySetup(client, chain)
-  const assetLocation = DOT_FOREIGN_ASSET_LOCATION
-
-  const treasuryPot = getTreasuryPotAccount(client)
-  // NOTE: treasury top-up commented out — testing whether the real on-chain treasury balance
-  // (≈ 2 DOT at pin block) is enough to fund a 1 DOT bounty without test pre-seeding.
-  // await client.dev.setStorage({
-  //   ForeignAssets: {
-  //     account: [[[assetLocation, treasuryPot], { balance: CUSTOM_DOT_BOUNTY_VALUE * 100n }]],
-  //   },
-  // })
-  const treasuryDotBeforeFund = await getForeignAssetBalance(client, assetLocation, treasuryPot)
-  console.log(
-    '[custom DOT lifecycle] treasury foreign DOT (real chain, no pre-seed):',
-    treasuryDotBeforeFund.toString(),
-    '| bounty value:',
-    CUSTOM_DOT_BOUNTY_VALUE.toString(),
-    treasuryDotBeforeFund >= CUSTOM_DOT_BOUNTY_VALUE ? '(SUFFICIENT)' : '(INSUFFICIENT)',
-  )
-
-  const initialBountyCount = await getBountyCount(client)
-
-  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
-    assetKind,
-    CUSTOM_DOT_BOUNTY_VALUE,
-    CUSTOM_DOT_CURATOR_PUBKEY,
-    metadata,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    fundBountyTx.method.toHex(),
-    { Origins: 'Treasurer' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  // await logBountyLifecycleEvents(client, 'STEP 1: fund_bounty (Treasurer origin)')
-  console.log('STEP 1: fund_bounty (Treasurer origin)')
-  await logAllEvents(client)
-
-  const newBountyCount = await getBountyCount(client)
-  expect(newBountyCount, 'fund_bounty must succeed with the supplied custom values').toBe(initialBountyCount + 1)
-  const bountyIndex = initialBountyCount
-
-  const bountyAfterFund = await getBounty(client, bountyIndex)
-  expect(bountyAfterFund).toBeTruthy()
-  expect(bountyAfterFund.value.toBigInt()).toBe(CUSTOM_DOT_BOUNTY_VALUE)
-  console.log('[custom DOT lifecycle] bounty after fund:', JSON.stringify(bountyAfterFund, null, 2))
-
-  // Find the bounty's account from the foreignAssets.Transferred event emitted by fund_bounty
-  // (treasury pot -> bounty account). The bounty account is derived by the pallet from the bounty
-  // index and is the holder of the funding payment.
-  const fundEvents = await client.api.query.system.events()
-  const transferEvent = (fundEvents as any).find((rec: any) => {
-    const ev = rec.event
-    return ev.section === 'foreignAssets' && ev.method === 'Transferred' && ev.data.from.toString() === treasuryPot
-  })
-  expect(
-    transferEvent,
-    'foreignAssets.Transferred (treasury -> bounty account) must be emitted by fund_bounty',
-  ).toBeTruthy()
-  const bountyAccount = (transferEvent as any).event.data.to.toString()
-  const transferAmount = (transferEvent as any).event.data.amount.toBigInt()
-  console.log('[custom DOT lifecycle] Treasury pot:', treasuryPot)
-  console.log('[custom DOT lifecycle] Bounty account (from event):', bountyAccount)
-  console.log('[custom DOT lifecycle] Transfer amount in event:', transferAmount.toString())
-  expect(transferAmount).toBe(CUSTOM_DOT_BOUNTY_VALUE)
-
-  // Verify the bounty account received exactly the funded value as foreign DOT
-  const bountyAccountDotAfterFund = await getForeignAssetBalance(client, assetLocation, bountyAccount)
-  console.log(
-    '[custom DOT lifecycle] Bounty account foreign DOT balance after fund_bounty:',
-    bountyAccountDotAfterFund.toString(),
-  )
-  expect(bountyAccountDotAfterFund).toBeGreaterThanOrEqual(CUSTOM_DOT_BOUNTY_VALUE)
-
-  // Ensure Alice has enough foreign DOT to send some to the bounty account; top up if needed.
-  const ALICE_DOT_TOPUP = 50_000_000_000n // 5 DOT (10 decimals)
-  const ALICE_DOT_SEND = 10_000_000_000n // 1 DOT (sent to bounty account)
-  let aliceDotBalance = await getForeignAssetBalance(client, assetLocation, testAccounts.alice.address)
-  console.log('[custom DOT lifecycle] Alice foreign DOT balance before top-up:', aliceDotBalance.toString())
-  if (aliceDotBalance < ALICE_DOT_SEND) {
-    await client.dev.setStorage({
-      ForeignAssets: {
-        account: [[[assetLocation, testAccounts.alice.address], { balance: ALICE_DOT_TOPUP }]],
-      },
-    })
-    aliceDotBalance = await getForeignAssetBalance(client, assetLocation, testAccounts.alice.address)
-    console.log('[custom DOT lifecycle] Alice topped up; new foreign DOT balance:', aliceDotBalance.toString())
-  }
-  expect(
-    aliceDotBalance >= ALICE_DOT_SEND,
-    `Alice needs at least ${ALICE_DOT_SEND} foreign DOT, got ${aliceDotBalance}`,
-  ).toBe(true)
-
-  // Alice sends foreign DOT to the bounty account; verify the balance increases by the sent amount.
-  const bountyAccountDotBeforeAliceSend = await getForeignAssetBalance(client, assetLocation, bountyAccount)
-  const aliceDotBeforeSend = await getForeignAssetBalance(client, assetLocation, testAccounts.alice.address)
-  console.log(
-    '[custom DOT lifecycle] Pre-send: bounty account DOT =',
-    bountyAccountDotBeforeAliceSend.toString(),
-    '| alice DOT =',
-    aliceDotBeforeSend.toString(),
-  )
-  const aliceSendTx = (client.api.tx as any).foreignAssets.transfer(assetLocation, bountyAccount, ALICE_DOT_SEND)
-  await sendTransaction(aliceSendTx.signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-  // await logBountyLifecycleEvents(client, 'STEP 2: alice -> bounty account foreignAssets.transfer')
-  console.log('STEP 2: alice -> bounty account foreignAssets.transfer')
-  await logAllEvents(client)
-  const bountyAccountDotAfterAliceSend = await getForeignAssetBalance(client, assetLocation, bountyAccount)
-  const aliceDotAfterSend = await getForeignAssetBalance(client, assetLocation, testAccounts.alice.address)
-  console.log(
-    '[custom DOT lifecycle] Post-send: bounty account DOT =',
-    bountyAccountDotAfterAliceSend.toString(),
-    '| alice DOT =',
-    aliceDotAfterSend.toString(),
-  )
-  expect(bountyAccountDotAfterAliceSend - bountyAccountDotBeforeAliceSend).toBe(ALICE_DOT_SEND)
-  expect(aliceDotBeforeSend - aliceDotAfterSend).toBe(ALICE_DOT_SEND)
-
-  await sendTransaction(client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null).signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-  // await logBountyLifecycleEvents(client, 'STEP 3: checkStatus (FundingAttempted -> Funded)')
-  console.log('STEP 3: checkStatus (FundingAttempted -> Funded)')
-  await logAllEvents(client)
-  const bountyAfterCheck = await getBounty(client, bountyIndex)
-  expect(bountyAfterCheck.status.isFunded).toBe(true)
-  console.log('[custom DOT lifecycle] bounty after checkStatus:', JSON.stringify(bountyAfterCheck, null, 2))
-
-  const bountyStorageKey = client.api.query.multiAssetBounties.bounties.key(bountyIndex)
-  const bountyOptBefore = await client.api.query.multiAssetBounties.bounties(bountyIndex)
-  const bountyHexBefore = (bountyOptBefore as any).toHex().toLowerCase()
-  const customCuratorBytes = CUSTOM_DOT_CURATOR_PUBKEY.toLowerCase().slice(2)
-  const bobCuratorBytes = Buffer.from(testAccounts.bob.publicKey).toString('hex')
-  expect(
-    bountyHexBefore.includes(customCuratorBytes),
-    'Custom curator bytes must appear in encoded bounty before substitution',
-  ).toBe(true)
-  expect(bountyHexBefore.indexOf(customCuratorBytes)).toBe(bountyHexBefore.lastIndexOf(customCuratorBytes))
-  const newBountyHex = `0x${bountyHexBefore.slice(2).replace(customCuratorBytes, bobCuratorBytes)}`
-
-  await client.dev.setStorage([[bountyStorageKey, newBountyHex]])
-  const bountyOptAfter = await client.api.query.multiAssetBounties.bounties(bountyIndex)
-  const bountyHexAfter = (bountyOptAfter as any).toHex().toLowerCase()
-  expect(
-    bountyHexAfter.includes(bobCuratorBytes),
-    'Bob curator bytes must appear in encoded bounty after substitution',
-  ).toBe(true)
-  expect(bountyHexAfter.includes(customCuratorBytes), 'Custom curator bytes must be gone after substitution').toBe(
-    false,
-  )
-  console.log('[custom DOT lifecycle] curator overridden to bob, continuing lifecycle')
-
-  await sendTransaction(client.api.tx.multiAssetBounties.acceptCurator(bountyIndex, null).signAsync(testAccounts.bob))
-  await client.dev.newBlock()
-  // await logBountyLifecycleEvents(client, 'STEP 4: acceptCurator (Funded -> Active, curator deposit locked)')
-  console.log('STEP 4: acceptCurator (Funded -> Active, curator deposit locked)')
-  await logAllEvents(client)
-  const bountyAfterAccept = await getBounty(client, bountyIndex)
-  expect(bountyAfterAccept.status.isActive).toBe(true)
-  console.log('[custom DOT lifecycle] bounty after acceptCurator:', JSON.stringify(bountyAfterAccept, null, 2))
-  const curatorDepositAfterAccept = await getCuratorDeposit(client, bountyIndex)
-  console.log(
-    '[custom DOT lifecycle] curator deposit after acceptCurator:',
-    JSON.stringify(curatorDepositAfterAccept, null, 2),
-  )
-
-  const beneficiaryDotBefore = await getForeignAssetBalance(client, assetLocation, testAccounts.charlie.address)
-  console.log('[custom DOT lifecycle] charlie foreign DOT before award:', beneficiaryDotBefore.toString())
-
-  const beneficiary = createBeneficiary(client.api, testAccounts.charlie)
-  await sendTransaction(
-    client.api.tx.multiAssetBounties.awardBounty(bountyIndex, null, beneficiary).signAsync(testAccounts.bob),
-  )
-  await client.dev.newBlock()
-  // await logBountyLifecycleEvents(client, 'STEP 5: awardBounty (Active -> PayoutAttempted, payout initiated)')
-  console.log('STEP 5: awardBounty (Active -> PayoutAttempted, payout initiated)')
-  await logAllEvents(client)
-  const bountyAfterAward = await getBounty(client, bountyIndex)
-  console.log('[custom DOT lifecycle] bounty after awardBounty:', JSON.stringify(bountyAfterAward, null, 2))
-
-  const finalEvents = await sendTransaction(
-    client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null).signAsync(testAccounts.alice),
-  )
-  await client.dev.newBlock()
-  // await logBountyLifecycleEvents(client, 'STEP 6: checkStatus final (PayoutAttempted -> Paid, bounty removed)')
-  console.log('STEP 6: checkStatus final (PayoutAttempted -> Paid, bounty removed)')
-  await logAllEvents(client)
-
-  await checkEvents(finalEvents, { section: 'multiAssetBounties', method: 'BountyPayoutProcessed' })
-    .redact({ redactKeys: /id/ })
-    .toMatchSnapshot('custom DOT bounty completed events')
-
-  const beneficiaryDotAfter = await getForeignAssetBalance(client, assetLocation, testAccounts.charlie.address)
-  console.log('[custom DOT lifecycle] charlie foreign DOT after payout:', beneficiaryDotAfter.toString())
-  expect(beneficiaryDotAfter - beneficiaryDotBefore).toBe(CUSTOM_DOT_BOUNTY_VALUE)
-
-  // Bounty account should retain Alice's residual transfer (it was outside the bounty's tracked value).
-  const bountyAccountResidual = await getForeignAssetBalance(client, assetLocation, bountyAccount)
-  console.log(
-    '[custom DOT lifecycle] bounty account residual DOT after payout:',
-    bountyAccountResidual.toString(),
-    '(should equal alice send amount =',
-    ALICE_DOT_SEND.toString(),
-    ')',
-  )
-
-  expect(await getBounty(client, bountyIndex)).toBeNull()
-  expect(await getCuratorDeposit(client, bountyIndex)).toBeNull()
-}
-
-/**
- * Test: Submit a referendum on the SmallSpender track for `multiAssetBounties.fundBounty`,
- * place its decision deposit, then verify the same call dispatches successfully when run with
- * `Origins: 'SmallSpender'`.
- *
- * Why bypass the full referendum lifecycle?
- * Chopsticks builds blocks at ~1-10 blk/s, so waiting through SmallSpender's preparation +
- * decision + confirmation periods (multiple days of blocks) is impractical for a CI test.
- * Instead we:
- *   1. Submit the referendum and assert it lands on the small_spender track with the right
- *      proposal — proving the referendum mechanism accepts a `fund_bounty` proposal here.
- *   2. Place the decision deposit so the referendum is "ready to decide".
- *   3. Force-dispatch the same encoded call via the scheduler with `Origins: 'SmallSpender'`,
- *      which is the origin the referendum would use upon enactment — proving `fund_bounty`
- *      succeeds under that origin.
- *
- * Together (1)+(2)+(3) confirm that *if* the referendum passed, the bounty would be created.
- */
-
-/// Bounty `value` in foreign DOT smallest units (10 decimals). Must satisfy:
-///   - converted to native via the asset rate, the value >= `bountyValueMinimum`
-///   - converted to native, the value <= SmallSpender's max spend limit
-const SMALL_SPENDER_BOUNTY_VALUE = 20_000_000_000n // 2 DOT
-/// Curator AccountId pubkey. Any 32-byte hex pubkey works — the test ends after BountyCreated,
-/// so we don't need to control the corresponding private key for this test.
-const SMALL_SPENDER_CURATOR_PUBKEY = '0xe104b438e7893a9f9cbc59e7d057d61a85ed1b88e3a0ebc59733cb89637a5e7c'
-/// UTF-8 text whose blake2 hash becomes the `metadata` argument; the preimage is noted on-chain.
-const SMALL_SPENDER_BOUNTY_PREIMAGE_TEXT = 'SmallSpender referendum-funded DOT bounty'
-
-export async function fundBountyViaSmallSpenderReferendumTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-  await setupTestAccounts(client, ['alice', 'bob', 'charlie'], true)
-
-  const metadata = await createPreimage(client, SMALL_SPENDER_BOUNTY_PREIMAGE_TEXT)
-  // ensureDOTBountySetup registers the asset rate and creates the foreign asset; its returned
-  // `dotBountyValue` is ignored — we use our configurable constant instead.
-  const { assetKind } = await ensureDOTBountySetup(client, chain)
-
-  // Build the fund_bounty call we want to put up for referendum.
-  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
-    assetKind,
-    SMALL_SPENDER_BOUNTY_VALUE,
-    SMALL_SPENDER_CURATOR_PUBKEY,
-    metadata,
-  )
-  const fundBountyEncoded = fundBountyTx.method.toHex()
-  console.log('[smallSpender ref] fund_bounty call (hex):', fundBountyEncoded)
-
-  // Locate the small_spender track on this chain.
-  const referendaTracks = client.api.consts.referenda.tracks
-  const smallSpenderEntry = (referendaTracks as any).find((track: any) =>
-    track[1].name.toString().startsWith('small_spender'),
-  )
-  expect(smallSpenderEntry, 'chain must define a small_spender track').toBeTruthy()
-  const smallSpenderTrackId = smallSpenderEntry[0].toNumber()
-  const smallSpenderTrackInfo = smallSpenderEntry[1]
-  console.log(
-    '[smallSpender ref] small_spender track id:',
-    smallSpenderTrackId,
-    '| decisionDeposit:',
-    smallSpenderTrackInfo.decisionDeposit.toString(),
-  )
-
-  // STEP 1 — submit the referendum on SmallSpender with fund_bounty as the inline proposal.
-  const submissionTx = client.api.tx.referenda.submit(
-    { Origins: 'SmallSpender' } as any,
-    { Inline: fundBountyEncoded },
-    { After: 1 },
-  )
-  const submissionEvents = await sendTransaction(submissionTx.signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  await checkEvents(submissionEvents, 'referenda')
-    .redact({ redactKeys: /index/, removeKeys: /track|when|hash|origin/ })
-    .toMatchSnapshot('SmallSpender fund_bounty referendum submission events')
-
-  // Pull the referendum index from referenda.Submitted.
-  const sysEvents = await client.api.query.system.events()
-  const submittedRecord = (sysEvents as any).find(
-    (rec: any) => rec.event.section === 'referenda' && rec.event.method === 'Submitted',
-  )
-  expect(submittedRecord, 'referenda.Submitted must fire after submit()').toBeTruthy()
-  const referendumIndex = submittedRecord.event.data[0].toNumber()
-  console.log('[smallSpender ref] referendum index:', referendumIndex)
-
-  // Verify the on-chain referendum: ongoing, on the small_spender track, with our fund_bounty proposal.
-  const refOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
-    (await client.api.query.referenda.referendumInfoFor(referendumIndex)) as any
-  expect(refOpt.isSome).toBe(true)
-  const refInfo = refOpt.unwrap()
-  expect(refInfo.isOngoing).toBe(true)
-  const ongoing = refInfo.asOngoing
-  expect(ongoing.track.toNumber()).toBe(smallSpenderTrackId)
-  await check(ongoing.origin).toMatchObject({ origins: 'SmallSpender' })
-  expect(ongoing.proposal.isInline, 'proposal must be Inline').toBe(true)
-  expect(ongoing.proposal.asInline.toHex()).toBe(fundBountyEncoded)
-  expect(ongoing.deciding.isNone, 'no deciding before decision deposit').toBe(true)
-
-  // STEP 2 — place the decision deposit so the referendum is "ready to decide".
-  // setupTestAccounts seeds Bob with 100_000 × ED (~0.33 KSM on AH-Kusama), but the SmallSpender
-  // decision deposit is ~3.33 KSM. Top Bob up so he can lock the deposit.
-  const requiredDeposit = (smallSpenderTrackInfo.decisionDeposit as any).toBigInt()
+async function prepareSuite(client: Client<any, any>) {
+  const endowment = ENDOWMENT_MULTIPLE * bountyMinimum(client)
   await client.dev.setStorage({
     System: {
-      account: [[[testAccounts.bob.address], { providers: 1, data: { free: requiredDeposit * 10n } }]],
+      account: SIGNERS.map((who) => [[who.address], { providers: 1, data: { free: endowment } }]),
     },
   })
-  const bobBalanceBeforeDep = (await client.api.query.system.account(testAccounts.bob.address)) as any
-  console.log(
-    '[smallSpender ref] bob balance before decision deposit: free =',
-    bobBalanceBeforeDep.data.free.toString(),
-    '| required deposit =',
-    requiredDeposit.toString(),
-  )
-
-  const decisionDepTx = client.api.tx.referenda.placeDecisionDeposit(referendumIndex)
-  const decisionDepEvents = await sendTransaction(decisionDepTx.signAsync(testAccounts.bob))
+  await sendTransaction(client.api.tx.preimage.notePreimage(METADATA).signAsync(alice))
   await client.dev.newBlock()
-  await checkEvents(decisionDepEvents, 'referenda')
-    .redact({ redactKeys: /index/, removeKeys: /track|when/ })
-    .toMatchSnapshot('SmallSpender fund_bounty referendum decision deposit events')
-
-  const refOptAfterDep = (await client.api.query.referenda.referendumInfoFor(referendumIndex)) as any
-  expect(refOptAfterDep.unwrap().asOngoing.decisionDeposit.isSome).toBe(true)
-  console.log(
-    '[smallSpender ref] referendum after decision deposit (track=',
-    refOptAfterDep.unwrap().asOngoing.track.toNumber(),
-    ', deposit set =',
-    refOptAfterDep.unwrap().asOngoing.decisionDeposit.isSome,
-    ')',
-  )
-
-  // STEP 3 — force-dispatch the same encoded call with `Origins: 'SmallSpender'` to verify that
-  // fund_bounty succeeds under this origin (i.e. the runtime's SpendOrigin admits SmallSpender for
-  // the supplied value/asset_kind).
-  const initialBountyCount = await getBountyCount(client)
-  console.log('[smallSpender ref] bounty count before forced enact:', initialBountyCount)
-
-  await scheduleInlineCallWithOrigin(
-    client,
-    fundBountyEncoded,
-    { Origins: 'SmallSpender' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  // await client.pause() // pause the test (uncomment to inspect via Polkadot.js Apps)
-
-  const newBountyCount = await getBountyCount(client)
-  console.log('[smallSpender ref] bounty count after forced enact:', newBountyCount)
-  expect(
-    newBountyCount,
-    'fund_bounty must succeed when dispatched with Origins: SmallSpender (governance enactment path)',
-  ).toBe(initialBountyCount + 1)
-
-  // Verify BountyCreated for the new bounty.
-  await checkSystemEvents(client, { section: 'multiAssetBounties', method: 'BountyCreated' })
-    .redact({ redactKeys: /index/ })
-    .toMatchSnapshot('SmallSpender enacted fund_bounty BountyCreated events')
-
-  const enactedBountyIndex = newBountyCount - 1
-  const enactedBounty = await getBounty(client, enactedBountyIndex)
-  expect(enactedBounty).toBeTruthy()
-  expect(enactedBounty.value.toBigInt()).toBe(SMALL_SPENDER_BOUNTY_VALUE)
-  expect(enactedBounty.metadata.toHex()).toBe(metadata)
-  expect(enactedBounty.status.isFundingAttempted).toBe(true)
-  console.log('[smallSpender ref] enacted bounty:', JSON.stringify(enactedBounty, null, 2))
+  await expectNoExtrinsicFailure(client)
 }
 
 /// -------
-/// Base Test Tree Builder
+/// Funding
 /// -------
 
 /**
- * Creates the complete test tree for Multi-Asset Bounties
+ * Funding a bounty moves its value from the treasury pot to the bounty's own account at once.
  *
- * WHY THIS STRUCTURE?
- * Following the same pattern as bounties.ts:
- * - Groups tests by asset type (Native, USDT)
- * - Each group tests the full lifecycle
- * - Enables easy addition of new asset types
+ * `LocalPay` pays synchronously, so the transfer happens inside `fund_bounty`. The bounty then
+ * waits in `FundingAttempted` only until a `check_status` call confirms the payment.
+ *
+ * 1. Fund a bounty as `Treasurer`, proposing alice as curator
+ * 2. Verify the call dispatched, and `Paid` and `BountyCreated` name the new bounty
+ * 3. Verify the treasury lost exactly the value and the bounty account gained it
+ * 4. Verify the bounty is stored as `FundingAttempted`, with the curator and the payment id
+ * 5. Verify the metadata preimage is now requested, so it cannot be removed while the bounty lives
  */
-async function logPalletInfo(chain: Chain<any, any>, _testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+async function fundBountyMovesFunds(client: Client<any, any>, asset: BountyAsset) {
+  const value = await parentValue(client, asset)
+  const index = await nextBountyIndex(client)
+  const treasuryBefore = await balanceOf(client, asset, treasuryPot(client))
+  const accountBefore = await balanceOf(client, asset, bountyAccount(client, index))
+  expect(treasuryBefore).toBeGreaterThan(value)
 
-  const api = client.api as ApiPromise
+  // 1. Fund as Treasurer
+  const call = bountiesTx(client).fundBounty(assetKind(asset), value, alice.address, METADATA_HASH)
+  const result = await dispatchAs(client, call, TREASURER)
 
-  const header = await api.rpc.chain.getHeader()
-  const blockNumber = header.number.toNumber()
-  const blockHash = header.hash.toHex()
-  console.log(`\n====== Chain info ======`)
-  console.log(`  Block number: ${blockNumber}`)
-  console.log(`  Block hash:   ${blockHash}`)
-  console.log(`  Chain:        ${(await api.rpc.system.chain()).toString()}`)
-  console.log(
-    `  Runtime version: ${api.runtimeVersion.specName.toString()} v${api.runtimeVersion.specVersion.toNumber()}`,
-  )
-  console.log(`====== end chain info ======\n`)
+  // 2. Dispatched, with Paid and BountyCreated
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot(`fund bounty in ${asset.symbol}: events`)
+  expectDispatchOk(result)
+  const paid = await bountyEvent(client, 'Paid', index)
+  expect(paid.data.childIndex.isNone).toBe(true)
+  expect(paid.data.paymentId.toBigInt()).toBe(LOCAL_PAY_ID)
+  await bountyEvent(client, 'BountyCreated', index)
 
-  console.log('\n====== multiAssetBounties pallet introspection ======\n')
+  // 3. Funds moved from the treasury to the bounty account
+  expect(await balanceOf(client, asset, treasuryPot(client))).toBe(treasuryBefore - value)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(accountBefore + value)
 
-  // Constants
-  const palletConsts = (api.consts as any).multiAssetBounties
-  if (palletConsts) {
-    console.log('--- Constants ---')
-    for (const key of Object.keys(palletConsts)) {
-      try {
-        const val = palletConsts[key]
-        console.log(`  ${key}:`, val?.toString?.() ?? val)
-      } catch (e: any) {
-        console.log(`  ${key}: <error reading: ${e.message}>`)
-      }
-    }
-  } else {
-    console.log('WARNING: api.consts.multiAssetBounties is UNDEFINED')
-    console.log('Available pallet constants:', Object.keys(api.consts as any))
-  }
+  // 4. Stored as FundingAttempted
+  const bounty = await getBounty(client, index)
+  expect(bounty.value.toBigInt()).toBe(value)
+  expect(bounty.metadata.toHex()).toBe(METADATA_HASH)
+  assert(bounty.status.isFundingAttempted)
+  const { curator, paymentStatus } = bounty.status.asFundingAttempted
+  expect(curator.toString()).toBe(addressOf(client, alice))
+  assert(paymentStatus.isAttempted)
+  expect(paymentStatus.asAttempted.id.toBigInt()).toBe(LOCAL_PAY_ID)
+  expect(await nextBountyIndex(client)).toBe(index + 1)
 
-  // Extrinsics (tx)
-  const palletTx = (api.tx as any).multiAssetBounties
-  if (palletTx) {
-    console.log('\n--- Extrinsics (tx) ---')
-    for (const key of Object.keys(palletTx)) {
-      if (typeof palletTx[key] === 'function') {
-        console.log(`  ${key}()`)
-      }
-    }
-  } else {
-    console.log('WARNING: api.tx.multiAssetBounties is UNDEFINED')
-    console.log('Available pallet tx:', Object.keys(api.tx as any))
-  }
-
-  // Storage
-  const palletQuery = (api.query as any).multiAssetBounties
-  if (palletQuery) {
-    console.log('\n--- Storage queries ---')
-    for (const key of Object.keys(palletQuery)) {
-      if (typeof palletQuery[key] === 'function') {
-        console.log(`  ${key}`)
-      }
-    }
-  } else {
-    console.log('WARNING: api.query.multiAssetBounties is UNDEFINED')
-    console.log('Available pallet queries:', Object.keys(api.query as any))
-  }
-
-  console.log('\n====== end pallet introspection ======\n')
+  // 5. Metadata preimage requested
+  const request = await client.api.query.preimage.requestStatusFor(METADATA_HASH)
+  expect(request.unwrap().isRequested).toBe(true)
 }
 
-export function baseMultiAssetBountiesE2ETests<
+/**
+ * The `SmallTipper` track may fund a bounty worth exactly its spend limit, measured in native
+ * value after conversion.
+ *
+ * 1. Fund a bounty worth the track's limit as `SmallTipper`
+ * 2. Verify the call dispatched and created the bounty with that value
+ */
+async function fundAtSmallTipperLimit(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const rate = await rateOf(client, asset)
+  const value = (testConfig.smallTipperLimit * RATE_ONE) / rate
+  expect(toNative(value, rate)).toBe(testConfig.smallTipperLimit)
+  const index = await nextBountyIndex(client)
+
+  // 1. Fund at the limit as SmallTipper
+  const call = bountiesTx(client).fundBounty(assetKind(asset), value, alice.address, METADATA_HASH)
+  const result = await dispatchAs(client, call, SMALL_TIPPER)
+
+  // 2. Bounty created
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund at SmallTipper limit: events')
+  expectDispatchOk(result)
+  await bountyEvent(client, 'BountyCreated', index)
+  expect((await getBounty(client, index)).value.toBigInt()).toBe(value)
+}
+
+/**
+ * One unit above the `SmallTipper` limit, the track may not fund the bounty.
+ *
+ * 1. Fund a bounty worth one unit more than the track's limit as `SmallTipper`
+ * 2. Verify the call failed with `InsufficientPermission`
+ * 3. Verify no bounty was created and the treasury kept its funds
+ */
+async function fundAboveSmallTipperLimitFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const rate = await rateOf(client, asset)
+  const value = (testConfig.smallTipperLimit * RATE_ONE) / rate + 1n
+  expect(toNative(value, rate)).toBeGreaterThan(testConfig.smallTipperLimit)
+  const index = await nextBountyIndex(client)
+  const treasuryBefore = await balanceOf(client, asset, treasuryPot(client))
+
+  // 1. Fund above the limit as SmallTipper
+  const call = bountiesTx(client).fundBounty(assetKind(asset), value, alice.address, METADATA_HASH)
+  const result = await dispatchAs(client, call, SMALL_TIPPER)
+
+  // 2. InsufficientPermission
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund above SmallTipper limit: events')
+  assert(result.isErr)
+  expectBountyError(client, result.asErr, 'InsufficientPermission')
+
+  // 3. Nothing created or moved
+  expect(await nextBountyIndex(client)).toBe(index)
+  expect(await balanceOf(client, asset, treasuryPot(client))).toBe(treasuryBefore)
+}
+
+/**
+ * A spend limit caps the total funded within one dispatch, not each call: two bounties that each
+ * fit the `SmallTipper` limit cannot be funded together in one batch when their sum does not.
+ *
+ * 1. Note a batch of two such fundings as a preimage, since it is too long to schedule inline
+ * 2. Dispatch the batch as `SmallTipper`
+ * 3. Verify the batch failed with `InsufficientPermission`, and neither bounty was created
+ */
+async function batchedFundsShareSmallTipperLimit(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const rate = await rateOf(client, asset)
+  const limit = testConfig.smallTipperLimit
+  const value = fromNative((limit * 3n) / 5n, rate)
+  expect(toNative(value, rate)).toBeLessThanOrEqual(limit)
+  expect(2n * toNative(value, rate)).toBeGreaterThan(limit)
+  const index = await nextBountyIndex(client)
+
+  const fund = (curator: KeyringPair) =>
+    bountiesTx(client).fundBounty(assetKind(asset), value, curator.address, METADATA_HASH)
+  const batch = client.api.tx.utility.batchAll([fund(alice), fund(charlie)])
+  const encoded = batch.method.toHex()
+
+  // 1. Note the batch
+  await sendTransaction(client.api.tx.preimage.notePreimage(encoded).signAsync(dave))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+
+  // 2. Dispatch it as SmallTipper
+  const provider = client.config.properties.schedulerBlockProvider
+  const when = await nextSchedulableBlockNum(client.api, provider)
+  await scheduleLookupCallWithOrigin(
+    client,
+    { hash: blake2AsHex(encoded, 256), len: batch.method.encodedLength },
+    SMALL_TIPPER,
+    provider,
+  )
+  await client.dev.newBlock()
+  const result = await dispatchResultAt(client, when)
+
+  // 3. InsufficientPermission, nothing created
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('batched funds over SmallTipper limit: events')
+  assert(result.isErr)
+  expectBountyError(client, result.asErr, 'InsufficientPermission')
+  expect(await nextBountyIndex(client)).toBe(index)
+}
+
+/**
+ * Only the treasury's spend origin may fund a bounty. A signed account is refused, however much
+ * it holds.
+ *
+ * 1. Fund a bounty from alice's signed origin
+ * 2. Verify the extrinsic failed with `BadOrigin`
+ */
+async function fundAsSignedFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+
+  // 1. Fund as a signed account
+  const call = bountiesTx(client).fundBounty(assetKind(asset), value, alice.address, METADATA_HASH)
+  await sendTransaction(call.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. BadOrigin
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund as signed: events')
+  expect((await extrinsicError(client)).isBadOrigin).toBe(true)
+}
+
+/**
+ * A bounty must be worth at least `BountyValueMinimum` in native value.
+ *
+ * 1. Fund a bounty one unit below the minimum as `Treasurer`
+ * 2. Verify the call failed with `InvalidValue`
+ */
+async function fundBelowMinimumFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const rate = await rateOf(client, asset)
+  const value = fromNative(bountyMinimum(client), rate) - 1n
+  expect(toNative(value, rate)).toBeLessThan(bountyMinimum(client))
+
+  // 1. Fund below the minimum
+  const call = bountiesTx(client).fundBounty(assetKind(asset), value, alice.address, METADATA_HASH)
+  const result = await dispatchAs(client, call, TREASURER)
+
+  // 2. InvalidValue
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund below minimum: events')
+  assert(result.isErr)
+  expectBountyError(client, result.asErr, 'InvalidValue')
+}
+
+/**
+ * A bounty's metadata hash must have a noted preimage, so its description can always be read.
+ *
+ * 1. Fund a bounty whose metadata hash has no preimage as `Treasurer`
+ * 2. Verify the call failed with `PreimageNotExist`
+ */
+async function fundWithUnnotedMetadataFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const unnoted = blake2AsHex(stringToHex('a description nobody noted'), 256)
+  expect((await client.api.query.preimage.requestStatusFor(unnoted)).isNone).toBe(true)
+
+  // 1. Fund with an unnoted hash
+  const call = bountiesTx(client).fundBounty(assetKind(asset), value, alice.address, unnoted)
+  const result = await dispatchAs(client, call, TREASURER)
+
+  // 2. PreimageNotExist
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund with unnoted metadata: events')
+  assert(result.isErr)
+  expectBountyError(client, result.asErr, 'PreimageNotExist')
+}
+
+/**
+ * Spend limits and the value minimum are native amounts, so an asset that `AssetRate` cannot price
+ * cannot fund a bounty.
+ *
+ * 1. Fund a bounty in an asset with no rate as `Treasurer`
+ * 2. Verify the call failed with `FailedToConvertBalance`
+ */
+async function fundInUnratedAssetFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const kind = assetKind(testConfig.unratedAsset)
+  expect(((await client.api.query.assetRate.conversionRateToNative(kind as any)) as any).isNone).toBe(true)
+
+  // 1. Fund in the unrated asset
+  const value = PARENT_VALUE_MULTIPLE * bountyMinimum(client)
+  const call = bountiesTx(client).fundBounty(kind, value, alice.address, METADATA_HASH)
+  const result = await dispatchAs(client, call, TREASURER)
+
+  // 2. FailedToConvertBalance
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund in unrated asset: events')
+  assert(result.isErr)
+  expectBountyError(client, result.asErr, 'FailedToConvertBalance')
+}
+
+/**
+ * The treasury pays a bounty at once, so it cannot fund one worth more than it holds. Root has no
+ * spend limit, which leaves the payment as the only check.
+ *
+ * 1. Fund a bounty worth one unit more than the treasury holds, as Root
+ * 2. Verify the call failed with `FundingError`
+ * 3. Verify the treasury kept its funds and no bounty was created
+ */
+async function fundBeyondTreasuryFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const treasuryBefore = await balanceOf(client, asset, treasuryPot(client))
+  const value = treasuryBefore + 1n
+  const index = await nextBountyIndex(client)
+
+  // 1. Fund more than the treasury holds
+  const call = bountiesTx(client).fundBounty(assetKind(asset), value, alice.address, METADATA_HASH)
+  const result = await dispatchAs(client, call, ROOT)
+
+  // 2. FundingError
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund beyond treasury: events')
+  assert(result.isErr)
+  expectBountyError(client, result.asErr, 'FundingError')
+
+  // 3. Nothing moved or created
+  expect(await balanceOf(client, asset, treasuryPot(client))).toBe(treasuryBefore)
+  expect(await nextBountyIndex(client)).toBe(index)
+}
+
+/// -------
+/// Payment status
+/// -------
+
+/**
+ * Anyone may confirm a funding payment. Once confirmed, the bounty is `Funded`, waiting for its
+ * proposed curator to accept.
+ *
+ * 1. Fund a bounty as `Treasurer`, proposing alice
+ * 2. Confirm the funding as dave, who has no role in the bounty
+ * 3. Verify `BountyFundingProcessed`, and that the bounty is `Funded` with alice proposed
+ */
+async function checkStatusAfterFunding(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Fund
+  const index = await fundBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Confirm as dave
+  await sendTransaction(bountiesTx(client).checkStatus(index, null).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 3. Funded
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('check status after funding: events')
+  await expectNoExtrinsicFailure(client)
+  const processed = await bountyEvent(client, 'BountyFundingProcessed', index)
+  expect(processed.data.childIndex.isNone).toBe(true)
+  const { status } = await getBounty(client, index)
+  assert(status.isFunded)
+  expect(status.asFunded.curator.toString()).toBe(addressOf(client, alice))
+}
+
+/**
+ * `check_status` only settles a pending payment. A `Funded` bounty has none.
+ *
+ * 1. Fund a bounty and confirm the funding
+ * 2. Call `check_status` on it again
+ * 3. Verify the extrinsic failed with `UnexpectedStatus`
+ */
+async function checkStatusOnFundedFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Funded bounty
+  const index = await fundedBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Check again
+  await sendTransaction(bountiesTx(client).checkStatus(index, null).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 3. UnexpectedStatus
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('check status on funded bounty: events')
+  expectBountyError(client, await extrinsicError(client), 'UnexpectedStatus')
+}
+
+/**
+ * `retry_payment` resends only a payment that failed. A `LocalPay` payment never fails, so a retry
+ * is refused rather than paying twice.
+ *
+ * 1. Fund a bounty, leaving its funding payment attempted
+ * 2. Retry the payment as dave
+ * 3. Verify the extrinsic failed with `UnexpectedStatus`
+ * 4. Verify the treasury paid nothing more and the bounty is still `FundingAttempted`
+ */
+async function retryAttemptedPaymentFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Fund
+  const index = await fundBounty(client, asset, await parentValue(client, asset), alice)
+  const treasuryBefore = await balanceOf(client, asset, treasuryPot(client))
+
+  // 2. Retry
+  await sendTransaction(bountiesTx(client).retryPayment(index, null).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 3. UnexpectedStatus
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('retry attempted payment: events')
+  expectBountyError(client, await extrinsicError(client), 'UnexpectedStatus')
+
+  // 4. Nothing paid twice
+  expect(await balanceOf(client, asset, treasuryPot(client))).toBe(treasuryBefore)
+  expect((await getBounty(client, index)).status.isFundingAttempted).toBe(true)
+}
+
+/**
+ * `check_status` on an index no bounty has is refused.
+ *
+ * 1. Call `check_status` on the next unused bounty index
+ * 2. Verify the extrinsic failed with `InvalidIndex`
+ */
+async function checkStatusOnUnknownBountyFails(client: Client<any, any>) {
+  const index = await nextBountyIndex(client)
+
+  // 1. Check an unused index
+  await sendTransaction(bountiesTx(client).checkStatus(index, null).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 2. InvalidIndex
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('check status on unknown bounty: events')
+  expectBountyError(client, await extrinsicError(client), 'InvalidIndex')
+}
+
+/// -------
+/// Curator
+/// -------
+
+/**
+ * Accepting the curator role puts a deposit on hold: a share of the bounty's native value, between
+ * a floor and a cap. It is the stake a curator loses if governance removes them.
+ *
+ * 1. Fund a bounty proposing alice, and settle the funding
+ * 2. Accept as alice
+ * 3. Verify `BountyBecameActive`, and `balances.Held` from alice for the deposit the formula gives
+ * 4. Verify alice's hold and the bounty's recorded deposit both equal that deposit
+ * 5. Verify the bounty is `Active` with alice as curator
+ */
+async function acceptCuratorHoldsDeposit(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const deposit = curatorDepositFor(testConfig, toNative(value, await rateOf(client, asset)))
+  expect(deposit).toBeGreaterThan(testConfig.curatorDeposit.min)
+  expect(deposit).toBeLessThan(testConfig.curatorDeposit.max)
+
+  // 1. Funded bounty
+  const index = await fundedBounty(client, asset, value, alice)
+  const holdBefore = await curatorHold(client, alice)
+
+  // 2. Accept
+  await sendTransaction(bountiesTx(client).acceptCurator(index, null).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. BountyBecameActive and Held
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('accept curator: events')
+  await expectNoExtrinsicFailure(client)
+  const active = await bountyEvent(client, 'BountyBecameActive', index)
+  expect(active.data.childIndex.isNone).toBe(true)
+  expect(active.data.curator.toString()).toBe(addressOf(client, alice))
+  expect((await balancesEvent(client, 'Held', alice)).data.amount.toBigInt()).toBe(deposit)
+
+  // 4. Deposit held and recorded
+  expect(await curatorHold(client, alice)).toBe(holdBefore + deposit)
+  expect((await bountiesQuery(client).curatorDeposit(index, null)).unwrap().toBigInt()).toBe(deposit)
+
+  // 5. Active
+  const { status } = await getBounty(client, index)
+  assert(status.isActive)
+  expect(status.asActive.curator.toString()).toBe(addressOf(client, alice))
+}
+
+/**
+ * However large the bounty, the curator deposit stops at its cap.
+ *
+ * 1. Fund a bounty worth twice the value at which the deposit reaches its cap, and settle it
+ * 2. Accept as alice
+ * 3. Verify the deposit held is exactly the cap
+ */
+async function curatorDepositCappedAtMax(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const { multiplier, max } = testConfig.curatorDeposit
+  const rate = await rateOf(client, asset)
+  const value = fromNative((2n * max * PERMILL_ONE) / multiplier, rate)
+  expect((toNative(value, rate) * multiplier) / PERMILL_ONE).toBeGreaterThan(max)
+
+  // 1. Funded bounty above the cap
+  const index = await fundedBounty(client, asset, value, alice)
+  const holdBefore = await curatorHold(client, alice)
+
+  // 2. Accept
+  await sendTransaction(bountiesTx(client).acceptCurator(index, null).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. Capped deposit
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('accept curator above deposit cap: events')
+  await expectNoExtrinsicFailure(client)
+  expect(await curatorHold(client, alice)).toBe(holdBefore + max)
+  expect((await bountiesQuery(client).curatorDeposit(index, null)).unwrap().toBigInt()).toBe(max)
+}
+
+/**
+ * Only the proposed curator may accept the role.
+ *
+ * 1. Fund a bounty proposing alice, and settle the funding
+ * 2. Accept as charlie
+ * 3. Verify the extrinsic failed with `RequireCurator`, and the bounty is still `Funded`
+ */
+async function acceptByOtherAccountFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Funded bounty
+  const index = await fundedBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Accept as charlie
+  await sendTransaction(bountiesTx(client).acceptCurator(index, null).signAsync(charlie))
+  await client.dev.newBlock()
+
+  // 3. RequireCurator
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('accept by other account: events')
+  expectBountyError(client, await extrinsicError(client), 'RequireCurator')
+  expect((await getBounty(client, index)).status.isFunded).toBe(true)
+}
+
+/**
+ * A curator who cannot put the deposit on hold cannot accept, so no bounty is curated without
+ * stake.
+ *
+ * 1. Fund a bounty proposing eve, and settle the funding
+ * 2. Give eve half the deposit, enough for fees but not for the hold
+ * 3. Accept as eve
+ * 4. Verify the extrinsic failed with `FundsUnavailable`, and the bounty is still `Funded` with no
+ *    deposit recorded
+ */
+async function acceptWithoutDepositFundsFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const deposit = curatorDepositFor(testConfig, toNative(value, await rateOf(client, asset)))
+
+  // 1. Funded bounty
+  const index = await fundedBounty(client, asset, value, eve)
+
+  // 2. Half the deposit
+  await client.dev.setStorage({
+    System: { account: [[[eve.address], { providers: 1, data: { free: deposit / 2n } }]] },
+  })
+
+  // 3. Accept
+  await sendTransaction(bountiesTx(client).acceptCurator(index, null).signAsync(eve))
+  await client.dev.newBlock()
+
+  // 4. FundsUnavailable, nothing held
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('accept without funds for deposit: events')
+  const error = await extrinsicError(client)
+  assert(error.isToken, `expected a token error, got ${JSON.stringify(error.toHuman())}`)
+  expect(error.asToken.isFundsUnavailable).toBe(true)
+  expect((await getBounty(client, index)).status.isFunded).toBe(true)
+  expect((await bountiesQuery(client).curatorDeposit(index, null)).isNone).toBe(true)
+  expect(await curatorHold(client, eve)).toBe(0n)
+}
+
+/**
+ * A curator may step down, and gets their deposit back.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Unassign as alice
+ * 3. Verify `CuratorUnassigned`, and `balances.Released` returning alice's deposit
+ * 4. Verify alice's hold dropped by the deposit, no deposit is recorded, and the bounty is
+ *    `CuratorUnassigned`
+ */
+async function curatorUnassignsSelf(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+  const deposit = (await bountiesQuery(client).curatorDeposit(index, null)).unwrap().toBigInt()
+  const holdBefore = await curatorHold(client, alice)
+
+  // 2. Unassign as alice
+  await sendTransaction(bountiesTx(client).unassignCurator(index, null).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. CuratorUnassigned and Released
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('curator unassigns self: events')
+  await expectNoExtrinsicFailure(client)
+  await bountyEvent(client, 'CuratorUnassigned', index)
+  expect((await balancesEvent(client, 'Released', alice)).data.amount.toBigInt()).toBe(deposit)
+
+  // 4. Deposit returned
+  expect(await curatorHold(client, alice)).toBe(holdBefore - deposit)
+  expect((await bountiesQuery(client).curatorDeposit(index, null)).isNone).toBe(true)
+  expect((await getBounty(client, index)).status.isCuratorUnassigned).toBe(true)
+}
+
+/**
+ * The reject origin may remove an active curator, and the curator's deposit is burned: it leaves
+ * total issuance rather than going to the curator or the treasury.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Unassign alice as `Treasurer`
+ * 3. Verify `CuratorUnassigned`, and `balances.BurnedHeld` for alice's deposit
+ * 4. Verify alice's hold dropped by the deposit while alice's free balance did not change
+ * 5. Verify total issuance fell by the deposit
+ */
+async function treasurerUnassignsCuratorBurnsDeposit(
+  client: Client<any, any>,
+  testConfig: MultiAssetBountiesTestConfig,
+) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+  const deposit = (await bountiesQuery(client).curatorDeposit(index, null)).unwrap().toBigInt()
+  const holdBefore = await curatorHold(client, alice)
+  const freeBefore = (await client.api.query.system.account(alice.address)).data.free.toBigInt()
+  const issuanceBefore = (await client.api.query.balances.totalIssuance()).toBigInt()
+
+  // 2. Unassign as Treasurer
+  const result = await dispatchAs(client, bountiesTx(client).unassignCurator(index, null), TREASURER)
+
+  // 3. CuratorUnassigned and BurnedHeld
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('treasurer unassigns curator: events')
+  expectDispatchOk(result)
+  await bountyEvent(client, 'CuratorUnassigned', index)
+  expect((await balancesEvent(client, 'BurnedHeld', alice)).data.amount.toBigInt()).toBe(deposit)
+
+  // 4. Hold gone, nothing returned to alice
+  expect(await curatorHold(client, alice)).toBe(holdBefore - deposit)
+  expect((await client.api.query.system.account(alice.address)).data.free.toBigInt()).toBe(freeBefore)
+
+  // 5. Issuance fell by the deposit. Treasury inflation, which some Asset Hubs mint
+  // periodically, can land in the same block; it is unrelated to the burn, so it is added back.
+  const minted = await mintedInLatestBlock(client)
+  expect((await client.api.query.balances.totalIssuance()).toBigInt()).toBe(issuanceBefore - deposit + minted)
+}
+
+/**
+ * Spender tracks may fund bounties, but only the reject origin may remove a curator.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Unassign alice as `SmallTipper`
+ * 3. Verify the call failed with `BadOrigin`, and alice is still the active curator with her
+ *    deposit held
+ */
+async function smallTipperUnassignFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+  const holdBefore = await curatorHold(client, alice)
+
+  // 2. Unassign as SmallTipper
+  const result = await dispatchAs(client, bountiesTx(client).unassignCurator(index, null), SMALL_TIPPER)
+
+  // 3. BadOrigin
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('small tipper unassigns curator: events')
+  assert(result.isErr)
+  expect(result.asErr.isBadOrigin).toBe(true)
+  expect((await getBounty(client, index)).status.isActive).toBe(true)
+  expect(await curatorHold(client, alice)).toBe(holdBefore)
+}
+
+/**
+ * A proposed curator may decline before accepting. No deposit was taken, so none moves.
+ *
+ * 1. Fund a bounty proposing alice, and settle the funding
+ * 2. Unassign as alice
+ * 3. Verify `CuratorUnassigned`, no balance hold event, and the bounty is `CuratorUnassigned`
+ */
+async function proposedCuratorUnassignsBeforeAccepting(
+  client: Client<any, any>,
+  testConfig: MultiAssetBountiesTestConfig,
+) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Funded bounty
+  const index = await fundedBounty(client, asset, await parentValue(client, asset), alice)
+  const holdBefore = await curatorHold(client, alice)
+
+  // 2. Unassign as alice
+  await sendTransaction(bountiesTx(client).unassignCurator(index, null).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. CuratorUnassigned, no deposit moved
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('proposed curator unassigns: events')
+  await expectNoExtrinsicFailure(client)
+  await bountyEvent(client, 'CuratorUnassigned', index)
+  expect(await curatorHold(client, alice)).toBe(holdBefore)
+  expect((await getBounty(client, index)).status.isCuratorUnassigned).toBe(true)
+}
+
+/**
+ * Once a bounty has no curator, a spender track within its limit may propose a new one, who can
+ * then accept as usual.
+ *
+ * 1. Fund a bounty proposing alice, settle it, and have alice step down
+ * 2. Propose charlie as `SmallTipper`
+ * 3. Verify `CuratorProposed` names charlie, and the bounty is `Funded` with charlie proposed
+ * 4. Accept as charlie, and verify the bounty is `Active` with charlie as curator
+ */
+async function proposeCuratorAfterUnassign(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  expect(toNative(value, await rateOf(client, asset))).toBeLessThanOrEqual(testConfig.smallTipperLimit)
+
+  // 1. Bounty without a curator
+  const index = await fundedBounty(client, asset, value, alice)
+  await sendTransaction(bountiesTx(client).unassignCurator(index, null).signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+
+  // 2. Propose charlie as SmallTipper
+  const result = await dispatchAs(client, bountiesTx(client).proposeCurator(index, null, charlie.address), SMALL_TIPPER)
+
+  // 3. CuratorProposed
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('propose curator after unassign: events')
+  expectDispatchOk(result)
+  const proposed = await bountyEvent(client, 'CuratorProposed', index)
+  expect(proposed.data.childIndex.isNone).toBe(true)
+  expect(proposed.data.curator.toString()).toBe(addressOf(client, charlie))
+  const { status } = await getBounty(client, index)
+  assert(status.isFunded)
+  expect(status.asFunded.curator.toString()).toBe(addressOf(client, charlie))
+
+  // 4. Charlie accepts
+  await sendTransaction(bountiesTx(client).acceptCurator(index, null).signAsync(charlie))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  const accepted = await getBounty(client, index)
+  assert(accepted.status.isActive)
+  expect(accepted.status.asActive.curator.toString()).toBe(addressOf(client, charlie))
+}
+
+/**
+ * A signed account may not propose the curator of a parent bounty: that is the spend origin's
+ * decision.
+ *
+ * 1. Fund a bounty proposing alice, settle it, and have alice step down
+ * 2. Propose charlie from dave's signed origin
+ * 3. Verify the extrinsic failed with `BadOrigin`, and the bounty still has no curator
+ */
+async function proposeCuratorAsSignedFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Bounty without a curator
+  const index = await fundedBounty(client, asset, await parentValue(client, asset), alice)
+  await sendTransaction(bountiesTx(client).unassignCurator(index, null).signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+
+  // 2. Propose as dave
+  await sendTransaction(bountiesTx(client).proposeCurator(index, null, charlie.address).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 3. BadOrigin
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('propose curator as signed: events')
+  expect((await extrinsicError(client)).isBadOrigin).toBe(true)
+  expect((await getBounty(client, index)).status.isCuratorUnassigned).toBe(true)
+}
+
+/**
+ * Proposing a curator is a spend decision, so a track may only do it for bounties within its
+ * spend limit.
+ *
+ * 1. Fund a bounty worth twice the `SmallTipper` limit, settle it, and have alice step down
+ * 2. Propose charlie as `SmallTipper`
+ * 3. Verify the call failed with `InsufficientPermission`, and the bounty still has no curator
+ */
+async function proposeCuratorAboveSmallTipperFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = fromNative(2n * testConfig.smallTipperLimit, await rateOf(client, asset))
+
+  // 1. Bounty above the limit, without a curator
+  const index = await fundedBounty(client, asset, value, alice)
+  await sendTransaction(bountiesTx(client).unassignCurator(index, null).signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+
+  // 2. Propose as SmallTipper
+  const result = await dispatchAs(client, bountiesTx(client).proposeCurator(index, null, charlie.address), SMALL_TIPPER)
+
+  // 3. InsufficientPermission
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('propose curator above SmallTipper limit: events')
+  assert(result.isErr)
+  expectBountyError(client, result.asErr, 'InsufficientPermission')
+  expect((await getBounty(client, index)).status.isCuratorUnassigned).toBe(true)
+}
+
+/**
+ * A curator can only be proposed for a bounty that has none. An active curator must be removed
+ * first.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Propose charlie as `Treasurer`
+ * 3. Verify the call failed with `UnexpectedStatus`, and alice is still the curator
+ */
+async function proposeCuratorOnActiveFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Propose as Treasurer
+  const result = await dispatchAs(client, bountiesTx(client).proposeCurator(index, null, charlie.address), TREASURER)
+
+  // 3. UnexpectedStatus
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('propose curator on active bounty: events')
+  assert(result.isErr)
+  expectBountyError(client, result.asErr, 'UnexpectedStatus')
+  const { status } = await getBounty(client, index)
+  assert(status.isActive)
+  expect(status.asActive.curator.toString()).toBe(addressOf(client, alice))
+}
+
+/// -------
+/// Award
+/// -------
+
+/**
+ * The curator pays a bounty out to a beneficiary. The transfer happens in `award_bounty`; a
+ * `check_status` call then confirms it, returns the curator's deposit and removes the bounty.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Award it to bob as alice
+ * 3. Verify `Paid` and `BountyAwarded`, that bob received the whole value, and that the bounty is
+ *    `PayoutAttempted`
+ * 4. Confirm the payout as dave
+ * 5. Verify `BountyPayoutProcessed` with the value paid, and `balances.Released` for alice's deposit
+ * 6. Verify the bounty and its deposit record are gone, alice's hold is released, the metadata
+ *    preimage is no longer requested, and dave paid no fee for the confirmation
+ */
+async function awardAndSettle(client: Client<any, any>, asset: BountyAsset) {
+  const value = await parentValue(client, asset)
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, value, alice)
+  const deposit = (await bountiesQuery(client).curatorDeposit(index, null)).unwrap().toBigInt()
+  const holdBefore = await curatorHold(client, alice)
+  const bobBefore = await balanceOf(client, asset, addressOf(client, bob))
+
+  // 2. Award to bob
+  await sendTransaction(bountiesTx(client).awardBounty(index, null, localBeneficiary(bob)).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. Paid, BountyAwarded, bob paid
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot(`award bounty in ${asset.symbol}: events`)
+  await expectNoExtrinsicFailure(client)
+  const paid = await bountyEvent(client, 'Paid', index)
+  expect(paid.data.paymentId.toBigInt()).toBe(LOCAL_PAY_ID)
+  const awarded = await bountyEvent(client, 'BountyAwarded', index)
+  expect(awarded.data.childIndex.isNone).toBe(true)
+  expectLocalBeneficiary(awarded.data.beneficiary, bob)
+  expect(await balanceOf(client, asset, addressOf(client, bob))).toBe(bobBefore + value)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(0n)
+  expect((await getBounty(client, index)).status.isPayoutAttempted).toBe(true)
+
+  // 4. Confirm as dave
+  const daveBefore = (await client.api.query.system.account(dave.address)).data.free.toBigInt()
+  await sendTransaction(bountiesTx(client).checkStatus(index, null).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 5. BountyPayoutProcessed and Released
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot(`settle payout in ${asset.symbol}: events`)
+  await expectNoExtrinsicFailure(client)
+  const processed = await bountyEvent(client, 'BountyPayoutProcessed', index)
+  expect(processed.data.value.toBigInt()).toBe(value)
+  expectLocalBeneficiary(processed.data.beneficiary, bob)
+  expect((await balancesEvent(client, 'Released', alice)).data.amount.toBigInt()).toBe(deposit)
+
+  // 6. Bounty removed, deposit returned, preimage released, no fee
+  expect((await bountiesQuery(client).bounties(index)).isNone).toBe(true)
+  expect((await bountiesQuery(client).curatorDeposit(index, null)).isNone).toBe(true)
+  expect(await curatorHold(client, alice)).toBe(holdBefore - deposit)
+  expect((await client.api.query.preimage.requestStatusFor(METADATA_HASH)).unwrap().isUnrequested).toBe(true)
+  expect((await client.api.query.system.account(dave.address)).data.free.toBigInt()).toBe(daveBefore)
+}
+
+/**
+ * Only the bounty's curator may award it.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Award it to bob as charlie
+ * 3. Verify the extrinsic failed with `RequireCurator`, and the bounty is still `Active`
+ */
+async function awardByNonCuratorFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Award as charlie
+  await sendTransaction(bountiesTx(client).awardBounty(index, null, localBeneficiary(bob)).signAsync(charlie))
+  await client.dev.newBlock()
+
+  // 3. RequireCurator
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('award by non-curator: events')
+  expectBountyError(client, await extrinsicError(client), 'RequireCurator')
+  expect((await getBounty(client, index)).status.isActive).toBe(true)
+}
+
+/**
+ * `LocalPay` pays only accounts on this chain. A beneficiary located on another chain cannot be
+ * paid, so the award fails and the funds stay in the bounty.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Award it to bob's account on parachain 2000
+ * 3. Verify the extrinsic failed with `PayoutError`, the bounty is still `Active`, and its account
+ *    kept the value
+ */
+async function awardToRemoteBeneficiaryFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, value, alice)
+  const remote = localBeneficiary(bob)
+  remote.V5.location = { parents: 1, interior: { X1: [{ Parachain: 2000 }] } } as any
+
+  // 2. Award to a remote beneficiary
+  await sendTransaction(bountiesTx(client).awardBounty(index, null, remote).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. PayoutError, funds kept
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('award to remote beneficiary: events')
+  expectBountyError(client, await extrinsicError(client), 'PayoutError')
+  expect((await getBounty(client, index)).status.isActive).toBe(true)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(value)
+}
+
+/**
+ * A parent bounty cannot be paid out while one of its child bounties is still open, since the
+ * child's value is set aside from the parent's.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Fund a child bounty from it as alice
+ * 3. Award the parent to bob as alice
+ * 4. Verify the extrinsic failed with `HasActiveChildBounty`
+ */
+async function awardParentWithActiveChildFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Child bounty
+  await fundChildBounty(client, index, await childValue(client, asset), null)
+
+  // 3. Award the parent
+  await sendTransaction(bountiesTx(client).awardBounty(index, null, localBeneficiary(bob)).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 4. HasActiveChildBounty
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('award parent with active child: events')
+  expectBountyError(client, await extrinsicError(client), 'HasActiveChildBounty')
+}
+
+/// -------
+/// Close
+/// -------
+
+/**
+ * The reject origin may cancel a bounty, and its value returns to the treasury. As with every
+ * payment, the refund happens in `close_bounty`, and a `check_status` call removes the bounty.
+ *
+ * 1. Fund a bounty proposing alice, and settle the funding
+ * 2. Close it as `Treasurer`
+ * 3. Verify `BountyCanceled` and `Paid`, that the treasury got the whole value back, and that the
+ *    bounty is `RefundAttempted`
+ * 4. Confirm the refund as dave
+ * 5. Verify `BountyRefundProcessed`, that the bounty is gone, and that its metadata preimage is no
+ *    longer requested
+ */
+async function treasurerClosesFundedBounty(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+
+  // 1. Funded bounty
+  const index = await fundedBounty(client, asset, value, alice)
+  const treasuryBefore = await balanceOf(client, asset, treasuryPot(client))
+
+  // 2. Close as Treasurer
+  const result = await dispatchAs(client, bountiesTx(client).closeBounty(index, null), TREASURER)
+
+  // 3. BountyCanceled, Paid, refunded
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('treasurer closes funded bounty: events')
+  expectDispatchOk(result)
+  const canceled = await bountyEvent(client, 'BountyCanceled', index)
+  expect(canceled.data.childIndex.isNone).toBe(true)
+  expect((await bountyEvent(client, 'Paid', index)).data.paymentId.toBigInt()).toBe(LOCAL_PAY_ID)
+  expect(await balanceOf(client, asset, treasuryPot(client))).toBe(treasuryBefore + value)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(0n)
+  expect((await getBounty(client, index)).status.isRefundAttempted).toBe(true)
+
+  // 4. Confirm as dave
+  await sendTransaction(bountiesTx(client).checkStatus(index, null).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 5. BountyRefundProcessed, bounty removed
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('settle refund of funded bounty: events')
+  await expectNoExtrinsicFailure(client)
+  await bountyEvent(client, 'BountyRefundProcessed', index)
+  expect((await bountiesQuery(client).bounties(index)).isNone).toBe(true)
+  expect((await client.api.query.preimage.requestStatusFor(METADATA_HASH)).unwrap().isUnrequested).toBe(true)
+}
+
+/**
+ * A curator may cancel their own bounty. Unlike removal by governance, this returns the curator's
+ * deposit once the refund is confirmed.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Close it as alice
+ * 3. Verify `BountyCanceled`, and that the bounty account was emptied
+ * 4. Confirm the refund as dave
+ * 5. Verify `BountyRefundProcessed` and `balances.Released` for alice's whole deposit, with nothing
+ *    burned
+ */
+async function curatorClosesOwnBounty(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+  const deposit = (await bountiesQuery(client).curatorDeposit(index, null)).unwrap().toBigInt()
+  const holdBefore = await curatorHold(client, alice)
+
+  // 2. Close as alice
+  await sendTransaction(bountiesTx(client).closeBounty(index, null).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. BountyCanceled, account emptied
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('curator closes own bounty: events')
+  await expectNoExtrinsicFailure(client)
+  await bountyEvent(client, 'BountyCanceled', index)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(0n)
+
+  // 4. Confirm as dave
+  await sendTransaction(bountiesTx(client).checkStatus(index, null).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 5. Deposit released, not burned
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('settle refund of curator-closed bounty: events')
+  await expectNoExtrinsicFailure(client)
+  await bountyEvent(client, 'BountyRefundProcessed', index)
+  expect((await balancesEvent(client, 'Released', alice)).data.amount.toBigInt()).toBe(deposit)
+  const burned = (await client.api.query.system.events()).filter(({ event }) =>
+    (client.api.events as any).balances.BurnedHeld.is(event),
+  )
+  expect(burned).toHaveLength(0)
+  expect(await curatorHold(client, alice)).toBe(holdBefore - deposit)
+}
+
+/**
+ * Spender tracks may fund bounties, but only the reject origin or the curator may close one.
+ *
+ * 1. Fund a bounty proposing alice, and settle the funding
+ * 2. Close it as `SmallTipper`
+ * 3. Verify the call failed with `BadOrigin`, and the bounty is still `Funded`
+ */
+async function smallTipperCloseFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Funded bounty
+  const index = await fundedBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Close as SmallTipper
+  const result = await dispatchAs(client, bountiesTx(client).closeBounty(index, null), SMALL_TIPPER)
+
+  // 3. BadOrigin
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('small tipper closes bounty: events')
+  assert(result.isErr)
+  expect(result.asErr.isBadOrigin).toBe(true)
+  expect((await getBounty(client, index)).status.isFunded).toBe(true)
+}
+
+/**
+ * A parent bounty cannot be closed while one of its child bounties is still open.
+ *
+ * 1. Make alice the active curator of a bounty, and fund a child bounty from it
+ * 2. Close the parent as `Treasurer`
+ * 3. Verify the call failed with `HasActiveChildBounty`
+ */
+async function closeParentWithActiveChildFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active parent with a child
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+  await fundChildBounty(client, index, await childValue(client, asset), null)
+
+  // 2. Close the parent
+  const result = await dispatchAs(client, bountiesTx(client).closeBounty(index, null), TREASURER)
+
+  // 3. HasActiveChildBounty
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('close parent with active child: events')
+  assert(result.isErr)
+  expectBountyError(client, result.asErr, 'HasActiveChildBounty')
+}
+
+/**
+ * After a child bounty is paid out, the parent's account holds only the parent's value minus the
+ * child's. Closing the parent should refund that remainder to the treasury.
+ *
+ * Earlier versions of the pallet ask for the parent's full value instead. The account cannot pay
+ * it, so the close fails with `RefundError` and the parent can never be closed.
+ * `parentRefundNetOfChildren` records which behaviour the chain runs. The test asserts that
+ * behaviour, so it fails when a runtime upgrade changes it and the flag needs updating.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. As alice, in one batch: fund a child bounty alice curates, settle it, award it to bob, and
+ *    settle the payout
+ * 3. Verify the parent's account holds the parent's value minus the child's
+ * 4. Close the parent as `Treasurer`
+ * 5. With the net refund, verify the close succeeded and the treasury got the remainder back.
+ *    Without it, verify `RefundError`, and that the parent and its account are unchanged
+ */
+async function closeParentAfterChildPayout(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const cv = await childValue(client, asset)
+
+  // 1. Active parent
+  const index = await activeBounty(client, asset, value, alice)
+  const child = (await bountiesQuery(client).totalChildBountiesPerParent(index)).toNumber()
+
+  // 2. Pay out a child
+  const tx = bountiesTx(client)
+  const payOutChild = client.api.tx.utility.batchAll([
+    tx.fundChildBounty(index, cv, METADATA_HASH, null),
+    tx.checkStatus(index, child),
+    tx.awardBounty(index, child, localBeneficiary(bob)),
+    tx.checkStatus(index, child),
+  ])
+  await sendTransaction(payOutChild.signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  expect((await bountiesQuery(client).childBounties(index, child)).isNone).toBe(true)
+
+  // 3. Parent account holds the remainder
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(value - cv)
+  const treasuryBefore = await balanceOf(client, asset, treasuryPot(client))
+
+  // 4. Close the parent
+  const result = await dispatchAs(client, bountiesTx(client).closeBounty(index, null), TREASURER)
+
+  // 5. Net refund, or RefundError
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('close parent after child payout: events')
+  if (testConfig.parentRefundNetOfChildren) {
+    expectDispatchOk(result)
+    await bountyEvent(client, 'BountyCanceled', index)
+    expect(await balanceOf(client, asset, treasuryPot(client))).toBe(treasuryBefore + value - cv)
+    expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(0n)
+  } else {
+    assert(result.isErr)
+    expectBountyError(client, result.asErr, 'RefundError')
+    expect((await getBounty(client, index)).status.isActive).toBe(true)
+    expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(value - cv)
+    expect(await balanceOf(client, asset, treasuryPot(client))).toBe(treasuryBefore)
+  }
+}
+
+/**
+ * Once a bounty has no curator, only the reject origin may close it: its former curator no
+ * longer can.
+ *
+ * 1. Fund a bounty proposing alice, settle it, and have alice step down
+ * 2. Close it as alice, and verify the extrinsic failed with `BadOrigin`
+ * 3. Close it as `Treasurer`, and verify `BountyCanceled` and a refund recorded with no curator
+ */
+async function closeUnassignedBountyNeedsRejectOrigin(
+  client: Client<any, any>,
+  testConfig: MultiAssetBountiesTestConfig,
+) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Bounty without a curator
+  const index = await fundedBounty(client, asset, await parentValue(client, asset), alice)
+  await sendTransaction(bountiesTx(client).unassignCurator(index, null).signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+
+  // 2. Former curator refused
+  await sendTransaction(bountiesTx(client).closeBounty(index, null).signAsync(alice))
+  await client.dev.newBlock()
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('former curator closes unassigned bounty: events')
+  expect((await extrinsicError(client)).isBadOrigin).toBe(true)
+  expect((await getBounty(client, index)).status.isCuratorUnassigned).toBe(true)
+
+  // 3. Treasurer closes
+  const result = await dispatchAs(client, bountiesTx(client).closeBounty(index, null), TREASURER)
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('treasurer closes unassigned bounty: events')
+  expectDispatchOk(result)
+  await bountyEvent(client, 'BountyCanceled', index)
+  const { status } = await getBounty(client, index)
+  assert(status.isRefundAttempted)
+  expect(status.asRefundAttempted.curator.isNone).toBe(true)
+}
+
+/// -------
+/// Child bounties
+/// -------
+
+/**
+ * The parent's curator may set part of the parent's value aside as a child bounty. The value moves
+ * to the child's own account, and the parent records it so it cannot be paid out twice. A child
+ * curated by the parent's curator needs no acceptance and no deposit.
+ *
+ * 1. Make alice the active curator of a parent bounty
+ * 2. Fund a child bounty from it as alice, naming no curator
+ * 3. Verify `Paid` and `ChildBountyCreated`, that the value moved from the parent's account to the
+ *    child's, and that the parent's child counters and child value went up
+ * 4. Settle the child's funding as dave
+ * 5. Verify `BountyFundingProcessed`, that the child is `Active` with alice as curator, and that no
+ *    `BountyBecameActive` was emitted and no deposit taken
+ */
+async function fundChildWithParentCurator(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const cv = await childValue(client, asset)
+
+  // 1. Active parent
+  const index = await activeBounty(client, asset, value, alice)
+  const holdBefore = await curatorHold(client, alice)
+
+  // 2. Fund a child
+  await sendTransaction(bountiesTx(client).fundChildBounty(index, cv, METADATA_HASH, null).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. Paid, ChildBountyCreated, value set aside
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund child with parent curator: events')
+  await expectNoExtrinsicFailure(client)
+  const created = await bountyEvent(client, 'ChildBountyCreated', index)
+  const child = created.data.childIndex.toNumber()
+  expect((await bountyEvent(client, 'Paid', index)).data.childIndex.unwrap().toNumber()).toBe(child)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(value - cv)
+  expect(await balanceOf(client, asset, bountyAccount(client, index, child))).toBe(cv)
+  const query = bountiesQuery(client)
+  expect((await query.childBountiesValuePerParent(index)).toBigInt()).toBe(cv)
+  expect((await query.childBountiesPerParent(index)).toNumber()).toBe(1)
+  expect((await query.totalChildBountiesPerParent(index)).toNumber()).toBe(child + 1)
+
+  // 4. Settle as dave
+  await sendTransaction(bountiesTx(client).checkStatus(index, child).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 5. Active straight away, no deposit
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('settle child with parent curator: events')
+  await expectNoExtrinsicFailure(client)
+  const processed = await bountyEvent(client, 'BountyFundingProcessed', index)
+  expect(processed.data.childIndex.unwrap().toNumber()).toBe(child)
+  const { status } = (await query.childBounties(index, child)).unwrap()
+  assert(status.isActive)
+  expect(status.asActive.curator.toString()).toBe(addressOf(client, alice))
+  const becameActive = (await client.api.query.system.events()).filter(({ event }) =>
+    (client.api.events as any).multiAssetBounties.BountyBecameActive.is(event),
+  )
+  expect(becameActive).toHaveLength(0)
+  expect((await query.curatorDeposit(index, child)).isNone).toBe(true)
+  expect(await curatorHold(client, alice)).toBe(holdBefore)
+}
+
+/**
+ * A child bounty may have its own curator, who accepts and puts down a deposit just as a parent's
+ * curator does. A child at the minimum value costs the minimum deposit.
+ *
+ * 1. Make alice the active curator of a parent bounty
+ * 2. Fund a child naming charlie as curator, and settle its funding
+ * 3. Accept as charlie
+ * 4. Verify `BountyBecameActive` for the child, and `balances.Held` from charlie for the minimum
+ *    deposit
+ * 5. Verify charlie's hold and the child's deposit record, and that the child is `Active`
+ */
+async function fundChildWithOwnCurator(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const cv = await childValue(client, asset)
+  const deposit = curatorDepositFor(testConfig, toNative(cv, await rateOf(client, asset)))
+  expect(deposit).toBe(testConfig.curatorDeposit.min)
+
+  // 1. Active parent
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Child proposing charlie, settled
+  const child = await fundChildBounty(client, index, cv, charlie)
+  await sendTransaction(bountiesTx(client).checkStatus(index, child).signAsync(dave))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  const funded = (await bountiesQuery(client).childBounties(index, child)).unwrap()
+  assert(funded.status.isFunded)
+  expect(funded.status.asFunded.curator.toString()).toBe(addressOf(client, charlie))
+
+  // 3. Accept as charlie
+  await sendTransaction(bountiesTx(client).acceptCurator(index, child).signAsync(charlie))
+  await client.dev.newBlock()
+
+  // 4. BountyBecameActive and Held
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('accept child curator: events')
+  await expectNoExtrinsicFailure(client)
+  const active = await bountyEvent(client, 'BountyBecameActive', index)
+  expect(active.data.childIndex.unwrap().toNumber()).toBe(child)
+  expect(active.data.curator.toString()).toBe(addressOf(client, charlie))
+  expect((await balancesEvent(client, 'Held', charlie)).data.amount.toBigInt()).toBe(deposit)
+
+  // 5. Deposit held, child Active
+  expect(await curatorHold(client, charlie)).toBe(deposit)
+  expect((await bountiesQuery(client).curatorDeposit(index, child)).unwrap().toBigInt()).toBe(deposit)
+  expect((await bountiesQuery(client).childBounties(index, child)).unwrap().status.isActive).toBe(true)
+}
+
+/**
+ * Paying out a child bounty spends part of the parent's value for good: the parent's later payout
+ * is its value minus the child's.
+ *
+ * 1. Make alice the active curator of a parent bounty and of an active child bounty under it
+ * 2. Award the child to bob as alice
+ * 3. Verify `BountyAwarded` for the child, and that bob received the child's value
+ * 4. Settle the child's payout as dave
+ * 5. Verify `BountyPayoutProcessed` for the child's value, that the child is gone, and that the
+ *    parent still counts the child's value as spent but no longer counts the child as open
+ * 6. Award the parent to bob as alice, and settle the payout as dave
+ * 7. Verify bob received the parent's value minus the child's
+ */
+async function awardChildThenParent(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const cv = await childValue(client, asset)
+  const query = bountiesQuery(client)
+
+  // 1. Active parent and child
+  const index = await activeBounty(client, asset, value, alice)
+  const child = await childOfParentCurator(client, index, cv)
+  const bobBefore = await balanceOf(client, asset, addressOf(client, bob))
+
+  // 2. Award the child
+  await sendTransaction(bountiesTx(client).awardBounty(index, child, localBeneficiary(bob)).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. BountyAwarded, bob paid
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('award child: events')
+  await expectNoExtrinsicFailure(client)
+  const awarded = await bountyEvent(client, 'BountyAwarded', index)
+  expect(awarded.data.childIndex.unwrap().toNumber()).toBe(child)
+  expect(await balanceOf(client, asset, addressOf(client, bob))).toBe(bobBefore + cv)
+
+  // 4. Settle the child payout
+  await sendTransaction(bountiesTx(client).checkStatus(index, child).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 5. BountyPayoutProcessed, child removed
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('settle child payout: events')
+  await expectNoExtrinsicFailure(client)
+  expect((await bountyEvent(client, 'BountyPayoutProcessed', index)).data.value.toBigInt()).toBe(cv)
+  expect((await query.childBounties(index, child)).isNone).toBe(true)
+  expect((await query.childBountiesValuePerParent(index)).toBigInt()).toBe(cv)
+  expect((await query.childBountiesPerParent(index)).toNumber()).toBe(0)
+
+  // 6. Award and settle the parent
+  await sendTransaction(bountiesTx(client).awardBounty(index, null, localBeneficiary(bob)).signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  await sendTransaction(bountiesTx(client).checkStatus(index, null).signAsync(dave))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+
+  // 7. Parent paid its value minus the child's
+  expect((await bountyEvent(client, 'BountyPayoutProcessed', index)).data.value.toBigInt()).toBe(value - cv)
+  expect(await balanceOf(client, asset, addressOf(client, bob))).toBe(bobBefore + value)
+}
+
+/**
+ * Closing a child bounty returns its value to the parent's account, not to the treasury, and the
+ * parent may set it aside again.
+ *
+ * 1. Make alice the active curator of a parent bounty and of an active child bounty under it
+ * 2. Close the child as alice
+ * 3. Verify `BountyCanceled` for the child, and that its value moved back to the parent's account
+ * 4. Settle the refund as dave
+ * 5. Verify `BountyRefundProcessed`, that the child is gone, and that the parent no longer counts
+ *    the child or its value
+ */
+async function closeChildReturnsValueToParent(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const cv = await childValue(client, asset)
+  const query = bountiesQuery(client)
+
+  // 1. Active parent and child
+  const index = await activeBounty(client, asset, value, alice)
+  const child = await childOfParentCurator(client, index, cv)
+
+  // 2. Close the child
+  await sendTransaction(bountiesTx(client).closeBounty(index, child).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. BountyCanceled, value back with the parent
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('close child: events')
+  await expectNoExtrinsicFailure(client)
+  const canceled = await bountyEvent(client, 'BountyCanceled', index)
+  expect(canceled.data.childIndex.unwrap().toNumber()).toBe(child)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(value)
+  expect(await balanceOf(client, asset, bountyAccount(client, index, child))).toBe(0n)
+
+  // 4. Settle the refund
+  await sendTransaction(bountiesTx(client).checkStatus(index, child).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 5. BountyRefundProcessed, parent's headroom restored
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('settle child refund: events')
+  await expectNoExtrinsicFailure(client)
+  await bountyEvent(client, 'BountyRefundProcessed', index)
+  expect((await query.childBounties(index, child)).isNone).toBe(true)
+  expect((await query.childBountiesValuePerParent(index)).toBigInt()).toBe(0n)
+  expect((await query.childBountiesPerParent(index)).toNumber()).toBe(0)
+}
+
+/**
+ * Only the parent's curator may fund a child bounty from it.
+ *
+ * 1. Make alice the active curator of a parent bounty
+ * 2. Fund a child from it as charlie
+ * 3. Verify the extrinsic failed with `RequireCurator`
+ */
+async function fundChildByNonCuratorFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active parent
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Fund as charlie
+  const cv = await childValue(client, asset)
+  await sendTransaction(bountiesTx(client).fundChildBounty(index, cv, METADATA_HASH, null).signAsync(charlie))
+  await client.dev.newBlock()
+
+  // 3. RequireCurator
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund child by non-curator: events')
+  expectBountyError(client, await extrinsicError(client), 'RequireCurator')
+}
+
+/**
+ * A child bounty must be worth at least `ChildBountyValueMinimum` in native value.
+ *
+ * 1. Make alice the active curator of a parent bounty
+ * 2. Fund a child one unit below the minimum as alice
+ * 3. Verify the extrinsic failed with `InvalidValue`
+ */
+async function fundChildBelowMinimumFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const rate = await rateOf(client, asset)
+  const value = (await childValue(client, asset)) - 1n
+  expect(toNative(value, rate)).toBeLessThan(childBountyMinimum(client))
+
+  // 1. Active parent
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Fund below the minimum
+  await sendTransaction(bountiesTx(client).fundChildBounty(index, value, METADATA_HASH, null).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. InvalidValue
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund child below minimum: events')
+  expectBountyError(client, await extrinsicError(client), 'InvalidValue')
+}
+
+/**
+ * A parent can only set aside what its open and paid child bounties have not already taken.
+ *
+ * 1. Make alice the active curator of a parent bounty, and fund one child from it
+ * 2. Fund a second child worth one unit more than the parent has left, as alice
+ * 3. Verify the extrinsic failed with `InsufficientBountyValue`
+ */
+async function fundChildAboveRemainingFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const cv = await childValue(client, asset)
+
+  // 1. Active parent with one child
+  const index = await activeBounty(client, asset, value, alice)
+  await fundChildBounty(client, index, cv, null)
+
+  // 2. Fund more than remains
+  const tooMuch = value - cv + 1n
+  await sendTransaction(bountiesTx(client).fundChildBounty(index, tooMuch, METADATA_HASH, null).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. InsufficientBountyValue
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund child above remaining value: events')
+  expectBountyError(client, await extrinsicError(client), 'InsufficientBountyValue')
+}
+
+/**
+ * A parent may have at most `MaxActiveChildBountyCount` open child bounties.
+ *
+ * Opening that many takes as many extrinsics, so the parent's open-child count is written
+ * directly. The count is the only state the limit reads.
+ *
+ * 1. Make alice the active curator of a parent bounty
+ * 2. Set the parent's open-child count to the limit
+ * 3. Fund a child as alice
+ * 4. Verify the extrinsic failed with `TooManyChildBounties`
+ */
+async function fundChildAtActiveLimitFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const limit = bountiesConsts(client).maxActiveChildBountyCount.toNumber()
+
+  // 1. Active parent
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+
+  // 2. Open-child count at the limit
+  await client.dev.setStorage({ MultiAssetBounties: { childBountiesPerParent: [[[index], limit]] } })
+  expect((await bountiesQuery(client).childBountiesPerParent(index)).toNumber()).toBe(limit)
+
+  // 3. Fund a child
+  const cv = await childValue(client, asset)
+  await sendTransaction(bountiesTx(client).fundChildBounty(index, cv, METADATA_HASH, null).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 4. TooManyChildBounties
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('fund child at active limit: events')
+  expectBountyError(client, await extrinsicError(client), 'TooManyChildBounties')
+}
+
+/**
+ * The parent's curator may remove a child's curator, and the child curator's deposit is burned,
+ * as when governance removes a curator.
+ *
+ * 1. Make alice the active curator of a parent bounty, and charlie the active curator of a child
+ * 2. Unassign charlie from the child as alice
+ * 3. Verify `CuratorUnassigned` for the child, and `balances.BurnedHeld` for charlie's deposit
+ * 4. Verify charlie's hold is gone, nothing was returned to charlie, and the child has no curator
+ */
+async function parentCuratorUnassignsChildCurator(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active parent and child
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+  const child = await childWithOwnCurator(client, index, await childValue(client, asset), charlie)
+  const deposit = (await bountiesQuery(client).curatorDeposit(index, child)).unwrap().toBigInt()
+  const freeBefore = (await client.api.query.system.account(charlie.address)).data.free.toBigInt()
+
+  // 2. Unassign charlie as alice
+  await sendTransaction(bountiesTx(client).unassignCurator(index, child).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. CuratorUnassigned and BurnedHeld
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('parent curator unassigns child curator: events')
+  await expectNoExtrinsicFailure(client)
+  const unassigned = await bountyEvent(client, 'CuratorUnassigned', index)
+  expect(unassigned.data.childIndex.unwrap().toNumber()).toBe(child)
+  expect((await balancesEvent(client, 'BurnedHeld', charlie)).data.amount.toBigInt()).toBe(deposit)
+
+  // 4. Deposit gone
+  expect(await curatorHold(client, charlie)).toBe(0n)
+  expect((await client.api.query.system.account(charlie.address)).data.free.toBigInt()).toBe(freeBefore)
+  expect((await bountiesQuery(client).childBounties(index, child)).unwrap().status.isCuratorUnassigned).toBe(true)
+}
+
+/**
+ * The parent's curator has power over child curators only while curating the parent. After alice
+ * steps down from the parent, alice can no longer remove the child's curator.
+ *
+ * 1. Make alice the active curator of a parent bounty, and charlie the active curator of a child
+ * 2. Unassign alice from the parent, as alice
+ * 3. Unassign charlie from the child, as alice
+ * 4. Verify the extrinsic failed with `BadOrigin`, and charlie still curates the child with the
+ *    deposit held
+ */
+async function formerParentCuratorCannotUnassignChildCurator(
+  client: Client<any, any>,
+  testConfig: MultiAssetBountiesTestConfig,
+) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active parent and child
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+  const child = await childWithOwnCurator(client, index, await childValue(client, asset), charlie)
+  const holdBefore = await curatorHold(client, charlie)
+
+  // 2. Alice leaves the parent
+  await sendTransaction(bountiesTx(client).unassignCurator(index, null).signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  expect((await getBounty(client, index)).status.isCuratorUnassigned).toBe(true)
+
+  // 3. Alice tries to unassign charlie
+  await sendTransaction(bountiesTx(client).unassignCurator(index, child).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 4. BadOrigin
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('former parent curator unassigns child curator: events')
+  expect((await extrinsicError(client)).isBadOrigin).toBe(true)
+  const { status } = (await bountiesQuery(client).childBounties(index, child)).unwrap()
+  assert(status.isActive)
+  expect(status.asActive.curator.toString()).toBe(addressOf(client, charlie))
+  expect(await curatorHold(client, charlie)).toBe(holdBefore)
+}
+
+/**
+ * Only the parent's curator may propose a child's curator. Not even Root may.
+ *
+ * 1. Make alice the active curator of a parent bounty, and fund a child proposing charlie
+ * 2. Settle the child's funding, and have charlie decline
+ * 3. Propose dave as the child's curator as Root, and verify the call failed with `BadOrigin`
+ * 4. Propose dave as alice, and verify `CuratorProposed` names dave and the child is `Funded` with
+ *    dave proposed
+ */
+async function proposeChildCuratorAsParentCurator(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+
+  // 1. Active parent, child proposing charlie
+  const index = await activeBounty(client, asset, await parentValue(client, asset), alice)
+  const child = await fundChildBounty(client, index, await childValue(client, asset), charlie)
+
+  // 2. Settle, then charlie declines
+  await sendTransaction(bountiesTx(client).checkStatus(index, child).signAsync(dave))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  await sendTransaction(bountiesTx(client).unassignCurator(index, child).signAsync(charlie))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+
+  // 3. Root refused
+  const result = await dispatchAs(client, bountiesTx(client).proposeCurator(index, child, dave.address), ROOT)
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('root proposes child curator: events')
+  assert(result.isErr)
+  expect(result.asErr.isBadOrigin).toBe(true)
+
+  // 4. Alice proposes dave
+  await sendTransaction(bountiesTx(client).proposeCurator(index, child, dave.address).signAsync(alice))
+  await client.dev.newBlock()
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('parent curator proposes child curator: events')
+  await expectNoExtrinsicFailure(client)
+  const proposed = await bountyEvent(client, 'CuratorProposed', index)
+  expect(proposed.data.childIndex.unwrap().toNumber()).toBe(child)
+  expect(proposed.data.curator.toString()).toBe(addressOf(client, dave))
+  const { status } = (await bountiesQuery(client).childBounties(index, child)).unwrap()
+  assert(status.isFunded)
+  expect(status.asFunded.curator.toString()).toBe(addressOf(client, dave))
+}
+
+/// -------
+/// Increase value
+/// -------
+
+/** A transfer of `amount` of `asset` to `dest`, from whichever account signs it. */
+function transferCall(client: Client<any, any>, asset: BountyAsset, dest: string, amount: bigint) {
+  switch (asset.pallet) {
+    case 'balances':
+      return client.api.tx.balances.transferKeepAlive(dest, amount)
+    case 'assets':
+      return client.api.tx.assets.transferKeepAlive(asset.id, dest, amount)
+    case 'foreignAssets':
+      return (client.api.tx.foreignAssets as any).transferKeepAlive(asset.location, dest, amount)
+  }
+}
+
+/**
+ * The curator may raise a bounty's value. The curator deposit is re-priced for the new value, but
+ * no funds move: the bounty account must be topped up separately before the extra can be paid.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Raise its value by one `BountyValueMinimum`'s worth, as alice
+ * 3. Verify `BountyValueIncreased` with the old and new values, and `balances.Held` from alice for
+ *    the deposit difference
+ * 4. Verify the stored value, deposit record and alice's hold were updated, and the bounty account
+ *    did not change
+ */
+async function increaseValueRepricesDeposit(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const rate = await rateOf(client, asset)
+  const value = await parentValue(client, asset)
+  const amount = fromNative(bountyMinimum(client), rate)
+  const oldDeposit = curatorDepositFor(testConfig, toNative(value, rate))
+  const newDeposit = curatorDepositFor(testConfig, toNative(value + amount, rate))
+  expect(newDeposit).toBeGreaterThan(oldDeposit)
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, value, alice)
+  const holdBefore = await curatorHold(client, alice)
+  const accountBefore = await balanceOf(client, asset, bountyAccount(client, index))
+
+  // 2. Raise the value
+  await sendTransaction(bountiesTx(client).increaseValue(index, amount).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. BountyValueIncreased and Held
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('increase value: events')
+  await expectNoExtrinsicFailure(client)
+  const increased = await bountyEvent(client, 'BountyValueIncreased', index)
+  expect(increased.data.oldValue.toBigInt()).toBe(value)
+  expect(increased.data.newValue.toBigInt()).toBe(value + amount)
+  expect((await balancesEvent(client, 'Held', alice)).data.amount.toBigInt()).toBe(newDeposit - oldDeposit)
+
+  // 4. Value and deposit updated, no funds moved
+  expect((await getBounty(client, index)).value.toBigInt()).toBe(value + amount)
+  expect((await bountiesQuery(client).curatorDeposit(index, null)).unwrap().toBigInt()).toBe(newDeposit)
+  expect(await curatorHold(client, alice)).toBe(holdBefore + newDeposit - oldDeposit)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(accountBefore)
+}
+
+/**
+ * Raising a bounty's value does not fund the increase. Until the bounty account is topped up, an
+ * award of the new value cannot be paid; once it is, the beneficiary receives the new value.
+ *
+ * 1. Make alice the active curator of a bounty, and raise its value by one child minimum's worth
+ * 2. Award it to bob as alice, and verify the extrinsic failed with `PayoutError`
+ * 3. Move the increase from the treasury to the bounty account: Root dispatches a transfer as the
+ *    treasury pot
+ * 4. Award it to bob as alice, and verify bob received the new value
+ */
+async function increaseValueThenAwardNeedsTopUp(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const amount = await childValue(client, asset)
+
+  // 1. Active bounty, value raised
+  const index = await activeBounty(client, asset, value, alice)
+  await sendTransaction(bountiesTx(client).increaseValue(index, amount).signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  const bobBefore = await balanceOf(client, asset, addressOf(client, bob))
+
+  // 2. Award fails
+  await sendTransaction(bountiesTx(client).awardBounty(index, null, localBeneficiary(bob)).signAsync(alice))
+  await client.dev.newBlock()
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('award increased bounty before top-up: events')
+  expectBountyError(client, await extrinsicError(client), 'PayoutError')
+  expect((await getBounty(client, index)).status.isActive).toBe(true)
+
+  // 3. Top up from the treasury. `dispatch_as` succeeds whatever the inner call does, so the
+  // transfer's own result is read from `DispatchedAs`.
+  const transfer = transferCall(client, asset, bountyAccount(client, index), amount)
+  const topUp = client.api.tx.utility.dispatchAs({ system: { Signed: treasuryPot(client) } }, transfer)
+  expectDispatchOk(await dispatchAs(client, topUp, ROOT))
+  const dispatchedAs = (await client.api.query.system.events()).find(({ event }) =>
+    client.api.events.utility.DispatchedAs.is(event),
+  )
+  assert(dispatchedAs && client.api.events.utility.DispatchedAs.is(dispatchedAs.event))
+  expect(dispatchedAs.event.data.result.isOk, JSON.stringify(dispatchedAs.event.data.result.toHuman())).toBe(true)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(value + amount)
+
+  // 4. Award pays the new value
+  await sendTransaction(bountiesTx(client).awardBounty(index, null, localBeneficiary(bob)).signAsync(alice))
+  await client.dev.newBlock()
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('award increased bounty after top-up: events')
+  await expectNoExtrinsicFailure(client)
+  expect(await balanceOf(client, asset, addressOf(client, bob))).toBe(bobBefore + value + amount)
+}
+
+/**
+ * Raising a bounty's value by nothing is refused.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Raise its value by zero, as alice
+ * 3. Verify the extrinsic failed with `InvalidValue`, and the value is unchanged
+ */
+async function increaseValueByZeroFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, value, alice)
+
+  // 2. Raise by zero
+  await sendTransaction(bountiesTx(client).increaseValue(index, 0).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. InvalidValue
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('increase value by zero: events')
+  expectBountyError(client, await extrinsicError(client), 'InvalidValue')
+  expect((await getBounty(client, index)).value.toBigInt()).toBe(value)
+}
+
+/**
+ * Only the bounty's curator may raise its value, since the curator's deposit grows with it.
+ *
+ * 1. Make alice the active curator of a bounty
+ * 2. Raise its value as charlie
+ * 3. Verify the extrinsic failed with `RequireCurator`, and the value is unchanged
+ */
+async function increaseValueByNonCuratorFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+
+  // 1. Active bounty
+  const index = await activeBounty(client, asset, value, alice)
+
+  // 2. Raise as charlie
+  await sendTransaction(
+    bountiesTx(client)
+      .increaseValue(index, await childValue(client, asset))
+      .signAsync(charlie),
+  )
+  await client.dev.newBlock()
+
+  // 3. RequireCurator
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('increase value by non-curator: events')
+  expectBountyError(client, await extrinsicError(client), 'RequireCurator')
+  expect((await getBounty(client, index)).value.toBigInt()).toBe(value)
+}
+
+/// ----------
+/// Test tree
+/// ----------
+
+/** Run `body`, or skip the test when the chain has no secondary asset configured. */
+function withSecondaryAsset(
+  testConfig: MultiAssetBountiesTestConfig,
+  body: (asset: BountyAsset) => Promise<void>,
+): (ctx?: TestContext) => Promise<void> {
+  return async (ctx) => {
+    if (!testConfig.secondaryAsset) {
+      ctx?.skip('no second asset with a conversion rate is configured for this chain')
+      return
+    }
+    await body(testConfig.secondaryAsset)
+  }
+}
+
+export function multiAssetBountiesE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): DescribeNode {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: MultiAssetBountiesTestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
+
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      await prepareSuite(client)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
     children: [
       {
-        kind: 'test',
-        label: 'Log multiAssetBounties pallet constants, extrinsics, and storage',
-        testFn: () => logPalletInfo(chain, testConfig),
-      },
-      {
         kind: 'describe',
-        label: 'Native Token Bounties',
+        label: 'Funding',
         children: [
           {
             kind: 'test',
-            label: 'Should fund a bounty with native token',
-            testFn: () => fundNativeBountyTest(chain, testConfig),
+            label: 'fund bounty in primary asset - BountyCreated, funds move',
+            testFn: () => fundBountyMovesFunds(client, testConfig.primaryAsset),
           },
           {
             kind: 'test',
-            label: 'Should check funding status and transition to Funded',
-            testFn: () => checkFundingStatusTest(chain, testConfig),
+            label: 'fund bounty in secondary asset - BountyCreated, funds move',
+            testFn: withSecondaryAsset(testConfig, (asset) => fundBountyMovesFunds(client, asset)),
           },
           {
             kind: 'test',
-            label: 'Should allow curator to accept role',
-            testFn: () => acceptCuratorTest(chain, testConfig),
+            label: 'fund at SmallTipper limit - BountyCreated',
+            testFn: () => fundAtSmallTipperLimit(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'Should award bounty to beneficiary',
-            testFn: () => awardBountyTest(chain, testConfig),
+            label: 'fund above SmallTipper limit - InsufficientPermission',
+            testFn: () => fundAboveSmallTipperLimitFails(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'Should complete full bounty lifecycle',
-            testFn: () => completeBountyLifecycleTest(chain, testConfig),
+            label: 'two funds in one batch over SmallTipper limit - InsufficientPermission',
+            testFn: () => batchedFundsShareSmallTipperLimit(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'fund as signed account - BadOrigin',
+            testFn: () => fundAsSignedFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'fund below BountyValueMinimum - InvalidValue',
+            testFn: () => fundBelowMinimumFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'fund with unnoted metadata - PreimageNotExist',
+            testFn: () => fundWithUnnotedMetadataFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'fund in unrated asset - FailedToConvertBalance',
+            testFn: () => fundInUnratedAssetFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'fund more than the treasury holds - FundingError',
+            testFn: () => fundBeyondTreasuryFails(client, testConfig),
           },
         ],
       },
       {
         kind: 'describe',
-        label: 'USDT Bounties',
+        label: 'Payment status',
         children: [
           {
             kind: 'test',
-            label: 'Should fund a bounty with USDT',
-            testFn: () => fundUSDTBountyTest(chain, testConfig),
+            label: 'check status after funding - Funded',
+            testFn: () => checkStatusAfterFunding(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'Should complete full USDT bounty lifecycle',
-            testFn: () => completeUSDTBountyLifecycleTest(chain, testConfig),
+            label: 'check status on Funded bounty - UnexpectedStatus',
+            testFn: () => checkStatusOnFundedFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'retry payment already attempted - UnexpectedStatus',
+            testFn: () => retryAttemptedPaymentFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'check status on unknown bounty - InvalidIndex',
+            testFn: () => checkStatusOnUnknownBountyFails(client),
           },
         ],
       },
       {
         kind: 'describe',
-        label: 'DOT Bounties',
+        label: 'Curator',
         children: [
           {
             kind: 'test',
-            label: 'Should complete full DOT bounty lifecycle',
-            testFn: () => completeDOTBountyLifecycleTest(chain, testConfig),
+            label: 'accept curator - deposit held, Active',
+            testFn: () => acceptCuratorHoldsDeposit(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'Should complete full DOT bounty lifecycle with custom call values',
-            testFn: () => completeDOTBountyLifecycleCustomTest(chain, testConfig),
+            label: 'accept curator of a large bounty - deposit capped at max',
+            testFn: () => curatorDepositCappedAtMax(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'accept by account not proposed - RequireCurator',
+            testFn: () => acceptByOtherAccountFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'accept without funds for the deposit - FundsUnavailable',
+            testFn: () => acceptWithoutDepositFundsFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'curator unassigns self while Active - deposit released',
+            testFn: () => curatorUnassignsSelf(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'Treasurer unassigns active curator - deposit burned',
+            testFn: () => treasurerUnassignsCuratorBurnsDeposit(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'SmallTipper unassigns curator - BadOrigin',
+            testFn: () => smallTipperUnassignFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'proposed curator unassigns before accepting - no deposit moves',
+            testFn: () => proposedCuratorUnassignsBeforeAccepting(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'propose curator after unassign as SmallTipper - CuratorProposed, then accepted',
+            testFn: () => proposeCuratorAfterUnassign(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'propose curator as signed account - BadOrigin',
+            testFn: () => proposeCuratorAsSignedFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'propose curator above SmallTipper limit - InsufficientPermission',
+            testFn: () => proposeCuratorAboveSmallTipperFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'propose curator on Active bounty - UnexpectedStatus',
+            testFn: () => proposeCuratorOnActiveFails(client, testConfig),
           },
         ],
       },
       {
         kind: 'describe',
-        label: 'Governance',
+        label: 'Award',
         children: [
           {
             kind: 'test',
-            label:
-              'Should submit a SmallSpender referendum for fund_bounty and dispatch successfully under that origin',
-            testFn: () => fundBountyViaSmallSpenderReferendumTest(chain, testConfig),
+            label: 'award and settle in primary asset - beneficiary paid, bounty removed',
+            testFn: () => awardAndSettle(client, testConfig.primaryAsset),
+          },
+          {
+            kind: 'test',
+            label: 'award and settle in secondary asset - beneficiary paid, bounty removed',
+            testFn: withSecondaryAsset(testConfig, (asset) => awardAndSettle(client, asset)),
+          },
+          {
+            kind: 'test',
+            label: 'award by non-curator - RequireCurator',
+            testFn: () => awardByNonCuratorFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'award to beneficiary on another chain - PayoutError',
+            testFn: () => awardToRemoteBeneficiaryFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'award parent with active child - HasActiveChildBounty',
+            testFn: () => awardParentWithActiveChildFails(client, testConfig),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'Close',
+        children: [
+          {
+            kind: 'test',
+            label: 'Treasurer closes Funded bounty - full refund',
+            testFn: () => treasurerClosesFundedBounty(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'curator closes own Active bounty - refund, deposit released',
+            testFn: () => curatorClosesOwnBounty(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'SmallTipper closes bounty - BadOrigin',
+            testFn: () => smallTipperCloseFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'close parent with active child - HasActiveChildBounty',
+            testFn: () => closeParentWithActiveChildFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'close parent after child payout - refund net of children, or RefundError',
+            testFn: () => closeParentAfterChildPayout(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'close bounty with no curator - only the reject origin',
+            testFn: () => closeUnassignedBountyNeedsRejectOrigin(client, testConfig),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'Child bounties',
+        children: [
+          {
+            kind: 'test',
+            label: 'fund child curated by parent curator - Active without deposit',
+            testFn: () => fundChildWithParentCurator(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'fund child with its own curator - accept holds minimum deposit',
+            testFn: () => fundChildWithOwnCurator(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'award child, then parent - parent payout reduced by child value',
+            testFn: () => awardChildThenParent(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'close child - value returns to parent',
+            testFn: () => closeChildReturnsValueToParent(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'fund child by non-curator - RequireCurator',
+            testFn: () => fundChildByNonCuratorFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'fund child below ChildBountyValueMinimum - InvalidValue',
+            testFn: () => fundChildBelowMinimumFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'fund child above remaining parent value - InsufficientBountyValue',
+            testFn: () => fundChildAboveRemainingFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'fund child at active child limit - TooManyChildBounties',
+            testFn: () => fundChildAtActiveLimitFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'parent curator unassigns child curator - deposit burned',
+            testFn: () => parentCuratorUnassignsChildCurator(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'former parent curator unassigns child curator - BadOrigin',
+            testFn: () => formerParentCuratorCannotUnassignChildCurator(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'propose child curator - Root BadOrigin, parent curator succeeds',
+            testFn: () => proposeChildCuratorAsParentCurator(client, testConfig),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'Increase value',
+        children: [
+          {
+            kind: 'test',
+            label: 'increase value - deposit re-priced, no funds move',
+            testFn: () => increaseValueRepricesDeposit(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'increase value then award - PayoutError until topped up',
+            testFn: () => increaseValueThenAwardNeedsTopUp(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'increase value by zero - InvalidValue',
+            testFn: () => increaseValueByZeroFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'increase value by non-curator - RequireCurator',
+            testFn: () => increaseValueByNonCuratorFails(client, testConfig),
           },
         ],
       },
     ],
   }
-}
-
-export {
-  BOUNTY_MULTIPLIER,
-  CHILD_BOUNTY_MULTIPLIER,
-  createDOTAssetKind,
-  createNativeAssetKind,
-  createPreimage,
-  createUSDTAssetKind,
-  DOT_FOREIGN_ASSET_LOCATION,
-  getBounty,
-  // Helper functions
-  getBountyCount,
-  getChildBounty,
-  getCuratorDeposit,
-  setupTestAccounts,
-  // Constants
-  TEST_ACCOUNT_BALANCE_MULTIPLIER,
-  USDT_ASSET_ID,
 }

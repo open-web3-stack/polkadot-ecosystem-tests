@@ -1,0 +1,1580 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Award > award and settle in primary asset - beneficiary paid, bounty removed > award bounty in DOT: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyAwarded",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Award > award and settle in primary asset - beneficiary paid, bounty removed > settle payout in DOT: events 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": "Here",
+            "parents": 1,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": "(bounty index)",
+      "value": 300000000000,
+    },
+    "method": "BountyPayoutProcessed",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "amount": 150000000000,
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Released",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Award > award and settle in secondary asset - beneficiary paid, bounty removed > award bounty in USDT: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyAwarded",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Award > award and settle in secondary asset - beneficiary paid, bounty removed > settle payout in USDT: events 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": "(bounty index)",
+      "value": 300000000,
+    },
+    "method": "BountyPayoutProcessed",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "amount": 150000000000,
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Released",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Award > award by non-curator - RequireCurator > award by non-curator: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Award > award parent with active child - HasActiveChildBounty > award parent with active child: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0e000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Award > award to beneficiary on another chain - PayoutError > award to remote beneficiary: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > award child, then parent - parent payout reduced by child value > award child: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": 0,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": 0,
+      "index": "(bounty index)",
+    },
+    "method": "BountyAwarded",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > award child, then parent - parent payout reduced by child value > settle child payout: events 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": "Here",
+            "parents": 1,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": 0,
+      "index": "(bounty index)",
+      "value": 10000000000,
+    },
+    "method": "BountyPayoutProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > close child - value returns to parent > close child: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": 0,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "childIndex": 0,
+      "index": "(bounty index)",
+    },
+    "method": "BountyCanceled",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > close child - value returns to parent > settle child refund: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": 0,
+      "index": "(bounty index)",
+    },
+    "method": "BountyRefundProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > former parent curator unassigns child curator - BadOrigin > former parent curator unassigns child curator: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > fund child above remaining parent value - InsufficientBountyValue > fund child above remaining value: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x10000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > fund child at active child limit - TooManyChildBounties > fund child at active limit: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0f000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > fund child below ChildBountyValueMinimum - InvalidValue > fund child below minimum: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > fund child by non-curator - RequireCurator > fund child by non-curator: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > fund child curated by parent curator - Active without deposit > fund child with parent curator: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": 0,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "childIndex": 0,
+      "index": "(bounty index)",
+    },
+    "method": "ChildBountyCreated",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > fund child curated by parent curator - Active without deposit > settle child with parent curator: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": 0,
+      "index": "(bounty index)",
+    },
+    "method": "BountyFundingProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > fund child with its own curator - accept holds minimum deposit > accept child curator: events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Held",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "childIndex": 0,
+      "curator": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+      "index": "(bounty index)",
+    },
+    "method": "BountyBecameActive",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > parent curator unassigns child curator - deposit burned > parent curator unassigns child curator: events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "BurnedHeld",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "childIndex": 0,
+      "index": "(bounty index)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > propose child curator - Root BadOrigin, parent curator succeeds > parent curator proposes child curator: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": 0,
+      "curator": "15Y1VYcCkzD91e5hzAW36wynBfh3inNzzwmUYF9gtm6NZwzi",
+      "index": "(bounty index)",
+    },
+    "method": "CuratorProposed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Child bounties > propose child curator - Root BadOrigin, parent curator succeeds > root proposes child curator: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Close > SmallTipper closes bounty - BadOrigin > small tipper closes bounty: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Close > Treasurer closes Funded bounty - full refund > settle refund of funded bounty: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyRefundProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Close > Treasurer closes Funded bounty - full refund > treasurer closes funded bounty: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyCanceled",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Close > close bounty with no curator - only the reject origin > former curator closes unassigned bounty: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Close > close bounty with no curator - only the reject origin > treasurer closes unassigned bounty: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyCanceled",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Close > close parent after child payout - refund net of children, or RefundError > close parent after child payout: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x08000000",
+            "index": 68,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Close > close parent with active child - HasActiveChildBounty > close parent with active child: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0e000000",
+            "index": 68,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Close > curator closes own Active bounty - refund, deposit released > curator closes own bounty: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyCanceled",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Close > curator closes own Active bounty - refund, deposit released > settle refund of curator-closed bounty: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyRefundProcessed",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "amount": 150000000000,
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Released",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > SmallTipper unassigns curator - BadOrigin > small tipper unassigns curator: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > Treasurer unassigns active curator - deposit burned > treasurer unassigns curator: events 1`] = `
+[
+  {
+    "data": {
+      "amount": 150000000000,
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "BurnedHeld",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > accept by account not proposed - RequireCurator > accept by other account: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > accept curator - deposit held, Active > accept curator: events 1`] = `
+[
+  {
+    "data": {
+      "amount": 150000000000,
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Held",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "curator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "index": "(bounty index)",
+    },
+    "method": "BountyBecameActive",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > accept curator of a large bounty - deposit capped at max > accept curator above deposit cap: events 1`] = `
+[
+  {
+    "data": {
+      "amount": 2000000000000,
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Held",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "curator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "index": "(bounty index)",
+    },
+    "method": "BountyBecameActive",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > accept without funds for the deposit - FundsUnavailable > accept without funds for deposit: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Token": "FundsUnavailable",
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > curator unassigns self while Active - deposit released > curator unassigns self: events 1`] = `
+[
+  {
+    "data": {
+      "amount": 150000000000,
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Released",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > propose curator above SmallTipper limit - InsufficientPermission > propose curator above SmallTipper limit: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x06000000",
+            "index": 68,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > propose curator after unassign as SmallTipper - CuratorProposed, then accepted > propose curator after unassign: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "curator": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+      "index": "(bounty index)",
+    },
+    "method": "CuratorProposed",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > propose curator as signed account - BadOrigin > propose curator as signed: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > propose curator on Active bounty - UnexpectedStatus > propose curator on active bounty: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x04000000",
+            "index": 68,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Curator > proposed curator unassigns before accepting - no deposit moves > proposed curator unassigns: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Funding > fund above SmallTipper limit - InsufficientPermission > fund above SmallTipper limit: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x06000000",
+            "index": 68,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Funding > fund as signed account - BadOrigin > fund as signed: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Funding > fund at SmallTipper limit - BountyCreated > fund at SmallTipper limit: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "index": "(bounty index)",
+    },
+    "method": "BountyCreated",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Funding > fund below BountyValueMinimum - InvalidValue > fund below minimum: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x02000000",
+            "index": 68,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Funding > fund bounty in primary asset - BountyCreated, funds move > fund bounty in DOT: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "index": "(bounty index)",
+    },
+    "method": "BountyCreated",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Funding > fund bounty in secondary asset - BountyCreated, funds move > fund bounty in USDT: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "index": "(bounty index)",
+    },
+    "method": "BountyCreated",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Funding > fund in unrated asset - FailedToConvertBalance > fund in unrated asset: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 68,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Funding > fund more than the treasury holds - FundingError > fund beyond treasury: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x07000000",
+            "index": 68,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Funding > fund with unnoted metadata - PreimageNotExist > fund with unnoted metadata: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x11000000",
+            "index": 68,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Funding > two funds in one batch over SmallTipper limit - InsufficientPermission > batched funds over SmallTipper limit: events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x06000000",
+            "index": 68,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Increase value > increase value - deposit re-priced, no funds move > increase value: events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000,
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Held",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "index": "(bounty index)",
+      "newValue": 400000000000,
+      "oldValue": 300000000000,
+    },
+    "method": "BountyValueIncreased",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Increase value > increase value by non-curator - RequireCurator > increase value by non-curator: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Increase value > increase value by zero - InvalidValue > increase value by zero: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Increase value > increase value then award - PayoutError until topped up > award increased bounty after top-up: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyAwarded",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Increase value > increase value then award - PayoutError until topped up > award increased bounty before top-up: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Payment status > check status after funding - Funded > check status after funding: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyFundingProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Payment status > check status on Funded bounty - UnexpectedStatus > check status on funded bounty: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Payment status > check status on unknown bounty - InvalidIndex > check status on unknown bounty: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Multi-Asset Bounties > Payment status > retry payment already attempted - UnexpectedStatus > retry attempted payment: events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 68,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
