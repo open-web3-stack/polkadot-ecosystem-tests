@@ -1,0 +1,175 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Asset Hub Treasury > check_status > check_status after payout - SpendProcessed, spend removed, fee refunded > check status after payout: SpendProcessed event 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Treasury > check_status > check_status of an expired unpaid spend - SpendProcessed, spend removed > check status of expired spend: SpendProcessed event 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Treasury > payout > payout - Paid, beneficiary credited, spend Attempted > payout: Paid event 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Treasury > payout > payout of a rated asset - asset moved, supply unchanged > rated payout: Paid event 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Treasury > pot accounting > pot balance change - UpdatedInactive in the next block > pot change: UpdatedInactive event 1`] = `
+[
+  {
+    "data": {
+      "deactivated": "(redacted)",
+      "reactivated": "(redacted)",
+    },
+    "method": "UpdatedInactive",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Treasury > spend > spend by BigSpender - AssetSpendApproved, spend stored as Pending > spend: AssetSpendApproved event 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000,
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Treasury > spend_local queue > spend period - queued proposal Awarded, Spending and Rollover balance > spend period: treasury events 1`] = `
+[
+  {
+    "data": {
+      "budgetRemaining": "(redacted)",
+    },
+    "method": "Spending",
+    "section": "treasury",
+  },
+  {
+    "data": {
+      "account": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+      "award": 100000000000,
+      "proposalIndex": "(redacted)",
+    },
+    "method": "Awarded",
+    "section": "treasury",
+  },
+  {
+    "data": {
+      "rolloverBalance": "(redacted)",
+    },
+    "method": "Rollover",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Treasury > spend_local queue > spend_local by SmallTipper - SpendApproved, proposal queued > spend_local: SpendApproved event 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "beneficiary": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+      "proposalIndex": "(redacted)",
+    },
+    "method": "SpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Treasury > void_spend > void_spend by Treasurer - AssetSpendVoided, spend can no longer be paid > void by Treasurer: AssetSpendVoided event 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "AssetSpendVoided",
+    "section": "treasury",
+  },
+]
+`;
