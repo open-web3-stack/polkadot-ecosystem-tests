@@ -209,8 +209,35 @@ These include:
     on Asset Hub, a member with no DOT for existential deposit still receives their payout
   - Mid-cycle promotion: a payout uses the amount locked at registration time, not the
     member's current rank if they were promoted after registering
+  - Dispatchable failure paths: `induct` (`NotMember`, `AlreadyInducted`), `register`
+    (`NotInducted`, `NoClaim`, `TooLate`), `bump` (`NotYet`, `NotStarted`), `payout`
+    (`NotInducted`, `TooEarly`), and `init` (`AlreadyStarted`)
+  - `check_payment`: confirms a successful payout resets the claimant to `Nothing`, and
+    rejects the ineligible cases (`NotInducted`, `NoClaim`, `NotCurrent`, `Inconclusive`)
+  - Account swap: exchanging a fellow's account migrates their salary claimant and emits
+    the `Swapped` event
   - All salary amounts and period lengths read from live chain state
     (`fellowshipCore.params`, `fellowshipSalary` constants), not hardcoded
+- E2E test suite for the Fellowship referenda pallet on Polkadot Collectives:
+  - Full referendum lifecycle driven end to end: seed rank-3 fellows into the live
+    collective, `fellowshipReferenda.submit`, place the decision deposit, cast real
+    `fellowshipCollective.vote` ayes, and fast-forward the referendum clock via
+    storage surgery (backdate the decision period, relocate the scheduler alarm and
+    enactment task). The tally is real; only time is edited
+  - Cross-chain whitelist: the enacted referendum sends an XCM `Transact` from
+    Collectives to Asset Hub Polkadot, exercising the genuine
+    `WhitelistOrigin = EnsureXcm<IsFellowshipVoice>` path and asserting
+    `whitelist.CallWhitelisted` on the destination
+  - Referendum lifecycle assertions: `Submitted`, `DecisionDepositPlaced`, `Voted`, and
+    `Confirmed` are each checked at the block they emit, scrutinizing event fields (poll
+    index, proposal hash/length, depositor and voter by public key, Aye vote)
+  - Rank gating: a rank-2 member voting on the Fellows (rank-3) track is rejected with
+    `RankTooLow`
+  - Geometric vote weight: with mixed-rank voters, the tally reflects
+    `v*(v+1)/2` (where `v = rank − trackMinRank + 1`) rather than one-member-one-vote
+  - Merge-based seeding preserves the real electorate: new members are appended at
+    the live `memberCount` per tier, keeping the ranked-collective index invariants
+    intact so live members and their (rank, index) slots are untouched
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.

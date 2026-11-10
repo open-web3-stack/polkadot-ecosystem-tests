@@ -1,18 +1,29 @@
+import type { Client } from '@e2e-test/networks'
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubPolkadot, hydration, moonbeam } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
-import { describe } from 'vitest'
+import { beforeAll, describe } from 'vitest'
 
-describe('hydration & moonbeam', { skip: true }, async () => {
+// Network setup must happen inside `beforeAll`, not in the `describe` body.
+// Vitest executes `describe` bodies at collection time even for skipped
+// suites, so a top-level `await setupNetworks(...)` here would hang test
+// collection whenever the Moonbeam endpoint is unreachable.
+describe.skip('hydration & moonbeam', () => {
   // TODO: until we figured out how to query balances on Moonbeam again
-  const [hydrationClient, moonbeamClient, assetHubPolkadotClient] = await setupNetworks(
-    hydration,
-    moonbeam,
-    assetHubPolkadot,
-  )
+  let hydrationClient: Client
+  let moonbeamClient: Client
+  let assetHubPolkadotClient: Client
+
+  beforeAll(async () => {
+    ;[hydrationClient, moonbeamClient, assetHubPolkadotClient] = await setupNetworks(
+      hydration,
+      moonbeam,
+      assetHubPolkadot,
+    )
+  })
 
   const hydrationDot = hydration.custom.relayToken
   const moonbeamDot = moonbeam.custom.dot

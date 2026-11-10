@@ -1,0 +1,86 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Fellowship referenda > whitelist a call via a real fellowship referendum > collectives sends fellowship whitelist xcm to the destination 1`] = `
+[
+  {
+    "data": {
+      "destination": {
+        "interior": {
+          "X1": [
+            {
+              "Parachain": 1000,
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "message": [
+        {
+          "UnpaidExecution": {
+            "checkOrigin": null,
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "Transact": {
+            "call": {
+              "encoded": "0x40000101010101010101010101010101010101010101010101010101010101010101",
+            },
+            "fallbackMaxWeight": {
+              "proofSize": 10000,
+              "refTime": 1000000000,
+            },
+            "originKind": "Xcm",
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": {
+          "X2": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+            {
+              "GeneralIndex": 3,
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > whitelist a call via a real fellowship referendum > destination whitelists the call via the fellowship voice 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": {
+        "Sibling": "(rounded 1000)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 100000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;

@@ -10,6 +10,7 @@ import {
 import { type RootTestTree, sendWhitelistCallViaXcmTransact } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { Option } from '@polkadot/types'
 import type { IU8a } from '@polkadot/types/types'
 import { bufferToU8a, compactAddLength } from '@polkadot/util'
 import type { HexString } from '@polkadot/util/types'
@@ -54,6 +55,131 @@ async function skipIfRealUpgradePending(client: Client, ctx?: { skip: (reason?: 
     ctx?.skip?.(
       `Skipping: real runtime upgrade already pending on ${client.config.name} (parachainSystem.pendingValidationCode is non-empty)`,
     )
+  }
+}
+
+// The restriction signal lives in the relay chain state proof, not parachain storage.
+// on_finalize kills it every block; set_validation_data re-injects it from the proof on the next.
+// At the fork point the storage is always None, so we produce one block to let the inherent run.
+async function skipIfRecentRealUpgrade(client: Client, ctx?: { skip: (reason?: string) => void }) {
+  if (client.config.isRelayChain) return
+
+  await client.dev.newBlock()
+  const restrictionSignal = (await client.api.query.parachainSystem.upgradeRestrictionSignal()) as Option<any>
+  if (restrictionSignal.isSome) {
+    ctx?.skip?.(
+      `Skipping: relay chain upgrade restriction active on ${client.config.name} (parachainSystem.upgradeRestrictionSignal is set)`,
+    )
+  }
+}
+
+// Only runs when `pendingValidationCode` is actually non-empty on-chain (i.e. the main upgrade
+// test was skipped). Verifies the barrier is real: `applyAuthorizedUpgrade` fails with
+// `OverlappingUpgrades`.
+//
+// Steps:
+// 1. Check `pendingValidationCode` — skip if empty (no overlapping upgrade in progress)
+// 2. Set `AuthorizedUpgrade` to the current WASM hash via `dev.setStorage`
+// 3. Call `applyAuthorizedUpgrade` and assert it fails with `OverlappingUpgrades`
+export async function upgradeBlockedByOverlappingUpgradeTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, ctx?: { skip: (reason?: string) => void }) {
+  if (chain.isRelayChain) {
+    ctx?.skip?.('Only relevant for parachains')
+    return
+  }
+
+  const [client] = await createNetworks(chain)
+  try {
+    // Given: pendingValidationCode is non-empty on the live chain
+    const pendingCode = await client.api.query.parachainSystem.pendingValidationCode()
+    if (pendingCode.isEmpty) {
+      ctx?.skip?.(`No pending validation code on ${client.config.name}, nothing to test`)
+      return
+    }
+
+    const alice = devAccounts.alice
+    const currentWasm = bufferToU8a(Buffer.from((await client.chain.head.wasm).slice(2), 'hex'))
+    const currentWasmHash = client.api.registry.hash(currentWasm)
+
+    await client.dev.setStorage({
+      System: {
+        account: [[[alice.address], { providers: 1, data: { free: 100000 * 1e10 } }]],
+        authorizedUpgrade: { codeHash: currentWasmHash.toHex(), checkVersion: false },
+      },
+    })
+
+    // When: apply the pre-authorized upgrade against real pending code
+    const applyTx = client.api.tx.system.applyAuthorizedUpgrade(compactAddLength(currentWasm))
+    await sendTransaction(applyTx.signAsync(alice))
+    await client.dev.newBlock()
+
+    // Then: schedule_code_upgrade rejects with OverlappingUpgrades
+    const events = await client.api.query.system.events()
+    const failed = events.find((r) => client.api.events.system.ExtrinsicFailed.is(r.event))
+    assert(failed, 'Expected applyAuthorizedUpgrade to fail')
+    const dispatchError = (failed.event.data as any).dispatchError
+    const decoded = client.api.registry.findMetaError(dispatchError.asModule)
+    assert.equal(decoded.name, 'OverlappingUpgrades')
+  } finally {
+    await client.api.disconnect().catch(() => {})
+    await client.teardown().catch(() => {})
+  }
+}
+
+// Only runs when `upgradeRestrictionSignal` is set on-chain (i.e. the main upgrade test was
+// skipped due to a recent runtime upgrade). Verifies the barrier is real:
+// `applyAuthorizedUpgrade` fails with `ProhibitedByPolkadot`.
+//
+// Steps:
+// 1. Check `upgradeRestrictionSignal` — skip if absent (no relay chain cooldown)
+// 2. Set `AuthorizedUpgrade` to the current WASM hash via `dev.setStorage`
+// 3. Call `applyAuthorizedUpgrade` and assert it fails with `ProhibitedByPolkadot`
+export async function upgradeBlockedByRestrictionSignalTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, ctx?: { skip: (reason?: string) => void }) {
+  if (chain.isRelayChain) {
+    ctx?.skip?.('Only relevant for parachains')
+    return
+  }
+
+  const [client] = await createNetworks(chain)
+  try {
+    // Given: upgradeRestrictionSignal is set on the live chain
+    const restrictionSignal = (await client.api.query.parachainSystem.upgradeRestrictionSignal()) as Option<any>
+    if (restrictionSignal.isNone) {
+      ctx?.skip?.(`No upgrade restriction signal on ${client.config.name}, nothing to test`)
+      return
+    }
+
+    const alice = devAccounts.alice
+    const currentWasm = bufferToU8a(Buffer.from((await client.chain.head.wasm).slice(2), 'hex'))
+    const currentWasmHash = client.api.registry.hash(currentWasm)
+
+    await client.dev.setStorage({
+      System: {
+        account: [[[alice.address], { providers: 1, data: { free: 100000 * 1e10 } }]],
+        authorizedUpgrade: { codeHash: currentWasmHash.toHex(), checkVersion: false },
+      },
+    })
+
+    // When: apply the pre-authorized upgrade under the real restriction signal
+    const applyTx = client.api.tx.system.applyAuthorizedUpgrade(compactAddLength(currentWasm))
+    await sendTransaction(applyTx.signAsync(alice))
+    await client.dev.newBlock()
+
+    // Then: schedule_code_upgrade rejects with ProhibitedByPolkadot
+    const events = await client.api.query.system.events()
+    const failed = events.find((r) => client.api.events.system.ExtrinsicFailed.is(r.event))
+    assert(failed, 'Expected applyAuthorizedUpgrade to fail')
+    const dispatchError = (failed.event.data as any).dispatchError
+    const decoded = client.api.registry.findMetaError(dispatchError.asModule)
+    assert.equal(decoded.name, 'ProhibitedByPolkadot')
+  } finally {
+    await client.api.disconnect().catch(() => {})
+    await client.teardown().catch(() => {})
   }
 }
 
@@ -605,6 +731,7 @@ export async function authorizeUpgradeWithoutChecksViaRootReferendumTests<
   try {
     await skipIfRealUpgradePending(governanceClient, ctx)
     await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
+    await skipIfRecentRealUpgrade(toBeUpgradedClient, ctx)
 
     let expectedEvents: ExpectedEvents = []
     if (toBeUpgradedChain.isRelayChain) {
@@ -723,6 +850,7 @@ export async function authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendu
   try {
     await skipIfRealUpgradePending(governanceClient, ctx)
     await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
+    await skipIfRecentRealUpgrade(toBeUpgradedClient, ctx)
 
     let expectedEvents: ExpectedEvents = []
     if (toBeUpgradedChain.isRelayChain) {
@@ -791,6 +919,16 @@ export function governanceChainSelfUpgradeViaRootReferendumSuite<
         label: `authorize_upgrade doesnt allow upgrade to the same wasm (via Root referendum)`,
         testFn: async () => await authorizeUpgradeViaRootReferendumTests(governanceChain, governanceChain),
       },
+      {
+        kind: 'test',
+        label: `applyAuthorizedUpgrade blocked by overlapping pending validation code`,
+        testFn: async (ctx) => await upgradeBlockedByOverlappingUpgradeTests(governanceChain, ctx),
+      },
+      {
+        kind: 'test',
+        label: `applyAuthorizedUpgrade blocked by relay chain upgrade restriction signal`,
+        testFn: async (ctx) => await upgradeBlockedByRestrictionSignalTests(governanceChain, ctx),
+      },
     ],
   }
 }
@@ -840,6 +978,16 @@ export function governanceChainUpgradesOtherChainViaRootReferendumSuite<
         kind: 'test',
         label: `authorize_upgrade doesnt allow upgrade to the same wasm (via Root referendum)`,
         testFn: async () => await authorizeUpgradeViaRootReferendumTests(governanceChain, toBeUpgradedChain),
+      },
+      {
+        kind: 'test',
+        label: `applyAuthorizedUpgrade blocked by overlapping pending validation code`,
+        testFn: async (ctx) => await upgradeBlockedByOverlappingUpgradeTests(toBeUpgradedChain, ctx),
+      },
+      {
+        kind: 'test',
+        label: `applyAuthorizedUpgrade blocked by relay chain upgrade restriction signal`,
+        testFn: async (ctx) => await upgradeBlockedByRestrictionSignalTests(toBeUpgradedChain, ctx),
       },
     ],
   }

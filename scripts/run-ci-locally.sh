@@ -27,15 +27,16 @@ if [[ -z "$NETWORK" ]]; then
 fi
 shift
 
-# Chain/port/env-var triples per network, hardcoded to mirror the matrix in
-# .github/workflows/ci.yml. Kept literal here (rather than parsed from the
-# YAML) for two reasons: (1) no YAML parser dependency for a local script,
-# (2) drift between this script and the CI workflow is rare and obvious in
-# review when both change. If a chain is added to CI, mirror it here.
+# Chain/port/env-var triples per network, hardcoded to mirror the output of
+# scripts/generate-ci-matrix.mjs (which .github/workflows/ci.yml consumes).
+# Kept literal here (rather than generated) for two reasons: (1) no node
+# dependency before the tool checks below, (2) drift between this script and
+# the CI matrix is rare and obvious in review when both change. If a chain is
+# added to CHAIN_ORDER or a base changes in PORT_BASES, mirror it here.
 #
 # `both` runs polkadot + kusama in a single tmux session. Westend is
 # intentionally excluded because CI does not run a Westend job (the matrix
-# in .github/workflows/ci.yml only covers polkadot and kusama).
+# only covers polkadot and kusama).
 POLKADOT_CHAINS=(
   "polkadot:9000:POLKADOT_ENDPOINT"
   "assetHubPolkadot:9001:ASSETHUBPOLKADOT_ENDPOINT"
@@ -43,19 +44,21 @@ POLKADOT_CHAINS=(
   "collectivesPolkadot:9003:COLLECTIVESPOLKADOT_ENDPOINT"
   "coretimePolkadot:9004:CORETIMEPOLKADOT_ENDPOINT"
   "peoplePolkadot:9005:PEOPLEPOLKADOT_ENDPOINT"
-  "acala:9006:ACALA_ENDPOINT"
-  "hydration:9007:HYDRATION_ENDPOINT"
-  "bifrostPolkadot:9008:BIFROSTPOLKADOT_ENDPOINT"
+  "bulletinPolkadot:9006:BULLETINPOLKADOT_ENDPOINT"
+  "acala:9007:ACALA_ENDPOINT"
+  "astar:9008:ASTAR_ENDPOINT"
+  "hydration:9009:HYDRATION_ENDPOINT"
+  "bifrostPolkadot:9010:BIFROSTPOLKADOT_ENDPOINT"
 )
 KUSAMA_CHAINS=(
-  "kusama:9010:KUSAMA_ENDPOINT"
-  "assetHubKusama:9011:ASSETHUBKUSAMA_ENDPOINT"
-  "bridgeHubKusama:9012:BRIDGEHUBKUSAMA_ENDPOINT"
-  "coretimeKusama:9013:CORETIMEKUSAMA_ENDPOINT"
-  "peopleKusama:9014:PEOPLEKUSAMA_ENDPOINT"
-  "encointerKusama:9015:ENCOINTERKUSAMA_ENDPOINT"
-  "karura:9016:KARURA_ENDPOINT"
-  "bifrostKusama:9017:BIFROSTKUSAMA_ENDPOINT"
+  "kusama:9100:KUSAMA_ENDPOINT"
+  "assetHubKusama:9101:ASSETHUBKUSAMA_ENDPOINT"
+  "bridgeHubKusama:9102:BRIDGEHUBKUSAMA_ENDPOINT"
+  "coretimeKusama:9103:CORETIMEKUSAMA_ENDPOINT"
+  "peopleKusama:9104:PEOPLEKUSAMA_ENDPOINT"
+  "encointerKusama:9105:ENCOINTERKUSAMA_ENDPOINT"
+  "karura:9106:KARURA_ENDPOINT"
+  "bifrostKusama:9107:BIFROSTKUSAMA_ENDPOINT"
 )
 
 case "$NETWORK" in

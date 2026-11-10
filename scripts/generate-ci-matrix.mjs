@@ -35,6 +35,7 @@ const CHAIN_ORDER = {
 		'collectivesPolkadot',
 		'coretimePolkadot',
 		'peoplePolkadot',
+		'bulletinPolkadot',
 		'acala',
 		'astar',
 		'hydration',
@@ -55,7 +56,7 @@ const CHAIN_ORDER = {
 /** Base port for each network group. Chains get consecutive ports from here. */
 const PORT_BASES = {
 	polkadot: 9000,
-	kusama: 9010,
+	kusama: 9100,
 }
 
 /** Convert chain name to the env var name used by workflows (e.g. "assetHubPolkadot" -> "ASSETHUBPOLKADOT_ENDPOINT") */
@@ -112,5 +113,19 @@ const matrix = ['polkadot', 'kusama'].map((networkName) => ({
 		}
 	}),
 }))
+
+// Ports come from a per-network base plus the chain's index, so a network that outgrows the gap to
+// the next base starts handing out ports the other network already claims.
+const portOwners = new Map()
+for (const network of matrix) {
+	for (const { chain, port } of network.chains) {
+		const owner = `${network.name}:${chain}`
+		const existing = portOwners.get(port)
+		if (existing !== undefined) {
+			throw new Error(`Port ${port} claimed by both ${existing} and ${owner}: raise a base in PORT_BASES`)
+		}
+		portOwners.set(port, owner)
+	}
+}
 
 process.stdout.write(JSON.stringify(matrix))

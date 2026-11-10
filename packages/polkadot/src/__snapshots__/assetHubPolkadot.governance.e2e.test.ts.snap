@@ -45,6 +45,40 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 }
 `;
 
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > big_spender > track capacity overflow > cancelling a queued referendum keeps DecidingCount > referendum canceled while queued on track 34 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > big_spender > track capacity overflow > killing a queued referendum keeps DecidingCount > referendum killed while queued on track 34 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Killed",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > insufficient approval rejection > decision deposit refund after rejection (insufficient approval) - referendum_killer 1`] = `
 [
   {
@@ -88,6 +122,40 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
   },
   "topics": [],
 }
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > track capacity overflow > cancelling a queued referendum keeps DecidingCount > referendum canceled while queued on track 21 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > track capacity overflow > killing a queued referendum keeps DecidingCount > referendum killed while queued on track 21 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Killed",
+    "section": "referenda",
+  },
+]
 `;
 
 exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > root > insufficient approval rejection > decision deposit refund after rejection (insufficient approval) - root 1`] = `
@@ -135,6 +203,40 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 }
 `;
 
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > root > track capacity overflow > cancelling a queued referendum keeps DecidingCount > referendum canceled while queued on track 0 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > root > track capacity overflow > killing a queued referendum keeps DecidingCount > referendum killed while queued on track 0 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Killed",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
 [
   {
@@ -145,7 +247,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 500000000)",
         },
       },
     },
@@ -658,7 +760,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },

@@ -168,7 +168,7 @@ export async function missingDecisionDepositTest<
   })
 
   /**
-   * 2. Check the referendum's data — decision deposit should be absent
+   * 2. Check the referendum's data. The decision deposit should be absent
    */
 
   let referendumDataOpt = (await client.api.query.referenda.referendumInfoFor(
@@ -1261,7 +1261,7 @@ async function verifyRejection(
   expect(rejectedRef[2].isSome, 'decision deposit should be present after rejection').toBe(true)
 
   /**
-   * 3. Refund the decision deposit — this should succeed for rejected referenda
+   * 3. Refund the decision deposit. This should succeed for rejected referenda
    */
 
   const refundDecisionTx = client.api.tx.referenda.refundDecisionDeposit(referendumIndex)
@@ -1273,7 +1273,7 @@ async function verifyRejection(
     .toMatchSnapshot(`decision deposit refund after rejection (${scenarioLabel}) - ${trackLabel}`)
 
   /**
-   * 4. Attempt to refund the submission deposit — this should fail with `BadStatus`
+   * 4. Attempt to refund the submission deposit. This should fail with `BadStatus`
    */
 
   const refundSubmissionTx = client.api.tx.referenda.refundSubmissionDeposit(referendumIndex)
@@ -1520,6 +1520,11 @@ async function setupOverflow(client: Client<any, any>, trackConfig: GovernanceTr
         [[devAccounts.bob.address], { providers: 1, data: { free: (decisionDeposit * 10n).toString() } }],
       ],
     },
+    // The forked chain can already hold referenda in this track's queue. They would take
+    // the free slot before the overflow referendum below, so the queue starts empty.
+    Referenda: {
+      trackQueue: [[[trackConfig.trackId], []]],
+    },
   })
 
   /**
@@ -1753,7 +1758,7 @@ export async function overflowPromotionViaRejectionTest<
    *
    * Backdating `deciding.since` so the decision period has elapsed by the next block.
    * A nay-only tally is injected because `Perbill::from_rational(0, 0)` returns 100 %
-   * in Substrate — an empty tally would pass approval and enter confirmation instead.
+   * in Substrate. An empty tally would pass approval and enter confirmation instead.
    */
 
   const block = (await client.api.rpc.chain.getHeader()).number.toNumber()
@@ -1812,18 +1817,64 @@ export async function overflowPromotionViaRejectionTest<
 /**
  * Test that the overflow referendum is promoted after the blocker is killed:
  * 1–4. shared setup (submit both refs, queue the overflow)
- * 5. killing the blocker with a Root-origin call via the scheduler
- * 6. verifying the blocker is killed and the overflow is promoted to deciding
+ * 5. putting the blocker into its decision period, so its kill frees track capacity
+ * 6. killing the blocker with a Root-origin call via the scheduler
+ * 7. verifying the blocker is killed and the overflow is promoted to deciding
  */
 export async function overflowPromotionViaKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
   const ctx = await setupOverflow(client, trackConfig)
-  const { blockerIndex, overflowIndex, maxDeciding } = ctx
+  const { blockerIndex, blockerOngoing, overflowIndex, maxDeciding, prepPeriod } = ctx
 
   /**
-   * 5. Kill the blocker with a Root-origin call via the scheduler
+   * 5. Put the blocker into its decision period
+   *
+   * `kill` only calls `note_one_fewer_deciding` when the referendum it removes was deciding:
+   *
+   * ```
+   * if status.deciding.is_some() {
+   *     Self::note_one_fewer_deciding(status.track);
+   * }
+   * ```
+   *
+   * `setupOverflow` fills the track by writing `DecidingCount`, which leaves the blocker itself
+   * with `deciding: None`. Killing it in that state frees no capacity, so the queued overflow
+   * stays queued and step 7 fails. Injecting `deciding` makes the kill release the slot the
+   * blocker occupies in `DecidingCount`.
+   */
+
+  const blockerBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const blockerDecidingSince = blockerBlock + 1
+
+  await client.dev.setStorage({
+    Referenda: {
+      ReferendumInfoFor: [
+        [
+          [blockerIndex],
+          {
+            Ongoing: {
+              track: blockerOngoing.track,
+              origin: blockerOngoing.origin,
+              proposal: blockerOngoing.proposal,
+              enactment: blockerOngoing.enactment,
+              submitted: blockerDecidingSince - prepPeriod,
+              submissionDeposit: blockerOngoing.submissionDeposit,
+              decisionDeposit: blockerOngoing.decisionDeposit,
+              deciding: { since: blockerDecidingSince, confirming: null },
+              tally: blockerOngoing.tally,
+              inQueue: false,
+              alarm: blockerOngoing.alarm,
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  /**
+   * 6. Kill the blocker with a Root-origin call via the scheduler
    */
 
   const schedulerBlock =
@@ -1851,11 +1902,137 @@ export async function overflowPromotionViaKillTest<
   expect(blockerResultOpt.unwrap().isKilled, 'blocker should have been killed').toBe(true)
 
   /**
-   * 6. Verify the overflow was promoted
+   * 7. Verify the overflow was promoted
    */
 
   await client.dev.newBlock()
   await verifyPromotion(client, overflowIndex, trackConfig, maxDeciding)
+}
+
+/**
+ * `DecidingCount` counts referenda in their decision period. A referendum that sits in a track's
+ * queue has never entered that period, so removing it must leave the count alone.
+ *
+ * Older runtimes decremented the count for any removed referendum, whether or not it was
+ * deciding. That let a track admit more concurrent referenda than `maxDeciding`, or promote a
+ * queued referendum that no freed slot was paying for.
+ *
+ * Both `cancel` and `kill` share the guard, so both are checked.
+ */
+async function verifyQueuedRemovalKeepsDecidingCount(
+  client: Client<any, any>,
+  trackConfig: GovernanceTrackConfig,
+  removal: 'cancel' | 'kill',
+) {
+  const { overflowIndex } = await setupOverflow(client, trackConfig)
+
+  /**
+   * 5. Record the count, and the overflow's tally, while the overflow is queued
+   */
+
+  const countBefore = ((await client.api.query.referenda.decidingCount(trackConfig.trackId)) as any).toNumber()
+
+  const queuedOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    (await client.api.query.referenda.referendumInfoFor(overflowIndex)) as any
+  assert(queuedOpt.isSome)
+  const queued = queuedOpt.unwrap()
+  assert(queued.isOngoing, 'overflow should be ongoing before it is removed')
+  const queuedOngoing = queued.asOngoing
+
+  /**
+   * 6. Remove the queued overflow with a Root-origin call via the scheduler
+   */
+
+  const call =
+    removal === 'kill' ? client.api.tx.referenda.kill(overflowIndex) : client.api.tx.referenda.cancel(overflowIndex)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    call.method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  const removalEvents = await client.api.query.system.events()
+  const removalEvent = removalEvents.find(({ event }) =>
+    removal === 'kill'
+      ? client.api.events.referenda.Killed.is(event) && event.data[0].toNumber() === overflowIndex
+      : client.api.events.referenda.Cancelled.is(event) && event.data[0].toNumber() === overflowIndex,
+  )
+  assert(removalEvent, `referenda.${removal === 'kill' ? 'Killed' : 'Cancelled'} should be emitted for the overflow`)
+
+  if (removal === 'kill') {
+    assert(client.api.events.referenda.Killed.is(removalEvent.event))
+    expect(removalEvent.event.data.index.toNumber()).toBe(overflowIndex)
+    expect(removalEvent.event.data.tally.toJSON()).toEqual(queuedOngoing.tally.toJSON())
+  } else {
+    assert(client.api.events.referenda.Cancelled.is(removalEvent.event))
+    expect(removalEvent.event.data.index.toNumber()).toBe(overflowIndex)
+    expect(removalEvent.event.data.tally.toJSON()).toEqual(queuedOngoing.tally.toJSON())
+  }
+
+  await checkSystemEvents(client, { section: 'referenda', method: removal === 'kill' ? 'Killed' : 'Cancelled' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot(`referendum ${removal}ed while queued on track ${trackConfig.trackId}`)
+
+  const removedOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    (await client.api.query.referenda.referendumInfoFor(overflowIndex)) as any
+  assert(removedOpt.isSome)
+  const removed = removedOpt.unwrap()
+  expect(removal === 'kill' ? removed.isKilled : removed.isCancelled, `overflow should be ${removal}ed`).toBe(true)
+
+  /**
+   * 7. Verify the count did not move
+   *
+   * `note_one_fewer_deciding` schedules its work for the next block, so the count is read again
+   * after one more block to catch a decrement that lands late.
+   *
+   * The count is only compared against itself. `setupOverflow` fills the track by writing
+   * `DecidingCount` rather than by driving referenda into their decision period, so on a fork the
+   * stored count deliberately exceeds the referenda actually deciding on the track.
+   *
+   * The track queue is not checked: neither `cancel` nor `kill` removes the entry, which is
+   * dropped later when `next_for_deciding` skips referenda that are no longer ongoing.
+   */
+
+  await client.dev.newBlock()
+
+  const countAfter = ((await client.api.query.referenda.decidingCount(trackConfig.trackId)) as any).toNumber()
+  expect(
+    countAfter,
+    `removing a queued referendum must not change DecidingCount for track ${trackConfig.trackId}`,
+  ).toBe(countBefore)
+}
+
+/**
+ * Test that killing a queued referendum leaves the track's `DecidingCount` untouched:
+ * 1–4. shared setup (submit both refs, queue the overflow)
+ * 5. recording `DecidingCount` and the overflow's tally while the overflow is queued
+ * 6. killing the queued overflow with a Root-origin call via the scheduler, and checking `Killed`
+ * 7. verifying `DecidingCount` still holds the value recorded in step 5
+ */
+export async function killQueuedKeepsDecidingCountTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+  await verifyQueuedRemovalKeepsDecidingCount(client, trackConfig, 'kill')
+}
+
+/**
+ * Test that cancelling a queued referendum leaves the track's `DecidingCount` untouched:
+ * 1–4. shared setup (submit both refs, queue the overflow)
+ * 5. recording `DecidingCount` and the overflow's tally while the overflow is queued
+ * 6. cancelling the queued overflow with a Root-origin call via the scheduler, and checking
+ *    `Cancelled`
+ * 7. verifying `DecidingCount` still holds the value recorded in step 5
+ */
+export async function cancelQueuedKeepsDecidingCountTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+  await verifyQueuedRemovalKeepsDecidingCount(client, trackConfig, 'cancel')
 }
 
 /// -------
@@ -1900,6 +2077,16 @@ function negativeFlowsForTrack(getClient: () => Client<any, any>, trackConfig: G
             kind: 'test' as const,
             label: 'promotion via kill',
             testFn: async () => await overflowPromotionViaKillTest(getClient(), trackConfig),
+          },
+          {
+            kind: 'test' as const,
+            label: 'killing a queued referendum keeps DecidingCount',
+            testFn: async () => await killQueuedKeepsDecidingCountTest(getClient(), trackConfig),
+          },
+          {
+            kind: 'test' as const,
+            label: 'cancelling a queued referendum keeps DecidingCount',
+            testFn: async () => await cancelQueuedKeepsDecidingCountTest(getClient(), trackConfig),
           },
         ],
       },

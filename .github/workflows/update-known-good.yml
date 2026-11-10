@@ -42,10 +42,11 @@ jobs:
         id: networks
         run: echo "networks=$(node scripts/generate-ci-matrix.mjs)" >> "$GITHUB_OUTPUT"
       - name: Update Known Good Block Numbers
-        run: |
-          yarn update-known-good
+        env:
+          ACALA_ENDPOINT: ${{ secrets.ACALA_ENDPOINT }}
+        run: yarn update-known-good
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: KNOWN_GOOD_BLOCK_NUMBERS
           path: |
@@ -78,7 +79,7 @@ jobs:
       - run: yarn --immutable
 
       - name: Download KNOWN_GOOD_BLOCK_NUMBERS artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: KNOWN_GOOD_BLOCK_NUMBERS
 
@@ -101,15 +102,22 @@ jobs:
 
       # Start one Subway instance per chain in this network, each on its own port
       - name: Start all Subway instances
+        env:
+          ACALA_ENDPOINT: ${{ secrets.ACALA_ENDPOINT }}
         run: |
           echo "Starting all Subway instances for ${{ matrix.network.name }}..."
 
           echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
             CHAIN=$(echo $chain | jq -r '.chain')
             PORT=$(echo $chain | jq -r '.port')
+            ENDPOINT_VAR=$(echo $chain | jq -r '.endpoint_var')
+            ENDPOINT_OVERRIDE="${!ENDPOINT_VAR:-}"
 
-            # Get endpoints from pet-chain-endpoints.json
-            ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+            if [ -n "$ENDPOINT_OVERRIDE" ]; then
+              ENDPOINTS=$(jq -cn --arg endpoint "$ENDPOINT_OVERRIDE" '[$endpoint]')
+            else
+              ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+            fi
 
             if [ "$ENDPOINTS" = "null" ] || [ -z "$ENDPOINTS" ]; then
               echo "Error: No endpoints found for chain $CHAIN"
@@ -187,7 +195,7 @@ jobs:
 
       - name: Upload failed chains
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: failed-chains-${{ matrix.network.name }}-${{ matrix.shard }}
           path: failed-chains.json
@@ -214,7 +222,7 @@ jobs:
     runs-on: ubuntu-latest
     if: success()
     steps:
-    - uses: actions/create-github-app-token@v1
+    - uses: actions/create-github-app-token@v3
       id: app-token
       with:
         app-id: ${{ secrets.GH_APP_ID }}
@@ -223,7 +231,7 @@ jobs:
       with:
         token: ${{ steps.app-token.outputs.token }}
     - name: Download KNOWN_GOOD_BLOCK_NUMBERS artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         name: KNOWN_GOOD_BLOCK_NUMBERS
     - name: Commit and push changes
@@ -248,7 +256,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download failed chains artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: failed-chains
           pattern: failed-chains-*

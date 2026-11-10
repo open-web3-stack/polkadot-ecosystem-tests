@@ -1,25 +1,39 @@
+import type { Client } from '@e2e-test/networks'
 import { defaultAccounts, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { acala, assetHubPolkadot, hydration } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
-import { describe } from 'vitest'
+import { beforeAll, describe } from 'vitest'
 
-describe('acala & hydration', async () => {
-  const [acalaClient, hydrationClient, assetHubPolkadotClient] = await setupNetworks(acala, hydration, assetHubPolkadot)
+describe('acala & hydration', () => {
+  let acalaClient: Client
+  let hydrationClient: Client
+  let assetHubPolkadotClient: Client
 
-  runXtokenstHorizontal('acala transfer DOT to hydration', async () => {
-    return {
-      fromChain: acalaClient,
-      toChain: hydrationClient,
-      routeChain: assetHubPolkadotClient,
-      toAccount: defaultAccountsSr25519.bob,
-      fromBalance: query.tokens(acala.custom.dot),
-      toBalance: query.tokens(hydration.custom.relayToken),
-      tx: tx.xtokens.transfer(acala.custom.dot, 1e12, tx.xtokens.parachainV3(hydration.paraId!)),
-    }
+  beforeAll(async () => {
+    ;[acalaClient, hydrationClient, assetHubPolkadotClient] = await setupNetworks(acala, hydration, assetHubPolkadot)
   })
+
+  // Skipped: Hydration runtime 455 fails `BuyExecution` for incoming DOT with `AssetNotFound` on a
+  // fork and traps the transferred DOT. The live chain deposits DOT normally, so the fee logic
+  // appears to need data that a quiet fork does not have.
+  runXtokenstHorizontal(
+    'acala transfer DOT to hydration',
+    async () => {
+      return {
+        fromChain: acalaClient,
+        toChain: hydrationClient,
+        routeChain: assetHubPolkadotClient,
+        toAccount: defaultAccountsSr25519.bob,
+        fromBalance: query.tokens(acala.custom.dot),
+        toBalance: query.tokens(hydration.custom.relayToken),
+        tx: tx.xtokens.transfer(acala.custom.dot, 1e12, tx.xtokens.parachainV3(hydration.paraId!)),
+      }
+    },
+    { skip: true },
+  )
 
   runXtokenstHorizontal('hydration transfer DOT to acala', async () => {
     return {

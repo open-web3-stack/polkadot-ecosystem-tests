@@ -7,36 +7,26 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
-import { assertExpectedEvents, type TestConfig } from './helpers/index.js'
+import { COLLECTIVES_PARA_ID, DEFAULT_SALARY_TEST_FREE_BALANCE, seedFellowshipMembers } from './fellowship.js'
+import { assertExpectedEvents, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
 import type { Client, RootTestTree } from './types.js'
 
 /** Shorthand — most salary helpers don't constrain the chain's custom config or init storages. */
 type AnyClient = Client<Record<string, unknown> | undefined, Record<string, Record<string, any>> | undefined>
 
-/// -------
+/// ---------
 /// Constants
-/// -------
+/// ---------
 
-// The Collectives parachain ID on Polkadot.
-// This is the parachain in which the Fellowship salary pallet is deployed, and is used to build the
-// cross-chain location of the salary sovereign.
-export const COLLECTIVES_PARA_ID = 1001
-
-// The pallet index for `pallet-ranked-collective` in the Collectives runtime.
-// This is used when directly seeding Fellowship membership storage for focused salary tests.
-export const FELLOWSHIP_COLLECTIVE_PALLET_INDEX = 60
-
-// The pallet index for `pallet-core-fellowship` in the Collectives runtime.
-// This identifies the pallet that stores active Fellowship member state used by salary eligibility checks.
-export const FELLOWSHIP_CORE_PALLET_INDEX = 63
+export {
+  COLLECTIVES_PARA_ID,
+  FELLOWSHIP_COLLECTIVE_PALLET_INDEX,
+  FELLOWSHIP_CORE_PALLET_INDEX,
+} from './fellowship.js'
 
 // The pallet index for `pallet-salary-fellowship` in the Collectives runtime.
 // Together with the Collectives parachain ID, this determines the salary sovereign XCM location.
 export const FELLOWSHIP_SALARY_PALLET_INDEX = 64
-
-// The Dan-3 Fellowship rank used throughout these tests.
-// Rank 3 is chosen because it has a live salary configured and is simple to seed directly into storage.
-export const SALARY_MEMBER_RANK_DAN_3 = 3
 
 // The ForeignAssets location for Hollar on Asset Hub.
 // Hollar lives on Hydration (parachain 2034) with GeneralIndex 222.
@@ -63,13 +53,13 @@ export const SALARY_SOVEREIGN_LOCATION = {
 // `asset-hub-polkadot/src/xcm_config.rs`, where the location/account derivation is validated.
 export const SALARY_SOVEREIGN_ADDRESS = '13w7NdvSR1Af8xsQTArDtZmVvjE8XhWNdL4yed3iFHrUNCnS'
 
-// Default free balance given to synthetic Fellowship members created for salary tests.
-// It is intentionally generous so fees never interfere with the salary lifecycle assertions.
-const DEFAULT_SALARY_TEST_FREE_BALANCE = 1_000n * 10n ** 10n
+// An XCM query id the paymaster will never have recorded. Used to drive `check_payment` into its
+// `PaymentStatus::Unknown` branch so the `Inconclusive` error path can be exercised.
+const SALARY_UNKNOWN_PAYMENT_ID = 999_999
 
-/// -------
+/// -----
 /// Types
-/// -------
+/// -----
 
 /** Salary parameters from `fellowshipCore.params()`. */
 export interface FellowshipSalaryParams {
@@ -107,9 +97,9 @@ export interface FellowshipSalaryClaimantState {
   attemptedAmount: bigint | null
 }
 
-/// -------
+/// ----------------
 /// Internal helpers
-/// -------
+/// ----------------
 
 /** Return whether events contain the matched event. */
 function hasEvent(events: any[], matcher: { is: (event: any) => boolean } | undefined): boolean {
@@ -125,9 +115,9 @@ function expectSourceChainXcmDispatch(client: AnyClient, events: any[]): void {
   ).toBe(true)
 }
 
-/// -------
+/// ---------------
 /// Storage readers
-/// -------
+/// ---------------
 
 /** Read salary runtime config from live chain state. */
 export async function readSalaryRuntimeConfig<
@@ -243,9 +233,9 @@ export async function hollarBalance(assetHubClient: AnyClient, address: string):
   return balance.isSome ? (balance.unwrap() as any).balance.toBigInt() : 0n
 }
 
-/// -------
+/// -----------------------
 /// Storage writers/seeders
-/// -------
+/// -----------------------
 
 /** Seed a funded Dan-3 Fellowship member for salary tests. */
 export async function seedDan3SalaryMember(
@@ -253,35 +243,7 @@ export async function seedDan3SalaryMember(
   member: KeyringPair,
   freeBalance: bigint = DEFAULT_SALARY_TEST_FREE_BALANCE,
 ): Promise<void> {
-  await client.dev.setStorage({
-    System: {
-      account: [[[member.address], { providers: 1, data: { free: freeBalance, frozen: 0, reserved: 0 } }]],
-    },
-    FellowshipCollective: {
-      members: [[[member.address], { rank: SALARY_MEMBER_RANK_DAN_3 }]],
-      memberCount: [
-        [[0], 1],
-        [[1], 1],
-        [[2], 1],
-        [[3], 1],
-      ],
-      idToIndex: [
-        [[0, member.address], 0],
-        [[1, member.address], 0],
-        [[2, member.address], 0],
-        [[3, member.address], 0],
-      ],
-      indexToId: [
-        [[0, 0], member.address],
-        [[1, 0], member.address],
-        [[2, 0], member.address],
-        [[3, 0], member.address],
-      ],
-    },
-    FellowshipCore: {
-      member: [[[member.address], { isActive: true, lastPromotion: 0, lastProof: 0 }]],
-    },
-  })
+  await seedFellowshipMembers(client, [{ pair: member, rank: 3 }], freeBalance)
 }
 
 /**
@@ -326,27 +288,9 @@ export async function fundSalarySovereignHollar(assetHubClient: AnyClient, amoun
   })
 }
 
-/// -------
+/// -----------------
 /// Time manipulation
-/// -------
-
-/** Ensure the salary cycle exists; call `init()` when needed. */
-export async function ensureSalaryCycleStarted<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, signer: KeyringPair): Promise<FellowshipSalaryStatus> {
-  const status = await readSalaryStatus(client)
-  if (status !== null) return status
-
-  await sendTransaction(client.api.tx.fellowshipSalary.init().signAsync(signer))
-  await client.dev.newBlock()
-
-  assertExpectedEvents(await client.api.query.system.events(), [
-    { type: client.api.events.fellowshipSalary.CycleStarted },
-  ])
-
-  return (await readSalaryStatus(client))!
-}
+/// -----------------
 
 /** Rewrite `cycleStart` while preserving other salary status fields. */
 async function setSalaryCycleStart(client: AnyClient, cycleStart: number): Promise<FellowshipSalaryStatus> {
@@ -393,36 +337,9 @@ export async function setSalaryCycleToBumpWindow(
   return await setSalaryCycleStart(client, block - runtimeConfig.cyclePeriod - 1)
 }
 
-/** Advance to the next salary cycle with storage edits plus `bump()`. */
-export async function bumpToNextSalaryCycle(
-  client: AnyClient,
-  signer: KeyringPair,
-  runtimeConfig: FellowshipSalaryRuntimeConfig,
-): Promise<any[]> {
-  await setSalaryCycleToBumpWindow(client, runtimeConfig)
-  await sendTransaction(client.api.tx.fellowshipSalary.bump().signAsync(signer))
-  await client.dev.newBlock()
-  return await client.api.query.system.events()
-}
-
-/// -------
-/// Salary lifecycle operations
-/// -------
-
-/** Submit `payout()` or `payoutOther()`; return system events. */
-export async function payoutSalaryMember(client: AnyClient, signer: KeyringPair, beneficiary?: string): Promise<any[]> {
-  const call = beneficiary
-    ? client.api.tx.fellowshipSalary.payoutOther(beneficiary)
-    : client.api.tx.fellowshipSalary.payout()
-
-  await sendTransaction(call.signAsync(signer))
-  await client.dev.newBlock()
-  return await client.api.query.system.events()
-}
-
-/// -------
+/// --------------
 /// Test functions
-/// -------
+/// --------------
 
 /**
  * Full salary lifecycle: `induct` → `register` → `payout`.
@@ -442,7 +359,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   const member = testAccounts.keyring.createFromUri('//salary_raw_member')
 
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, 3)
   const liveStatusBefore = await readSalaryStatus(collectivesClient)
 
   if (liveStatusBefore !== null) {
@@ -453,37 +370,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   /// 1. Seed a fresh Dan-3 Fellowship member directly into the ranked collective/core storage.
   ///
 
-  await collectivesClient.dev.setStorage({
-    System: {
-      account: [
-        [[member.address], { providers: 1, data: { free: DEFAULT_SALARY_TEST_FREE_BALANCE, frozen: 0, reserved: 0 } }],
-      ],
-    },
-    FellowshipCollective: {
-      members: [[[member.address], { rank: SALARY_MEMBER_RANK_DAN_3 }]],
-      memberCount: [
-        [[0], 1],
-        [[1], 1],
-        [[2], 1],
-        [[3], 1],
-      ],
-      idToIndex: [
-        [[0, member.address], 0],
-        [[1, member.address], 0],
-        [[2, member.address], 0],
-        [[3, member.address], 0],
-      ],
-      indexToId: [
-        [[0, 0], member.address],
-        [[1, 0], member.address],
-        [[2, 0], member.address],
-        [[3, 0], member.address],
-      ],
-    },
-    FellowshipCore: {
-      member: [[[member.address], { isActive: true, lastPromotion: 0, lastProof: 0 }]],
-    },
-  })
+  await seedFellowshipMembers(collectivesClient, [{ pair: member, rank: 3 }])
 
   ///
   /// 2. Seed the validated salary sovereign account on Asset Hub with enough Hollar for one payout.
@@ -660,7 +547,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
 export async function salaryStatusStorageTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
   const member = testAccounts.keyring.createFromUri('//salary_status_member')
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, 3)
 
   /// 1. Seed member and sovereign balances.
 
@@ -668,20 +555,29 @@ export async function salaryStatusStorageTest(collectivesClient: AnyClient, asse
 
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
-  /// 2. Ensure the salary cycle is started.
+  /// 2. Bootstrap the salary cycle when the fork predates its first start.
 
-  await ensureSalaryCycleStarted(collectivesClient, member)
+  if ((await readSalaryStatus(collectivesClient)) === null) {
+    await sendTransaction(collectivesClient.api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: collectivesClient.api.events.fellowshipSalary.CycleStarted },
+    ])
+  }
+  const salaryStatus = (await readSalaryStatus(collectivesClient))!
 
   /// 3. Seed inducted claimant state (induction doesn't touch status, so seed directly).
 
-  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
+  const cycleIndex = salaryStatus.cycleIndex
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
 
   const statusAfterInduct = (await readSalaryStatus(collectivesClient))!
 
   /// 4. Bump to next cycle; verify status reset.
 
-  await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
+  await setSalaryCycleToBumpWindow(collectivesClient, runtimeConfig)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.bump().signAsync(member))
+  await collectivesClient.dev.newBlock()
   const statusAfterBump = (await readSalaryStatus(collectivesClient))!
   expect(statusAfterBump.cycleIndex).toBe(statusAfterInduct.cycleIndex + 1)
   expect(statusAfterBump.budget).toBe(runtimeConfig.budget)
@@ -699,7 +595,8 @@ export async function salaryStatusStorageTest(collectivesClient: AnyClient, asse
   /// 6. Payout; verify `totalUnregisteredPaid` remains zero.
 
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
-  await payoutSalaryMember(collectivesClient, member)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.payout().signAsync(member))
+  await collectivesClient.dev.newBlock()
 
   const statusAfterPayout = (await readSalaryStatus(collectivesClient))!
   expect(statusAfterPayout.totalRegistrations).toBe(expectedSalary)
@@ -722,7 +619,7 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
   const member = testAccounts.keyring.createFromUri('//salary_cross_chain_member')
   const beneficiary = testAccounts.keyring.createFromUri('//salary_cross_chain_beneficiary')
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, 3)
 
   /// 1. Seed member, beneficiary ED, and sovereign Hollar.
 
@@ -730,13 +627,23 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
 
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
-  /// 2. Ensure the salary cycle is started.
+  /// 2. Bootstrap the salary cycle when the fork predates its first start.
 
-  await ensureSalaryCycleStarted(collectivesClient, member)
+  let status = await readSalaryStatus(collectivesClient)
+  if (status === null) {
+    await sendTransaction(collectivesClient.api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: collectivesClient.api.events.fellowshipSalary.CycleStarted },
+    ])
+    status = (await readSalaryStatus(collectivesClient))!
+  }
 
   /// 3. Seed registered claimant state and move to payout window.
 
-  await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
+  await setSalaryCycleToBumpWindow(collectivesClient, runtimeConfig)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.bump().signAsync(member))
+  await collectivesClient.dev.newBlock()
   const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, {
     Registered: expectedSalary.toString(),
@@ -746,7 +653,9 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
   /// 4. Call `payoutOther(beneficiary)`; verify Collectives events.
 
   const balanceBefore = await hollarBalance(assetHubClient, beneficiary.address)
-  const payoutEvents = await payoutSalaryMember(collectivesClient, member, beneficiary.address)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.payoutOther(beneficiary.address).signAsync(member))
+  await collectivesClient.dev.newBlock()
+  const payoutEvents = await collectivesClient.api.query.system.events()
 
   const addressEncoding = collectivesClient.config.properties.addressEncoding
   const memberAddress = encodeAddress(member.address, addressEncoding)
@@ -792,7 +701,7 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
   const unregisteredMember = testAccounts.keyring.createFromUri('//salary_unregistered_test_unregistered')
 
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, 3)
 
   /// 1. Seed registered and unregistered fellows plus sovereign Hollar.
 
@@ -801,16 +710,26 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
 
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
-  /// 2. Ensure the salary cycle is started; seed inducted claimant state.
+  /// 2. Bootstrap the salary cycle when needed, then seed inducted claimant state.
 
-  await ensureSalaryCycleStarted(collectivesClient, registeredMember)
-  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
+  let status = await readSalaryStatus(collectivesClient)
+  if (status === null) {
+    await sendTransaction(collectivesClient.api.tx.fellowshipSalary.init().signAsync(registeredMember))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: collectivesClient.api.events.fellowshipSalary.CycleStarted },
+    ])
+    status = (await readSalaryStatus(collectivesClient))!
+  }
+  const cycleIndex = status!.cycleIndex
   await seedSalaryClaimant(collectivesClient, registeredMember.address, cycleIndex, { Nothing: null })
   await seedSalaryClaimant(collectivesClient, unregisteredMember.address, cycleIndex, { Nothing: null })
 
   /// 3. Bump to next cycle.
 
-  await bumpToNextSalaryCycle(collectivesClient, registeredMember, runtimeConfig)
+  await setSalaryCycleToBumpWindow(collectivesClient, runtimeConfig)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.bump().signAsync(registeredMember))
+  await collectivesClient.dev.newBlock()
 
   /// 4. Register only one fellow.
 
@@ -826,7 +745,8 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
   /// 5. Pay the registered fellow.
 
   const registeredBalanceBefore = await hollarBalance(assetHubClient, registeredMember.address)
-  await payoutSalaryMember(collectivesClient, registeredMember)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.payout().signAsync(registeredMember))
+  await collectivesClient.dev.newBlock()
   await assetHubClient.dev.newBlock()
   const registeredBalanceAfter = await hollarBalance(assetHubClient, registeredMember.address)
   expect(registeredBalanceAfter - registeredBalanceBefore).toBe(expectedSalary)
@@ -837,7 +757,8 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
   const expectedUnregisteredPayout = expectedSalary < pot ? expectedSalary : pot
 
   const unregisteredBalanceBefore = await hollarBalance(assetHubClient, unregisteredMember.address)
-  await payoutSalaryMember(collectivesClient, unregisteredMember)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.payout().signAsync(unregisteredMember))
+  await collectivesClient.dev.newBlock()
   await assetHubClient.dev.newBlock()
   const unregisteredBalanceAfter = await hollarBalance(assetHubClient, unregisteredMember.address)
 
@@ -865,7 +786,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
   const member2 = testAccounts.keyring.createFromUri('//salary_proration_member_2')
 
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const salaryPerMember = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const salaryPerMember = activeSalaryForRank(runtimeConfig.params, 3)
 
   /// 1. Seed two fellows plus sovereign Hollar.
 
@@ -876,16 +797,26 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
 
   await fundSalarySovereignHollar(assetHubClient, salaryPerMember * 2n)
 
-  /// 2. Ensure the salary cycle is started; seed inducted claimant state.
+  /// 2. Bootstrap the salary cycle when needed, then seed inducted claimant state.
 
-  await ensureSalaryCycleStarted(collectivesClient, member1)
-  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
+  let status = await readSalaryStatus(collectivesClient)
+  if (status === null) {
+    await sendTransaction(collectivesClient.api.tx.fellowshipSalary.init().signAsync(member1))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: collectivesClient.api.events.fellowshipSalary.CycleStarted },
+    ])
+    status = (await readSalaryStatus(collectivesClient))!
+  }
+  const cycleIndex = status!.cycleIndex
   await seedSalaryClaimant(collectivesClient, member1.address, cycleIndex, { Nothing: null })
   await seedSalaryClaimant(collectivesClient, member2.address, cycleIndex, { Nothing: null })
 
   /// 3. Bump to next cycle; override budget below total registrations.
 
-  await bumpToNextSalaryCycle(collectivesClient, member1, runtimeConfig)
+  await setSalaryCycleToBumpWindow(collectivesClient, runtimeConfig)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.bump().signAsync(member1))
+  await collectivesClient.dev.newBlock()
 
   const statusAfterBump = (await readSalaryStatus(collectivesClient))!
   await collectivesClient.dev.setStorage({
@@ -921,17 +852,17 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
   const expectedProrated = (salaryPerMember * smallBudget) / totalRegistrations
 
   const balance1Before = await hollarBalance(assetHubClient, member1.address)
-  await payoutSalaryMember(collectivesClient, member1)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.payout().signAsync(member1))
+  await collectivesClient.dev.newBlock()
   await assetHubClient.dev.newBlock()
   const balance1After = await hollarBalance(assetHubClient, member1.address)
 
   const received1 = balance1After - balance1Before
   expect(received1).toBe(expectedProrated)
 
-  /// Pay member2 — same prorated amount.
-
   const balance2Before = await hollarBalance(assetHubClient, member2.address)
-  await payoutSalaryMember(collectivesClient, member2)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.payout().signAsync(member2))
+  await collectivesClient.dev.newBlock()
   await assetHubClient.dev.newBlock()
   const balance2After = await hollarBalance(assetHubClient, member2.address)
 
@@ -962,7 +893,7 @@ export async function salaryPayoutSucceedsWithoutDotOnAssetHubTest(
 ) {
   const member = testAccounts.keyring.createFromUri('//salary_no_dot_member')
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, 3)
 
   /// 1. Seed member on Collectives. No DOT on AH.
 
@@ -972,19 +903,31 @@ export async function salaryPayoutSucceedsWithoutDotOnAssetHubTest(
 
   const sovBefore = await hollarBalance(assetHubClient, SALARY_SOVEREIGN_ADDRESS)
 
-  await ensureSalaryCycleStarted(collectivesClient, member)
+  /// 2. Bootstrap if needed, then advance the member into a payable registered state.
 
-  /// 2. Induct, bump, register, payout.
+  let status = await readSalaryStatus(collectivesClient)
+  if (status === null) {
+    await sendTransaction(collectivesClient.api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: collectivesClient.api.events.fellowshipSalary.CycleStarted },
+    ])
+    status = (await readSalaryStatus(collectivesClient))!
+  }
 
-  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
+  const cycleIndex = status!.cycleIndex
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
 
-  await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
+  await setSalaryCycleToBumpWindow(collectivesClient, runtimeConfig)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.bump().signAsync(member))
+  await collectivesClient.dev.newBlock()
   await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(member))
   await collectivesClient.dev.newBlock()
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
 
-  const payoutEvents = await payoutSalaryMember(collectivesClient, member)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.payout().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  const payoutEvents = await collectivesClient.api.query.system.events()
   expectSourceChainXcmDispatch(collectivesClient, payoutEvents as any[])
 
   /// 3. Process XCM on Asset Hub.
@@ -1026,14 +969,24 @@ export async function salaryPayoutUsesRegisteredAmountAfterPromotionTest(
 
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
-  await ensureSalaryCycleStarted(collectivesClient, member)
+  /// 2. Bootstrap if needed, then register the member while rank 3 salary is active.
 
-  /// 2. Induct, bump, register at rank 3.
+  let status = await readSalaryStatus(collectivesClient)
+  if (status === null) {
+    await sendTransaction(collectivesClient.api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: collectivesClient.api.events.fellowshipSalary.CycleStarted },
+    ])
+    status = (await readSalaryStatus(collectivesClient))!
+  }
 
-  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
+  const cycleIndex = status!.cycleIndex
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
 
-  await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
+  await setSalaryCycleToBumpWindow(collectivesClient, runtimeConfig)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.bump().signAsync(member))
+  await collectivesClient.dev.newBlock()
   await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(member))
   await collectivesClient.dev.newBlock()
 
@@ -1055,7 +1008,8 @@ export async function salaryPayoutUsesRegisteredAmountAfterPromotionTest(
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
 
   const balanceBefore = await hollarBalance(assetHubClient, member.address)
-  await payoutSalaryMember(collectivesClient, member)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.payout().signAsync(member))
+  await collectivesClient.dev.newBlock()
   await assetHubClient.dev.newBlock()
 
   /// 5. Verify payout amount matches rank 3 salary, not rank 4.
@@ -1066,9 +1020,445 @@ export async function salaryPayoutUsesRegisteredAmountAfterPromotionTest(
   expect(received).not.toBe(rank4Salary)
 }
 
-/// -------
+/// --------------------
+/// Failure-path helpers
+/// --------------------
+
+/**
+ * Assert that the given block events contain a `system.ExtrinsicFailed` carrying the named
+ * `fellowshipSalary` error variant. This is a pure assertion over already-produced events; the
+ * caller is responsible for submitting the extrinsic and building the block, so that the block
+ * progression stays visible in the test body.
+ *
+ * @param errorName A key of `api.errors.fellowshipSalary`, e.g. `AlreadyInducted`.
+ */
+function assertSalaryError(client: AnyClient, events: any[], errorName: string): void {
+  const failed = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
+  assert(failed, `expected ExtrinsicFailed for ${errorName}, found none`)
+
+  const { dispatchError } = (failed.event as any).data
+  assert(dispatchError.isModule, `expected a module error for ${errorName}`)
+  const matcher = (client.api.errors.fellowshipSalary as any)[errorName]
+  expect(matcher.is(dispatchError.asModule), `expected fellowshipSalary.${errorName}`).toBe(true)
+}
+
+/// ---------------------------
+/// Failure-path test functions
+/// ---------------------------
+
+/**
+ * `induct` rejects a non-member and a double induction.
+ *
+ * 1. Ensure the salary cycle exists
+ * 2. A non-member calling `induct` fails with `NotMember`
+ * 3. Seed and induct a Dan-3 member successfully
+ * 4. Inducting the same member again fails with `AlreadyInducted`
+ */
+export async function salaryInductFailureTest(collectivesClient: AnyClient, _assetHubClient: AnyClient) {
+  const api = collectivesClient.api
+  const member = testAccounts.keyring.createFromUri('//salary_induct_member')
+  const stranger = testAccounts.keyring.createFromUri('//salary_induct_stranger')
+
+  /// 1. Ensure the salary cycle exists so `induct` gets past its `NotStarted` guard.
+
+  await seedDan3SalaryMember(collectivesClient, member)
+  if ((await readSalaryStatus(collectivesClient)) === null) {
+    await sendTransaction(api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: api.events.fellowshipSalary.CycleStarted },
+    ])
+  }
+
+  /// 2. A funded non-member cannot induct: `rank_of` returns `None` → `NotMember`.
+
+  await collectivesClient.dev.setStorage({
+    System: {
+      account: [
+        [
+          [stranger.address],
+          { providers: 1, data: { free: DEFAULT_SALARY_TEST_FREE_BALANCE, frozen: 0, reserved: 0 } },
+        ],
+      ],
+    },
+  })
+  await sendTransaction(api.tx.fellowshipSalary.induct().signAsync(stranger))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'NotMember')
+
+  /// 3. The member inducts successfully, creating the claimant entry.
+
+  await sendTransaction(api.tx.fellowshipSalary.induct().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  const claimant = await readSalaryClaimant(collectivesClient, member.address)
+  assert(claimant !== null)
+  expect(claimant.kind).toBe('nothing')
+
+  /// 4. A second induction hits the `Claimant` existence check → `AlreadyInducted`.
+
+  await sendTransaction(api.tx.fellowshipSalary.induct().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'AlreadyInducted')
+}
+
+/**
+ * `register` rejects every ineligible caller, covering each guard in `pallet-salary::register`.
+ *
+ * 1. A member who was never inducted cannot register (`NotInducted`)
+ * 2. After inducting and registering once, a second registration in the same cycle is rejected
+ *    because the member is already active this cycle (`NoClaim`)
+ * 3. In a fresh cycle, registering after the registration window has closed is too late (`TooLate`)
+ */
+export async function salaryRegisterFailureTest(collectivesClient: AnyClient, _assetHubClient: AnyClient) {
+  const api = collectivesClient.api
+  const member = testAccounts.keyring.createFromUri('//salary_register_member')
+  const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
+
+  /// 1. A member without a claimant entry has never entered payroll, so `register` rejects immediately.
+
+  await seedDan3SalaryMember(collectivesClient, member)
+  if ((await readSalaryStatus(collectivesClient)) === null) {
+    await sendTransaction(api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: api.events.fellowshipSalary.CycleStarted },
+    ])
+  }
+  const salaryStatus = (await readSalaryStatus(collectivesClient))!
+
+  await sendTransaction(api.tx.fellowshipSalary.register().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'NotInducted')
+
+  /// 2. After one successful registration, the same cycle has no fresh claim left to make.
+
+  const cycleIndex = salaryStatus.cycleIndex
+  await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
+  await setSalaryCycleToBumpWindow(collectivesClient, runtimeConfig)
+  await sendTransaction(api.tx.fellowshipSalary.bump().signAsync(member))
+  await collectivesClient.dev.newBlock()
+
+  await sendTransaction(api.tx.fellowshipSalary.register().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  expect(
+    (await readSalaryClaimant(collectivesClient, member.address))!.kind,
+    'member should be registered for the current cycle',
+  ).toBe('registered')
+
+  await sendTransaction(api.tx.fellowshipSalary.register().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'NoClaim')
+
+  /// 3. In a fresh cycle's payout window, registration is already closed.
+
+  await setSalaryCycleToBumpWindow(collectivesClient, runtimeConfig)
+  await sendTransaction(api.tx.fellowshipSalary.bump().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
+
+  await sendTransaction(api.tx.fellowshipSalary.register().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'TooLate')
+}
+
+/**
+ * `bump` rejects before the cycle boundary and when no cycle exists.
+ *
+ * 1. Ensure the cycle exists, then push `cycleStart` into the future so the boundary is unmet
+ * 2. Calling `bump` before `cycleStart + cyclePeriod` fails with `NotYet`
+ * 3. Remove the salary `status`, then `bump` fails with `NotStarted`
+ */
+export async function salaryBumpFailureTest(collectivesClient: AnyClient, _assetHubClient: AnyClient) {
+  const api = collectivesClient.api
+  const member = testAccounts.keyring.createFromUri('//salary_bump_member')
+
+  /// 1. Ensure a running cycle, then force `cycleStart` far into the future so the boundary is not reached.
+
+  await seedDan3SalaryMember(collectivesClient, member)
+  let status = await readSalaryStatus(collectivesClient)
+  if (status === null) {
+    await sendTransaction(api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: api.events.fellowshipSalary.CycleStarted },
+    ])
+    status = (await readSalaryStatus(collectivesClient))!
+  }
+
+  const futureStart = (await api.rpc.chain.getHeader()).number.toNumber() + 1_000_000
+  await collectivesClient.dev.setStorage({
+    FellowshipSalary: {
+      status: {
+        cycleIndex: status.cycleIndex,
+        cycleStart: futureStart,
+        budget: status.budget.toString(),
+        totalRegistrations: status.totalRegistrations.toString(),
+        totalUnregisteredPaid: status.totalUnregisteredPaid.toString(),
+      },
+    },
+  })
+
+  /// 2. `now < cycle_start` means the cycle has not elapsed → `NotYet`.
+
+  await sendTransaction(api.tx.fellowshipSalary.bump().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'NotYet')
+
+  /// 3. Clear the salary `status` entirely; with no cycle, `Status::get` is `None` → `NotStarted`.
+
+  await collectivesClient.dev.setStorage({ FellowshipSalary: { status: null } })
+  await sendTransaction(api.tx.fellowshipSalary.bump().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'NotStarted')
+}
+
+/**
+ * `payout` rejects outside the payout window and without a claim.
+ *
+ * 1. Seed a Dan-3 member and ensure the cycle exists
+ * 2. Paying out before induction fails with `NotInducted`
+ * 3. Induct into the current cycle (registration window), then `payout` fails with `TooEarly`
+ */
+export async function salaryPayoutFailureTest(collectivesClient: AnyClient, _assetHubClient: AnyClient) {
+  const api = collectivesClient.api
+  const member = testAccounts.keyring.createFromUri('//salary_payout_fail_member')
+
+  /// 1. Seed the member and make sure the salary cycle is running.
+
+  await seedDan3SalaryMember(collectivesClient, member)
+  let status = await readSalaryStatus(collectivesClient)
+  if (status === null) {
+    await sendTransaction(api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: api.events.fellowshipSalary.CycleStarted },
+    ])
+    status = (await readSalaryStatus(collectivesClient))!
+  }
+
+  /// 2. No claimant entry yet → `NotInducted`.
+
+  await sendTransaction(api.tx.fellowshipSalary.payout().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'NotInducted')
+
+  /// 3. Induct into the current cycle and stay in the registration window; `payout` requires being
+  ///    past `registrationPeriod`, so it fails with `TooEarly`.
+
+  const cycleIndex = status!.cycleIndex
+  await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
+  await setSalaryCycleToRegistrationWindow(collectivesClient)
+
+  await sendTransaction(api.tx.fellowshipSalary.payout().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'TooEarly')
+}
+
+/**
+ * `init` rejects when the salary cycle already exists.
+ *
+ * 1. Ensure the cycle exists
+ * 2. A second `init` hits the `Status::exists` guard → `AlreadyStarted`
+ */
+export async function salaryInitFailureTest(collectivesClient: AnyClient, _assetHubClient: AnyClient) {
+  const api = collectivesClient.api
+  const member = testAccounts.keyring.createFromUri('//salary_init_member')
+
+  /// 1. Guarantee a live cycle (bootstrapping via `init` if the fork predates it).
+
+  await seedDan3SalaryMember(collectivesClient, member)
+  let status = await readSalaryStatus(collectivesClient)
+  if (status === null) {
+    await sendTransaction(api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: api.events.fellowshipSalary.CycleStarted },
+    ])
+    status = (await readSalaryStatus(collectivesClient))!
+  }
+
+  /// 2. `Status` now exists, so calling `init` again fails with `AlreadyStarted`.
+
+  await sendTransaction(api.tx.fellowshipSalary.init().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'AlreadyStarted')
+}
+
+/// ----------------------------
+/// check_payment test functions
+/// ----------------------------
+
+/**
+ * `check_payment` confirms a successful payout and clears the claimant.
+ *
+ * 1. Seed member + sovereign, run a full register → payout so the claimant is `Attempted`
+ * 2. Process the XCM on Asset Hub (executes the transfer and emits the query-status response)
+ * 3. Advance Collectives so it ingests the response XCM, then `check_payment` sees success and
+ *    resets the claimant to `Nothing`
+ */
+export async function salaryCheckPaymentSuccessTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
+  const api = collectivesClient.api
+  const member = testAccounts.keyring.createFromUri('//salary_checkpay_member')
+  const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
+
+  /// 1. Drive the claimant into `Attempted` via a real register → payout.
+
+  await seedDan3SalaryMember(collectivesClient, member)
+  await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
+  let status = await readSalaryStatus(collectivesClient)
+  if (status === null) {
+    await sendTransaction(api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: api.events.fellowshipSalary.CycleStarted },
+    ])
+    status = (await readSalaryStatus(collectivesClient))!
+  }
+
+  const cycleIndex = status!.cycleIndex
+  await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
+  await setSalaryCycleToBumpWindow(collectivesClient, runtimeConfig)
+  await sendTransaction(api.tx.fellowshipSalary.bump().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  await sendTransaction(api.tx.fellowshipSalary.register().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
+  await sendTransaction(api.tx.fellowshipSalary.payout().signAsync(member))
+  await collectivesClient.dev.newBlock()
+
+  expect((await readSalaryClaimant(collectivesClient, member.address))!.kind).toBe('attempted')
+
+  /// 2. Land the payment on Asset Hub. This executes the transfer and sends the payment's
+  ///    query-status response back toward Collectives.
+
+  await assetHubClient.dev.newBlock()
+
+  /// 3. Advance Collectives so it ingests the response XCM, then `check_payment` observes the
+  ///    successful payment and resets the claimant to `Nothing`.
+
+  await collectivesClient.dev.newBlock()
+  await collectivesClient.dev.newBlock()
+
+  await sendTransaction(api.tx.fellowshipSalary.checkPayment().signAsync(member))
+  await collectivesClient.dev.newBlock()
+
+  const claimant = await readSalaryClaimant(collectivesClient, member.address)
+  assert(claimant !== null)
+  expect(claimant.kind).toBe('nothing')
+}
+
+/**
+ * `check_payment` rejects the ineligible cases.
+ *
+ * 1. Seed member + ensure cycle; calling before induction fails with `NotInducted`
+ * 2. Induct into the current cycle with a `Nothing` claim; the non-`Attempted` arm → `NoClaim`
+ * 3. Seed an `Attempted` claim from a previous cycle; the cycle guard → `NotCurrent`
+ * 4. Seed an `Attempted` claim in the current cycle with an unresolvable payment id; the
+ *    paymaster reports an unknown status → `Inconclusive`
+ */
+export async function salaryCheckPaymentFailureTest(collectivesClient: AnyClient, _assetHubClient: AnyClient) {
+  const api = collectivesClient.api
+  const member = testAccounts.keyring.createFromUri('//salary_checkpay_fail_member')
+
+  /// 1. No claimant entry means `check_payment` cannot even identify a salary participant.
+
+  await seedDan3SalaryMember(collectivesClient, member)
+  let status = await readSalaryStatus(collectivesClient)
+  if (status === null) {
+    await sendTransaction(api.tx.fellowshipSalary.init().signAsync(member))
+    await collectivesClient.dev.newBlock()
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: api.events.fellowshipSalary.CycleStarted },
+    ])
+    status = (await readSalaryStatus(collectivesClient))!
+  }
+  await sendTransaction(api.tx.fellowshipSalary.checkPayment().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'NotInducted')
+
+  /// 2. Induct in the current cycle but with nothing attempted; `check_payment` matches the
+  ///    non-`Attempted` arm → `NoClaim`.
+
+  const cycleIndex = status!.cycleIndex
+  await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
+  await sendTransaction(api.tx.fellowshipSalary.checkPayment().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'NoClaim')
+
+  /// 3. An `Attempted` claim whose `lastActive` predates the current cycle trips the
+  ///    `last_active == cycle_index` guard → `NotCurrent`.
+
+  const staleAttempt = { Attempted: { registered: null, id: SALARY_UNKNOWN_PAYMENT_ID, amount: '1000000000000000000' } }
+  await seedSalaryClaimant(collectivesClient, member.address, cycleIndex - 1, staleAttempt)
+  await sendTransaction(api.tx.fellowshipSalary.checkPayment().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'NotCurrent')
+
+  /// 4. An `Attempted` claim in the current cycle whose payment id the paymaster cannot resolve
+  ///    yields `PaymentStatus::Unknown`, hitting the catch-all arm → `Inconclusive`.
+
+  await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, staleAttempt)
+  await sendTransaction(api.tx.fellowshipSalary.checkPayment().signAsync(member))
+  await collectivesClient.dev.newBlock()
+  assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'Inconclusive')
+}
+
+/// ---------------------------
+/// Swapped event test function
+/// ---------------------------
+
+/**
+ * The salary claimant migrates when a Fellowship member swaps accounts.
+ *
+ * Uses a live inducted fellow as the swap source: real members already have consistent
+ * ranked-collective index bookkeeping, which the synthetic seeding used elsewhere does not
+ * satisfy for `exchangeMember`'s internal index manipulation.
+ *
+ * 1. Pick an existing inducted fellow (has a salary claimant) from live storage
+ * 2. Root-dispatch `fellowshipCollective.exchangeMember(existing, new)`
+ * 3. Assert `fellowshipSalary.Swapped { who, newWho }` fires and the claimant moves old → new
+ */
+export async function salarySwappedOnMemberExchangeTest(collectivesClient: AnyClient, _assetHubClient: AnyClient) {
+  const api = collectivesClient.api
+  const newMember = testAccounts.keyring.createFromUri('//salary_swap_new')
+
+  const addressEncoding = collectivesClient.config.properties.addressEncoding
+  const newAddress = encodeAddress(newMember.address, addressEncoding)
+
+  /// 1. Take the first live salary claimant; every inducted fellow has one.
+
+  const claimantEntries = await api.query.fellowshipSalary.claimant.entries()
+  assert(claimantEntries.length > 0, 'expected at least one inducted fellow in live storage')
+  const oldMemberAddress = (claimantEntries[0][0].args[0] as any).toString()
+  const oldAddress = encodeAddress(oldMemberAddress, addressEncoding)
+
+  assert((await readSalaryClaimant(collectivesClient, oldMemberAddress)) !== null)
+
+  /// 2. `exchangeMember` requires the `ExchangeOrigin` (Root or Fellows), so dispatch as Root via
+  ///    the scheduler. The ranked-collective swap invokes salary's `RankedMembersSwapHandler`.
+
+  const exchangeCall = api.tx.fellowshipCollective.exchangeMember(oldMemberAddress, newMember.address)
+  await scheduleInlineCallWithOrigin(
+    collectivesClient,
+    exchangeCall.method.toHex(),
+    { system: 'Root' },
+    collectivesClient.config.properties.schedulerBlockProvider,
+  )
+  await collectivesClient.dev.newBlock()
+
+  /// 3. Verify the `Swapped` event and that the claimant entry moved from old to new account.
+
+  assertExpectedEvents(await api.query.system.events(), [
+    { type: api.events.fellowshipSalary.Swapped, args: { who: oldAddress, newWho: newAddress } },
+  ])
+
+  expect(await readSalaryClaimant(collectivesClient, oldMemberAddress)).toBeNull()
+  expect(await readSalaryClaimant(collectivesClient, newMember.address)).not.toBeNull()
+}
+
+/// -----------------
 /// Test tree builder
-/// -------
+/// -----------------
 
 /** Build the shared end-to-end salary test tree. */
 export function baseSalaryE2ETests<
@@ -1143,6 +1533,46 @@ export function baseSalaryE2ETests<
         kind: 'test',
         label: 'payout uses registered amount after mid-cycle promotion',
         testFn: async () => await salaryPayoutUsesRegisteredAmountAfterPromotionTest(collectivesClient, assetHubClient),
+      },
+      {
+        kind: 'test',
+        label: 'induct rejects non-member and double induction',
+        testFn: async () => await salaryInductFailureTest(collectivesClient, assetHubClient),
+      },
+      {
+        kind: 'test',
+        label: 'register rejects uninducted member and re-registration',
+        testFn: async () => await salaryRegisterFailureTest(collectivesClient, assetHubClient),
+      },
+      {
+        kind: 'test',
+        label: 'bump rejects before the cycle boundary',
+        testFn: async () => await salaryBumpFailureTest(collectivesClient, assetHubClient),
+      },
+      {
+        kind: 'test',
+        label: 'payout rejects uninducted member and early payout',
+        testFn: async () => await salaryPayoutFailureTest(collectivesClient, assetHubClient),
+      },
+      {
+        kind: 'test',
+        label: 'init rejects when a cycle already exists',
+        testFn: async () => await salaryInitFailureTest(collectivesClient, assetHubClient),
+      },
+      {
+        kind: 'test',
+        label: 'check_payment confirms a successful payout',
+        testFn: async () => await salaryCheckPaymentSuccessTest(collectivesClient, assetHubClient),
+      },
+      {
+        kind: 'test',
+        label: 'check_payment rejects uninducted member and missing claim',
+        testFn: async () => await salaryCheckPaymentFailureTest(collectivesClient, assetHubClient),
+      },
+      {
+        kind: 'test',
+        label: 'claimant migrates on Fellowship member account swap',
+        testFn: async () => await salarySwappedOnMemberExchangeTest(collectivesClient, assetHubClient),
       },
     ],
   }
