@@ -1,9 +1,9 @@
 {
   "polkadot": [
-    "wss://rpc-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io",
-    "wss://rpc-polkadot.helixstreet.io",
-    "wss://polkadot-rpc.n.dwellir.com"
+    "wss://rpc-polkadot.luckyfriday.io",
+    "wss://polkadot-rpc.n.dwellir.com",
+    "wss://rpc-polkadot.helixstreet.io"
   ],
   "assetHubWestend": [
     "wss://asset-hub-westend-rpc.n.dwellir.com",
@@ -26,8 +26,8 @@
   ],
   "coretimePolkadot": [
     "wss://rpc-coretime-polkadot.luckyfriday.io",
-    "wss://coretime-polkadot-rpc.n.dwellir.com",
-    "wss://dot-rpc.stakeworld.io/coretime"
+    "wss://dot-rpc.stakeworld.io/coretime",
+    "wss://coretime-polkadot-rpc.n.dwellir.com"
   ],
   "bulletinPolkadot": [
     "wss://bulletin-rpc.polkadot.io"
@@ -38,15 +38,15 @@
     "wss://people-polkadot-rpc.n.dwellir.com"
   ],
   "acala": [
-    "wss://acala-rpc.aca-api.network",
-    "wss://acala-rpc-1.aca-api.network",
     "wss://acala-rpc-3.aca-api.network/ws",
     "wss://acala-rpc-0.aca-api.network",
+    "wss://acala-rpc-1.aca-api.network",
+    "wss://acala-rpc.aca-api.network",
     "wss://rpc-acala.luckyfriday.io"
   ],
   "bifrostPolkadot": [
-    "wss://hk.p.bifrost-rpc.liebi.com/ws",
-    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws"
+    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws",
+    "wss://hk.p.bifrost-rpc.liebi.com/ws"
   ],
   "hydration": [
     "wss://hydration-rpc.n.dwellir.com",
@@ -82,8 +82,8 @@
   ],
   "peopleKusama": [
     "wss://rpc-people-kusama.luckyfriday.io",
-    "wss://people-kusama-rpc.n.dwellir.com",
     "wss://rpc-people-kusama.helixstreet.io",
+    "wss://people-kusama-rpc.n.dwellir.com",
     "wss://ksm-rpc.stakeworld.io/people"
   ],
   "encointerKusama": [
@@ -96,16 +96,16 @@
     "wss://rpc-karura.luckyfriday.io"
   ],
   "bifrostKusama": [
-    "wss://bifrost-rpc.liebi.com/ws",
-    "wss://hk.bifrost-rpc.liebi.com/ws"
+    "wss://hk.bifrost-rpc.liebi.com/ws",
+    "wss://bifrost-rpc.liebi.com/ws"
   ],
   "basilisk": [
     "wss://rpc.basilisk.cloud",
     "wss://basilisk-rpc.n.dwellir.com"
   ],
   "moonriver": [
-    "wss://moonriver.api.onfinality.io/public-ws",
     "wss://moonriver.unitedbloc.com",
+    "wss://moonriver.api.onfinality.io/public-ws",
     "wss://moonriver-rpc.n.dwellir.com",
     "wss://moonriver-rpc.publicnode.com",
     "wss://wss.api.moonriver.moonbeam.network"
