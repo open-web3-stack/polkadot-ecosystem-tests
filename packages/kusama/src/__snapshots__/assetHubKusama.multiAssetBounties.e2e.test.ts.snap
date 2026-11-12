@@ -1,0 +1,390 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Asset Hub Multi-Asset Bounties (Local) > DOT Bounties > Should complete full DOT bounty lifecycle > DOT bounty completed events 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": {
+              "X1": [
+                {
+                  "GlobalConsensus": "Polkadot",
+                },
+              ],
+            },
+            "parents": 2,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": 0,
+      "value": "(rounded 670000000000)",
+    },
+    "method": "BountyPayoutProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties (Local) > Native Token Bounties > Should fund a bounty with native token > native bounty creation events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties (Local) > Native Token Bounties > Should fund a bounty with native token > native bounty funding payment events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties (Local) > USDT Bounties > Should complete full USDT bounty lifecycle > USDT bounty completed events 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": 0,
+      "value": 1000000000,
+    },
+    "method": "BountyPayoutProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties (Local) > USDT Bounties > Should fund a bounty with USDT > USDT bounty creation events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyCreated",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties (Local) > USDT Bounties > Should fund a bounty with USDT > USDT bounty funding payment events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": 0,
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties > DOT Bounties > Should complete full DOT bounty lifecycle > DOT bounty completed events 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": {
+              "X1": [
+                {
+                  "GlobalConsensus": "Polkadot",
+                },
+              ],
+            },
+            "parents": 2,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": 0,
+      "value": "(rounded 670000000000)",
+    },
+    "method": "BountyPayoutProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties > DOT Bounties > Should complete full DOT bounty lifecycle with custom call values > custom DOT bounty completed events 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": {
+              "X1": [
+                {
+                  "GlobalConsensus": "Polkadot",
+                },
+              ],
+            },
+            "parents": 2,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(redacted)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": 0,
+      "value": 20000000000,
+    },
+    "method": "BountyPayoutProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties > Governance > Should submit a SmallSpender referendum for fund_bounty and dispatch successfully under that origin > SmallSpender enacted fund_bounty BountyCreated events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyCreated",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties > Governance > Should submit a SmallSpender referendum for fund_bounty and dispatch successfully under that origin > SmallSpender fund_bounty referendum decision deposit events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 3300000000000)",
+      "index": "(redacted)",
+      "who": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties > Governance > Should submit a SmallSpender referendum for fund_bounty and dispatch successfully under that origin > SmallSpender fund_bounty referendum submission events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "(hash)",
+      },
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties > Native Token Bounties > Should complete full bounty lifecycle > bounty completed events 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": "Here",
+            "parents": 1,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": 0,
+      "value": "(rounded 67000000000000)",
+    },
+    "method": "BountyPayoutProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Multi-Asset Bounties > USDT Bounties > Should complete full USDT bounty lifecycle > USDT bounty completed events 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V5": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "childIndex": null,
+      "index": 0,
+      "value": 1000000000,
+    },
+    "method": "BountyPayoutProcessed",
+    "section": "multiAssetBounties",
+  },
+]
+`;
