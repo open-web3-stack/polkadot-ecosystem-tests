@@ -87,21 +87,22 @@ async function runAuthorizeUpgradeScenario(
     await client.dev.newBlock({ count: 1 })
     const eventsAfterSecondBlock = await client.api.query.system.events()
 
-    // ProhibitedByPolkadot: the relay chain forbids a code upgrade while another one for this
-    // parachain is in flight. The restriction signal lives in the relay chain state proof, so it
-    // is only visible here as the dispatch error of the failed `applyAuthorizedUpgrade`.
+    // A live code upgrade in flight blocks the test's own upgrade, under two names:
+    // ProhibitedByPolkadot is the relay chain's restriction signal, and OverlappingUpgrades is
+    // the parachain's own pending validation code. Both live outside parachain storage at the
+    // time of the check, so detect them from the dispatch error of the failed
+    // `applyAuthorizedUpgrade` and skip.
+    const upgradeWindowErrors = ['ProhibitedByPolkadot', 'OverlappingUpgrades']
     for (const events of [eventsAfterFirstBlock, eventsAfterSecondBlock]) {
       const applyFailed = events.find((r: any) => client.api.events.system.ExtrinsicFailed.is(r.event))
       if (applyFailed) {
         const dispatchError = (applyFailed.event.data as any).dispatchError
-        if (
-          dispatchError.isModule &&
-          client.api.registry.findMetaError(dispatchError.asModule).name === 'ProhibitedByPolkadot'
-        ) {
-          params.ctx?.skip?.(
-            `Skipping: relay chain upgrade restriction active on ${client.config.name} (ProhibitedByPolkadot)`,
-          )
-          return
+        if (dispatchError.isModule) {
+          const name = client.api.registry.findMetaError(dispatchError.asModule).name
+          if (upgradeWindowErrors.includes(name)) {
+            params.ctx?.skip?.(`Skipping: a live upgrade is in flight on ${client.config.name} (${name})`)
+            return
+          }
         }
       }
     }
@@ -165,20 +166,24 @@ async function runAuthorizeUpgradeScenarioViaRemoteScheduler(
   await toBeUpgradedClient.dev.newBlock({ count: 1 })
   const eventsAfterFirstBlock = await toBeUpgradedClient.api.query.system.events()
 
-  // ProhibitedByPolkadot: the restriction signal lives in the relay chain state proof, not
-  // parachain storage. on_finalize kills it, so it's unreadable after the block — but
-  // set_validation_data re-injects it during execution. Detect it from the dispatch error.
-  const prohibitedByPolkadot = (events: any): boolean => {
+  // A live code upgrade in flight blocks the test's own upgrade, under two names:
+  // ProhibitedByPolkadot is the relay chain's restriction signal (it lives in the relay state
+  // proof, is killed by on_finalize, and is re-injected by set_validation_data during execution),
+  // and OverlappingUpgrades is the parachain's own pending validation code. Detect both from the
+  // dispatch error of the failed `applyAuthorizedUpgrade`.
+  const upgradeWindowError = (events: any): string | undefined => {
     const applyFailed = events.find((r: any) => toBeUpgradedClient.api.events.system.ExtrinsicFailed.is(r.event))
-    if (!applyFailed) return false
+    if (!applyFailed) return undefined
     const dispatchError = (applyFailed.event.data as any).dispatchError
-    if (!dispatchError.isModule) return false
-    return toBeUpgradedClient.api.registry.findMetaError(dispatchError.asModule).name === 'ProhibitedByPolkadot'
+    if (!dispatchError.isModule) return undefined
+    const name = toBeUpgradedClient.api.registry.findMetaError(dispatchError.asModule).name
+    return ['ProhibitedByPolkadot', 'OverlappingUpgrades'].includes(name) ? name : undefined
   }
 
-  if (prohibitedByPolkadot(eventsAfterFirstBlock)) {
+  const firstBlockError = upgradeWindowError(eventsAfterFirstBlock)
+  if (firstBlockError) {
     params.ctx?.skip?.(
-      `Skipping: relay chain upgrade restriction active on ${toBeUpgradedClient.config.name} (ProhibitedByPolkadot)`,
+      `Skipping: a live upgrade is in flight on ${toBeUpgradedClient.config.name} (${firstBlockError})`,
     )
     return
   }
@@ -188,9 +193,10 @@ async function runAuthorizeUpgradeScenarioViaRemoteScheduler(
 
   // When governance acts from a remote chain, the XCM lands a block later, so the failed apply
   // can surface in the second block instead of the first.
-  if (prohibitedByPolkadot(eventsAfterSecondBlock)) {
+  const secondBlockError = upgradeWindowError(eventsAfterSecondBlock)
+  if (secondBlockError) {
     params.ctx?.skip?.(
-      `Skipping: relay chain upgrade restriction active on ${toBeUpgradedClient.config.name} (ProhibitedByPolkadot)`,
+      `Skipping: a live upgrade is in flight on ${toBeUpgradedClient.config.name} (${secondBlockError})`,
     )
     return
   }
