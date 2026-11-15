@@ -354,7 +354,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Child bounties > fund child ab
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -379,7 +379,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Child bounties > fund child at
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -404,7 +404,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Child bounties > fund child be
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -429,7 +429,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Child bounties > fund child by
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -623,7 +623,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Close > close bounty with no c
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -668,15 +668,25 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Close > close parent after chi
 [
   {
     "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyCanceled",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
       "id": null,
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x08000000",
-            "index": 96,
-          },
-        },
-      },
+      "result": "Ok",
       "task": "(redacted)",
     },
     "method": "Dispatched",
@@ -1051,7 +1061,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Funding > fund as signed accou
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1266,7 +1276,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Increase value > increase valu
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 400000000)",
+          "refTime": "(rounded 500000000)",
         },
       },
     },
@@ -1291,7 +1301,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Increase value > increase valu
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 400000000)",
+          "refTime": "(rounded 500000000)",
         },
       },
     },
@@ -1397,7 +1407,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Payment status > check status 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1422,7 +1432,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Payment status > check status 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },

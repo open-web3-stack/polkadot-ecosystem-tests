@@ -18,10 +18,9 @@ const testConfig: MultiAssetBountiesTestConfig = {
   // `CuratorDepositFromValueMultiplier`, `CuratorDepositMin` and `CuratorDepositMax` in
   // `asset-hub-westend/src/governance/mod.rs`.
   curatorDeposit: { multiplier: 100_000n, min: 10n * CENTS, max: 500n * CENTS },
-  // The deployed runtime still refunds a closed parent's full value, so the close fails with
-  // `RefundError`. Fixed upstream in polkadot-sdk #13258; set this to true once a runtime with
-  // the fix is live.
-  parentRefundNetOfChildren: false,
+  // The runtime refunds a closed parent's value minus what its child bounties paid out, from
+  // https://github.com/paritytech/polkadot-sdk/pull/13258.
+  parentRefundNetOfChildren: true,
 }
 
 registerTestTree(multiAssetBountiesE2ETests(assetHubWestend, testConfig))
