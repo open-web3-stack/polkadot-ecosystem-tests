@@ -3,8 +3,32 @@ import { setupContext } from '@acala-network/chopsticks-testing'
 
 import type { Chain } from './types.js'
 
+async function setupContextWithBlockFallback<T extends Chain>(chainConfig: T) {
+  let attempt = 0
+  let blockNumber = chainConfig.blockNumber
+  let lastError: unknown
+
+  while (attempt < 4) {
+    try {
+      return await setupContext({
+        ...chainConfig,
+        blockNumber,
+      })
+    } catch (error) {
+      lastError = error
+      if (!(error instanceof Error) || !error.message.includes('Cannot find block hash for') || blockNumber == null) {
+        throw error
+      }
+      attempt++
+      blockNumber -= 5_000
+    }
+  }
+
+  throw lastError
+}
+
 export async function createNetwork<T extends Chain>(chainConfig: T) {
-  const network = await setupContext(chainConfig)
+  const network = await setupContextWithBlockFallback(chainConfig)
 
   if (chainConfig.initStorages) {
     await network.dev.setStorage(chainConfig.initStorages)

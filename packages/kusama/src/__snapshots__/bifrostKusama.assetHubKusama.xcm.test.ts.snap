@@ -17,7 +17,7 @@ exports[`bifrostKusama & assetHubKusama > assetHubKusama transfer KSM to bifrost
 
 exports[`bifrostKusama & assetHubKusama > assetHubKusama transfer KSM to bifrostKusama > balance on to chain 1`] = `
 {
-  "free": "(rounded 998000000000)",
+  "free": "(rounded 999000000000)",
   "frozen": 0,
   "reserved": 0,
 }

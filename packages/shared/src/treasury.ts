@@ -1,14 +1,13 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccountsSr25519 as devAccounts } from '@e2e-test/networks'
-import { setupNetworks } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, defaultAccountsSr25519 as devAccounts } from '@e2e-test/networks'
 
 import type { FrameSupportTokensFungibleUnionOfNativeOrWithId, XcmVersionedLocation } from '@polkadot/types/lookup'
 
 import { assert, expect } from 'vitest'
 
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
-import type { RootTestTree } from './types.js'
+import type { Client, RootTestTree } from './types.js'
 
 /**
  * Test that a foreign asset spend from the Relay treasury is reflected on the AssetHub.
@@ -21,9 +20,7 @@ export async function treasurySpendForeignAssetTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>, ahChain: Chain<TCustom, TInitStoragesPara>) {
-  const [relayClient, assetHubClient] = await setupNetworks(relayChain, ahChain)
-
+>(relayClient: Client<TCustom, TInitStoragesRelay>, assetHubClient: Client<TCustom, TInitStoragesPara>) {
   await relayClient.dev.setStorage({
     System: {
       account: [
@@ -139,14 +136,34 @@ export function baseTreasuryE2ETests<
   ahChain: Chain<TCustom, TInitStoragesPara>,
   testConfig: { testSuiteName: string },
 ): RootTestTree {
+  let relayClient!: Client<TCustom, TInitStoragesRelay>
+  let assetHubClient!: Client<TCustom, TInitStoragesPara>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[relayClient, assetHubClient] = await createNetworks(relayChain, ahChain)
+      restoreSnapshot = captureSnapshot(relayClient, assetHubClient)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      for (const c of [relayClient, assetHubClient]) {
+        const blockNumber = (await c.api.rpc.chain.getHeader()).number.toNumber()
+        await c.dev.setHead(blockNumber)
+      }
+    },
+    afterAll: async () => {
+      for (const c of [relayClient, assetHubClient]) {
+        await c.api.disconnect().catch(() => {})
+        await c.teardown().catch(() => {})
+      }
+    },
     children: [
       {
         kind: 'test',
         label: 'Foreign asset spend from Relay treasury is reflected on AssetHub',
-        testFn: async () => await treasurySpendForeignAssetTest(relayChain, ahChain),
+        testFn: async () => await treasurySpendForeignAssetTest(relayClient, assetHubClient),
       },
     ],
   }

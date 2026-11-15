@@ -39,7 +39,7 @@ interface ChainConfigRelaychain {
 interface ChainConfigParachain {
   isRelayChain?: false
   paraId: number
-  properties: ChainProperties & { asyncBacking: 'Enabled' | 'Disabled' }
+  properties: ChainProperties & { relayBlocksPerParaBlock: number }
 }
 
 type ChainConfigBase = {

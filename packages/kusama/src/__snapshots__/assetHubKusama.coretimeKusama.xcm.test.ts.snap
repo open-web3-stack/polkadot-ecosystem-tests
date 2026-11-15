@@ -291,72 +291,74 @@ exports[`assetHubKusama & coretimeKusama > coretimeKusama transfer KSM to assetH
 [
   {
     "data": [
-      "ConcatenatedVersionedXcm",
-      {
-        "v5": [
-          {
-            "receiveTeleportedAsset": [
-              {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
+      "ConcatenatedOpaqueVersionedXcm",
+      [
+        {
+          "v5": [
+            {
+              "receiveTeleportedAsset": [
+                {
+                  "fun": {
+                    "fungible": 1000000000000,
                   },
-                  "parents": 1,
-                },
-              },
-            ],
-          },
-          {
-            "clearOrigin": null,
-          },
-          {
-            "buyExecution": {
-              "fees": {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-              "weightLimit": {
-                "unlimited": null,
-              },
-            },
-          },
-          {
-            "depositAsset": {
-              "assets": {
-                "wild": {
-                  "allCounted": 1,
-                },
-              },
-              "beneficiary": {
-                "interior": {
-                  "x1": [
-                    {
-                      "accountId32": {
-                        "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
-                        "network": null,
-                      },
+                  "id": {
+                    "interior": {
+                      "here": null,
                     },
-                  ],
+                    "parents": 1,
+                  },
                 },
-                "parents": 0,
+              ],
+            },
+            {
+              "clearOrigin": null,
+            },
+            {
+              "buyExecution": {
+                "fees": {
+                  "fun": {
+                    "fungible": 1000000000000,
+                  },
+                  "id": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+                "weightLimit": {
+                  "unlimited": null,
+                },
               },
             },
-          },
-          {
-            "setTopic": "(redacted)",
-          },
-        ],
-      },
+            {
+              "depositAsset": {
+                "assets": {
+                  "wild": {
+                    "allCounted": 1,
+                  },
+                },
+                "beneficiary": {
+                  "interior": {
+                    "x1": [
+                      {
+                        "accountId32": {
+                          "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
+                          "network": null,
+                        },
+                      },
+                    ],
+                  },
+                  "parents": 0,
+                },
+              },
+            },
+            {
+              "setTopic": "(redacted)",
+            },
+          ],
+        },
+      ],
     ],
     "recipient": 1000,
   },
@@ -374,7 +376,7 @@ exports[`assetHubKusama & coretimeKusama > coretimeKusama transfer KSM to assetH
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 300000000)",
+        "refTime": "(rounded 400000000)",
       },
     },
     "method": "Processed",
@@ -391,7 +393,7 @@ exports[`assetHubKusama & coretimeKusama > coretimeKusama transfer KSM to assetH
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 100000000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },

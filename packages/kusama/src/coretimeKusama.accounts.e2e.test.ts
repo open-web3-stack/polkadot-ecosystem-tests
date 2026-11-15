@@ -7,7 +7,6 @@ const testCfg: TestConfig = {
 
 const accountsCfg = createAccountsConfig({
   expectation: 'success',
-  relayChain: kusama,
 })
 
-registerTestTree(accountsE2ETests(coretimeKusama, testCfg, accountsCfg))
+registerTestTree(accountsE2ETests(coretimeKusama, testCfg, accountsCfg, kusama))

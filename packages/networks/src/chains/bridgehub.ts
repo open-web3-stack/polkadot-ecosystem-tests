@@ -34,7 +34,7 @@ export const bridgeHubPolkadot = defineChain({
     addressEncoding: 0,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'NonLocal',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })
@@ -50,7 +50,7 @@ export const bridgeHubKusama = defineChain({
     addressEncoding: 2,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'NonLocal',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })

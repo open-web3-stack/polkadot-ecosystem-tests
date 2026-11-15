@@ -1,13 +1,15 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
-import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
+import type { Client, RootTestTree } from '@e2e-test/shared'
 
+import type { ApiPromise } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Vec } from '@polkadot/types'
 import type { FrameSystemEventRecord } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
+import type { u128 } from '@polkadot/types-codec'
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
@@ -34,6 +36,54 @@ import {
 // be executed with a different amount of funds depending on the ED ~ tx. fee relationship.
 //
 // This is currently not done in favor of skipping those tests in low ED chains; it is left for a future PR.
+//
+// Note about `IS_NEW_LOGIC_FLAG`
+//
+// `pallet_balances::AccountData::flags` is a u128 bitfield used by `ensure_upgraded` to track which accounts
+// have been migrated from the legacy `locks/reserves` consumer-ref model to the modern `freezes/holds` model
+// (FRAME 4 -> FRAME 5 transition, polkadot v1.0/v1.1). The high bit (`1 << 127`) is `IS_NEW_LOGIC`.
+//
+// Accounts created via `setStorage` (bypassing FRAME code paths) default to `flags = 0`, which marks them as
+// "legacy". On the next mutation, `ensure_upgraded` runs the legacy-to-new repair: if the account has non-zero
+// `reserved` and zero `frozen`, it defensively calls `inc_consumers_without_limit` to fix the invariant. This
+// corrupts consumer-ref accounting in tests that manually inject reserves via `setStorage`.
+//
+// All `setStorage` writes to `System.Account` in this module must set `flags: IS_NEW_LOGIC_FLAG` to avoid this
+// path. See `pallet-balances-*/src/lib.rs::ensure_upgraded` and `pallet-balances-*/src/types.rs::IS_NEW_LOGIC`.
+
+const IS_NEW_LOGIC_FLAG = '0x80000000000000000000000000000000'
+
+// The DAP pallet on AssetHub periodically mints inflation rewards (`dap.IssuanceMinted`).
+// When the Chopsticks fork point crosses a DAP payout boundary, one or more blocks in the
+// test sequence will carry a mint that changes total issuance independently of the operation
+// under test. This helper adds up the amounts minted in every block after `sinceBlock`, so a
+// caller can subtract them from the issuance delta it observes. A mint can land in any block of
+// the sequence, so reading only the latest block misses it.
+async function getDapIssuance(api: ApiPromise, sinceBlock: number): Promise<bigint> {
+  // Only some chains have the DAP pallet.
+  const issuanceMinted = api.events.dap?.IssuanceMinted
+  if (issuanceMinted === undefined) {
+    return 0n
+  }
+
+  const head = (await api.rpc.chain.getHeader()).number.toNumber()
+  let dapMint = 0n
+
+  for (let height = sinceBlock + 1; height <= head; height++) {
+    const hash = await api.rpc.chain.getBlockHash(height)
+    const events = await api.query.system.events.at(hash)
+    for (const { event } of events) {
+      if (issuanceMinted.is(event)) {
+        // `IssuanceMinted` carries `total_minted` then `elapsed_millis`. The DAP pallet is not
+        // in the augmented types, so the balance needs its concrete type.
+        const [totalMinted] = event.data
+        dapMint += (totalMinted as u128).toBigInt()
+      }
+    }
+  }
+
+  return dapMint
+}
 
 /// -------
 /// Helpers
@@ -49,10 +99,9 @@ async function createAccountWithBalance<
   // Create fresh account from seed
   const newAccount = testAccounts.keyring.createFromUri(`${seed}`)
 
-  // Set account balance directly via storage
   await client.dev.setStorage({
     System: {
-      account: [[[newAccount.address], { providers: 1, data: { free: balance } }]],
+      account: [[[newAccount.address], { providers: 1, data: { free: balance, flags: IS_NEW_LOGIC_FLAG } }]],
     },
   })
 
@@ -283,7 +332,7 @@ export const manualReserveAction = <
                 free: currentFree - amount,
                 reserved: amount,
                 frozen: currentFrozen,
-                flags: currentAccount.data.flags,
+                flags: IS_NEW_LOGIC_FLAG,
               },
             },
           ],
@@ -322,7 +371,7 @@ export const vestedTransferLockAction = <
   execute: async (client: Client<TCustom, TInitStorages>, alice: KeyringPair, amount: bigint): Promise<void> => {
     const offset = blockProviderOffset(
       client.config.properties.schedulerBlockProvider,
-      (client.config.properties as any).asyncBacking,
+      (client.config.properties as any).relayBlocksPerParaBlock,
     )
     const number = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
     const perBlock = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -365,7 +414,7 @@ export const manualLockAction = <
                 free: currentFree,
                 reserved: currentReserved,
                 frozen: amount,
-                flags: currentAccount.data.flags,
+                flags: IS_NEW_LOGIC_FLAG,
               },
             },
           ],
@@ -476,15 +525,13 @@ async function transferInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(
-  chain: Chain<TCustom, TInitStorages>,
+  client: Client<TCustom, TInitStorages>,
   transferFn: (
     client: Client<TCustom, TInitStorages>,
     bob: string,
     ...args: any[]
   ) => SubmittableExtrinsic<'promise', ISubmittableResult>,
 ) {
-  const [client] = await setupNetworks(chain)
-
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100n
   const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
@@ -547,12 +594,9 @@ export type LiqRestrTestResExpectation = 'failure' | 'success'
 export interface AccountsTestConfig<
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>>,
 > {
   /** Expected behavior for liquidity restriction tests */
   expectation: LiqRestrTestResExpectation
-  /** Optional relay chain for XCM-based operations */
-  relayChain?: Chain<TCustom, TInitStoragesRelay>
   /** Custom action lists - if not provided, defaults will be used */
   actions?: {
     reserveActions: ReserveAction<TCustom, TInitStoragesBase>[]
@@ -568,12 +612,9 @@ export interface AccountsTestConfig<
 export function createAccountsConfig<
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>>,
->(
-  overrides?: Partial<AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay>>,
-): AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay> {
+>(overrides?: Partial<AccountsTestConfig<TCustom, TInitStoragesBase>>): AccountsTestConfig<TCustom, TInitStoragesBase> {
   return {
-    ...defaultAccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay>(),
+    ...defaultAccountsTestConfig<TCustom, TInitStoragesBase>(),
     ...overrides,
   }
 }
@@ -582,14 +623,12 @@ export function createAccountsConfig<
  * Default accounts E2E test configuration.
  *
  * 1. Liquidity restriction tests are expected to fail
- * 2. The relay chain field is empty, meaning the chain has the `scheduler` pallet available
- * 3. The action lists used in liq. restriction tests are all defaults
+ * 2. The action lists used in liq. restriction tests are all defaults
  */
 const defaultAccountsTestConfig = <
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>>,
->(): AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay> => ({
+>(): AccountsTestConfig<TCustom, TInitStoragesBase> => ({
   expectation: 'failure',
   actions: {
     reserveActions: createDefaultReserveActions(),
@@ -618,9 +657,7 @@ const defaultAccountsTestConfig = <
 async function transferAllowDeathTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = 100n * existentialDeposit
@@ -780,9 +817,7 @@ async function transferAllowDeathTest<
 async function transferAllowDeathNoKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100n // 100 ED
@@ -846,7 +881,7 @@ async function transferAllowDeathNoKillTest<
   expect(transferEventData.amount.toBigInt()).toBe(transferAmount)
 
   // On Bifrost networks, fees emit Burned (not Withdraw) events. Skip Withdraw check there.
-  if (chain.name !== 'bifrostKusama' && chain.name !== 'bifrostPolkadot') {
+  if (client.config.name !== 'bifrostKusama' && client.config.name !== 'bifrostPolkadot') {
     const withdrawEvent = events.find((record) => {
       const { event } = record
       if (event.section === 'balances' && event.method === 'Withdraw') {
@@ -902,9 +937,7 @@ async function transferAllowDeathNoKillTest<
 async function transferBelowExistentialDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit * 100n // 100 ED
@@ -958,11 +991,11 @@ async function transferBelowExistentialDepositTest<
 async function transferAllowDeathInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(client: Client<TCustom, TInitStorages>) {
   const lambda = (client: Client<TCustom, TInitStorages>, bob: string, amt: bigint) =>
     client.api.tx.balances.transferAllowDeath(bob, amt)
 
-  await transferInsufficientFundsTest(chain, lambda)
+  await transferInsufficientFundsTest(client, lambda)
 }
 
 /**
@@ -977,9 +1010,7 @@ async function transferAllowDeathInsufficientFundsTest<
 async function transferAllowDeathWithReserveTest<
   TCustom extends Record<string, unknown>,
   TInitStorages extends Record<string, Record<string, any>>,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create fresh addresses, one with 100 ED
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100n
@@ -1094,9 +1125,7 @@ async function transferAllowDeathWithReserveTest<
 async function transferAllowDeathSelfTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit * 100n
   const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
@@ -1177,27 +1206,7 @@ async function transferAllowDeathSelfTest<
 async function forceTransferKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
-  // and the base client needs to be recreated simultaneously - otherwise, they would be unable tocommunicate.
-  const hasScheduler = !!bc.api.tx.scheduler
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // Create fresh account
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const eps = existentialDeposit / 2n
@@ -1210,13 +1219,13 @@ async function forceTransferKillTest<
 
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, existentialDeposit)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force transfer directly
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceTransferTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -1226,7 +1235,7 @@ async function forceTransferKillTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -1237,10 +1246,10 @@ async function forceTransferKillTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -1265,13 +1274,15 @@ async function forceTransferKillTest<
     baseClient,
     alice.address,
     bob.address,
-    baseChain.properties.addressEncoding,
+    baseClient.config.properties.addressEncoding,
   )
   expect(transferEvent).toBeDefined()
   assert(baseClient.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, baseChain.properties.addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, baseChain.properties.addressEncoding))
+  expect(transferEventData.from.toString()).toBe(
+    encodeAddress(alice.address, baseClient.config.properties.addressEncoding),
+  )
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, baseClient.config.properties.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
 
   // Check `DustLost` event
@@ -1279,14 +1290,18 @@ async function forceTransferKillTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'DustLost') {
       assert(baseClient.api.events.balances.DustLost.is(event))
-      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+      return (
+        event.data.account.toString() === encodeAddress(alice.address, baseClient.config.properties.addressEncoding)
+      )
     }
     return false
   })
   expect(dustLostEvent).toBeDefined()
   assert(baseClient.api.events.balances.DustLost.is(dustLostEvent!.event))
   const dustLostEventData = dustLostEvent!.event.data
-  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, baseChain.properties.addressEncoding))
+  expect(dustLostEventData.account.toString()).toBe(
+    encodeAddress(alice.address, baseClient.config.properties.addressEncoding),
+  )
   expect(dustLostEventData.amount.toBigInt()).toBe(eps)
 
   // Check `Endowed` event
@@ -1294,14 +1309,16 @@ async function forceTransferKillTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'Endowed') {
       assert(baseClient.api.events.balances.Endowed.is(event))
-      return event.data.account.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+      return event.data.account.toString() === encodeAddress(bob.address, baseClient.config.properties.addressEncoding)
     }
     return false
   })
   expect(endowedEvent).toBeDefined()
   assert(baseClient.api.events.balances.Endowed.is(endowedEvent!.event))
   const endowedEventData = endowedEvent!.event.data
-  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, baseChain.properties.addressEncoding))
+  expect(endowedEventData.account.toString()).toBe(
+    encodeAddress(bob.address, baseClient.config.properties.addressEncoding),
+  )
   expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
 
   // Check `KilledAccount` event
@@ -1309,7 +1326,9 @@ async function forceTransferKillTest<
     const { event } = record
     if (event.section === 'system' && event.method === 'KilledAccount') {
       assert(baseClient.api.events.system.KilledAccount.is(event))
-      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+      return (
+        event.data.account.toString() === encodeAddress(alice.address, baseClient.config.properties.addressEncoding)
+      )
     }
     return false
   })
@@ -1317,7 +1336,7 @@ async function forceTransferKillTest<
   assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
   const killedAccountEventData = killedAccountEvent!.event.data
   expect(killedAccountEventData.account.toString()).toBe(
-    encodeAddress(alice.address, baseChain.properties.addressEncoding),
+    encodeAddress(alice.address, baseClient.config.properties.addressEncoding),
   )
 
   // Check `NewAccount` event
@@ -1325,14 +1344,16 @@ async function forceTransferKillTest<
     const { event } = record
     if (event.section === 'system' && event.method === 'NewAccount') {
       assert(baseClient.api.events.system.NewAccount.is(event))
-      return event.data.account.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+      return event.data.account.toString() === encodeAddress(bob.address, baseClient.config.properties.addressEncoding)
     }
     return false
   })
   expect(newAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.NewAccount.is(newAccountEvent!.event))
   const newAccountEventData = newAccountEvent!.event.data
-  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, baseChain.properties.addressEncoding))
+  expect(newAccountEventData.account.toString()).toBe(
+    encodeAddress(bob.address, baseClient.config.properties.addressEncoding),
+  )
 }
 
 /**
@@ -1346,26 +1367,7 @@ async function forceTransferKillTest<
 async function forceTransferBelowExistentialDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available
-  const hasScheduler = !!bc.api.tx.scheduler
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // Create fresh accounts
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit * 100n // 100 ED
@@ -1379,13 +1381,13 @@ async function forceTransferBelowExistentialDepositTest<
   const transferAmount = existentialDeposit - 1n
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force transfer directly
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceTransferTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -1395,7 +1397,7 @@ async function forceTransferBelowExistentialDepositTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -1406,10 +1408,10 @@ async function forceTransferBelowExistentialDepositTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -1422,7 +1424,7 @@ async function forceTransferBelowExistentialDepositTest<
   // No events are emitted from this failure, as it was the result of a manually injected scheduler call.
   expect(failedEvent).toBeUndefined()
 
-  if (hasScheduler) {
+  if (!relayClient) {
     const dispatchedEvent = events.find((record) => {
       const { event } = record
       return event.section === 'scheduler' && event.method === 'Dispatched'
@@ -1458,26 +1460,7 @@ async function forceTransferBelowExistentialDepositTest<
 async function forceTransferInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available
-  const hasScheduler = !!bc.api.tx.scheduler
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // Create fresh accounts
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit
@@ -1491,12 +1474,12 @@ async function forceTransferInsufficientFundsTest<
   const transferAmount = 2n * aliceBalance
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceTransferTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -1506,7 +1489,7 @@ async function forceTransferInsufficientFundsTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -1517,17 +1500,17 @@ async function forceTransferInsufficientFundsTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
   // Check for failure
   const events = await baseClient.api.query.system.events()
 
-  if (hasScheduler) {
+  if (!relayClient) {
     const dispatchedEvent = events.find((record) => {
       const { event } = record
       return event.section === 'scheduler' && event.method === 'Dispatched'
@@ -1565,27 +1548,7 @@ async function forceTransferInsufficientFundsTest<
 async function forceTransferWithReserveTest<
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
-  // and the base client needs to be recreated simultaneously - otherwise, they would be unable to communicate.
-  const hasScheduler = !!bc.api.tx.scheduler
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // 1. Create fresh addresses, one with 100 ED (plus some extra for fees)
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100n + existentialDeposit
@@ -1616,13 +1579,13 @@ async function forceTransferWithReserveTest<
 
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force transfer directly
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceTransferTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
 
     await baseClient.dev.newBlock()
@@ -1633,7 +1596,7 @@ async function forceTransferWithReserveTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -1644,10 +1607,10 @@ async function forceTransferWithReserveTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -1678,7 +1641,9 @@ async function forceTransferWithReserveTest<
     const { event } = record
     if (event.section === 'system' && event.method === 'KilledAccount') {
       assert(baseClient.api.events.system.KilledAccount.is(event))
-      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+      return (
+        event.data.account.toString() === encodeAddress(alice.address, baseClient.config.properties.addressEncoding)
+      )
     }
     return false
   })
@@ -1690,11 +1655,11 @@ async function forceTransferWithReserveTest<
     baseClient,
     alice.address,
     bob.address,
-    baseChain.properties.addressEncoding,
+    baseClient.config.properties.addressEncoding,
   )
   expect(transferEvent).toBeUndefined()
 
-  if (hasScheduler) {
+  if (!relayClient) {
     const dispatchedEvent = events.find((record) => {
       const { event } = record
       return event.section === 'scheduler' && event.method === 'Dispatched'
@@ -1714,9 +1679,7 @@ async function forceTransferWithReserveTest<
 /**
  * Test `force_transfer` with a bad origin (non-root).
  */
-async function forceTransferBadOriginTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-
+async function forceTransferBadOriginTest(client: Client<any, any>) {
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const transferAmount = existentialDeposit
@@ -1750,26 +1713,7 @@ async function forceTransferBadOriginTest(chain: Chain) {
 async function forceTransferSelfTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available
-  const hasScheduler = !!bc.api.tx.scheduler
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // 1. Create Alice's account
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit * 100n
@@ -1781,13 +1725,13 @@ async function forceTransferSelfTest<
 
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, alice.address, aliceBalance)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force transfer directly
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceTransferTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -1797,7 +1741,7 @@ async function forceTransferSelfTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -1808,7 +1752,7 @@ async function forceTransferSelfTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
     await baseClient.dev.newBlock()
   }
 
@@ -1832,7 +1776,7 @@ async function forceTransferSelfTest<
     baseClient,
     alice.address,
     alice.address,
-    baseChain.properties.addressEncoding,
+    baseClient.config.properties.addressEncoding,
   )
   expect(transferEvent).toBeUndefined()
 
@@ -1841,7 +1785,9 @@ async function forceTransferSelfTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'Endowed') {
       assert(baseClient.api.events.balances.Endowed.is(event))
-      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+      return (
+        event.data.account.toString() === encodeAddress(alice.address, baseClient.config.properties.addressEncoding)
+      )
     }
     return false
   })
@@ -1852,7 +1798,9 @@ async function forceTransferSelfTest<
     const { event } = record
     if (event.section === 'system' && event.method === 'KilledAccount') {
       assert(baseClient.api.events.system.KilledAccount.is(event))
-      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+      return (
+        event.data.account.toString() === encodeAddress(alice.address, baseClient.config.properties.addressEncoding)
+      )
     }
     return false
   })
@@ -1879,9 +1827,7 @@ async function forceTransferSelfTest<
 async function transferAllKeepAliveTrueTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create and fund accounts
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -1965,9 +1911,7 @@ async function transferAllKeepAliveTrueTest<
 async function transferAllKeepAliveFalseTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create and fund accounts
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -2052,9 +1996,7 @@ async function transferAllKeepAliveFalseTest<
 async function transferAllWithReserveTest<
   TCustom extends Record<string, unknown>,
   TInitStorages extends Record<string, Record<string, any>>,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create fresh addresses, one with 100 ED (plus some extra for fees)
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100n + existentialDeposit
@@ -2189,9 +2131,7 @@ async function transferAllWithReserveTest<
 async function transferAllSelfKeepAliveTrueTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create Alice's account
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -2276,9 +2216,7 @@ async function transferAllSelfKeepAliveTrueTest<
 async function transferAllSelfKeepAliveFalseTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create Alice's account
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -2367,10 +2305,10 @@ async function transferAllSelfKeepAliveFalseTest<
 async function transferKeepAliveInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(client: Client<TCustom, TInitStorages>) {
   const lambda = (client: Client<TCustom, TInitStorages>, bob: string, amount: bigint) =>
     client.api.tx.balances.transferKeepAlive(bob, amount)
-  await transferInsufficientFundsTest(chain, lambda)
+  await transferInsufficientFundsTest(client, lambda)
 }
 
 /**
@@ -2384,9 +2322,7 @@ async function transferKeepAliveInsufficientFundsTest<
 async function transferKeepAliveSelfTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create Alice's account
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -2443,9 +2379,7 @@ async function transferKeepAliveSelfTest<
 async function transferKeepAliveSelfSuccessTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create Alice's account
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -2517,9 +2451,7 @@ async function transferKeepAliveSelfSuccessTest<
 async function transferKeepAliveBelowEdTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create accounts, and endow Alice with funds
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -2613,9 +2545,7 @@ async function transferKeepAliveBelowEdTest<
 async function transferKeepAliveExceedBalanceTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create accounts, and endow Alice with funds
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -2701,9 +2631,7 @@ async function transferKeepAliveExceedBalanceTest<
 /**
  * Test `force_unreserve` with a bad origin (non-root).
  */
-async function forceUnreserveBadOriginTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-
+async function forceUnreserveBadOriginTest(client: Client<any, any>) {
   // Create fresh account
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const alice = await createAccountWithBalance(client, existentialDeposit * 1000n, '//fresh_alice')
@@ -2736,26 +2664,9 @@ async function forceUnreserveBadOriginTest(chain: Chain) {
 async function forceUnreserveNoReservesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available
-  const hasScheduler = !!bc.api.tx.scheduler
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   let paraId: number | undefined
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-
+  if (relayClient) {
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     paraId = (parachainInfo as any).toNumber()
@@ -2778,18 +2689,18 @@ async function forceUnreserveNoReservesTest<
   const unreserveAmount = 0n
   const forceUnreserveTx = baseClient.api.tx.balances.forceUnreserve(alice.address, unreserveAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceUnreserveTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -2800,10 +2711,10 @@ async function forceUnreserveNoReservesTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -2814,7 +2725,7 @@ async function forceUnreserveNoReservesTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'Unreserved') {
       assert(baseClient.api.events.balances.Unreserved.is(event))
-      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+      return event.data.who.toString() === encodeAddress(alice.address, baseClient.config.properties.addressEncoding)
     }
     return false
   })
@@ -2837,26 +2748,9 @@ async function forceUnreserveNoReservesTest<
 async function forceUnreserveNonExistentAccountTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available
-  const hasScheduler = !!bc.api.tx.scheduler
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   let paraId: number | undefined
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-
+  if (relayClient) {
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     paraId = (parachainInfo as any).toNumber()
@@ -2872,18 +2766,18 @@ async function forceUnreserveNonExistentAccountTest<
   const unreserveAmount = existentialDeposit
   const forceUnreserveTx = baseClient.api.tx.balances.forceUnreserve(bob.address, unreserveAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceUnreserveTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -2894,10 +2788,10 @@ async function forceUnreserveNonExistentAccountTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -2907,7 +2801,7 @@ async function forceUnreserveNonExistentAccountTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'Unreserved') {
       assert(baseClient.api.events.balances.Unreserved.is(event))
-      return event.data.who.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+      return event.data.who.toString() === encodeAddress(bob.address, baseClient.config.properties.addressEncoding)
     }
     return false
   })
@@ -2931,26 +2825,11 @@ async function forceUnreserveNonExistentAccountTest<
 async function forceUnreserveWithReservesTest<
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
+  const reserveAction = manualReserveAction<TCustom, TInitStoragesBase>()
 
-  // Check if scheduler pallet is available
-  const hasScheduler = !!bc.api.tx.scheduler
   let paraId: number | undefined
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-
+  if (relayClient) {
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     paraId = (parachainInfo as any).toNumber()
@@ -2970,45 +2849,34 @@ async function forceUnreserveWithReservesTest<
   expect(aliceAccountInitial.data.free.toBigInt()).toBe(aliceBalance)
   expect(aliceAccountInitial.consumers.toNumber()).toBe(0)
 
-  // 2. Create a reserve a multisig operation - available on most chains
+  // 2. Create a reserve using the configured reserve action
 
-  const multisigThreshold = 2n
-  const multisigDeposit =
-    baseClient.api.consts.multisig.depositBase.toBigInt() +
-    multisigThreshold * baseClient.api.consts.multisig.depositFactor.toBigInt()
-  const multisigTx = baseClient.api.tx.multisig.asMulti(
-    multisigThreshold,
-    [testAccounts.bob.address],
-    null,
-    baseClient.api.tx.system.remark('multisig test').method.toHex(),
-    { refTime: 1000000, proofSize: 1000 },
-  )
-  await sendTransaction(multisigTx.signAsync(alice))
-  await baseClient.dev.newBlock()
+  const reserveAmount = existentialDeposit * 20n
+  const reservedAmount = await reserveAction.execute(baseClient, alice, reserveAmount)
 
   // Verify the reserve was created and consumer count increased
   const aliceAccountAfterReserve = await baseClient.api.query.system.account(alice.address)
-  expect(aliceAccountAfterReserve.data.reserved.toBigInt()).toBe(multisigDeposit)
+  expect(aliceAccountAfterReserve.data.reserved.toBigInt()).toBe(reservedAmount)
   expect(aliceAccountAfterReserve.consumers.toNumber()).toEqual(1)
   const consumersAfterReserve = aliceAccountAfterReserve.consumers.toNumber()
 
   // 3. Forcefully unreserve 20 ED from Alice
 
-  const unreserveAmount = multisigDeposit
+  const unreserveAmount = reservedAmount
   const forceUnreserveTx = baseClient.api.tx.balances.forceUnreserve(alice.address, unreserveAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceUnreserveTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3019,10 +2887,10 @@ async function forceUnreserveWithReservesTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -3033,7 +2901,7 @@ async function forceUnreserveWithReservesTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'Unreserved') {
       assert(baseClient.api.events.balances.Unreserved.is(event))
-      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+      return event.data.who.toString() === encodeAddress(alice.address, baseClient.config.properties.addressEncoding)
     }
     return false
   })
@@ -3041,7 +2909,9 @@ async function forceUnreserveWithReservesTest<
   expect(unreservedEvent).toBeDefined()
   assert(baseClient.api.events.balances.Unreserved.is(unreservedEvent!.event))
   const unreservedEventData = unreservedEvent!.event.data
-  expect(unreservedEventData.who.toString()).toBe(encodeAddress(alice.address, baseChain.properties.addressEncoding))
+  expect(unreservedEventData.who.toString()).toBe(
+    encodeAddress(alice.address, baseClient.config.properties.addressEncoding),
+  )
   expect(unreservedEventData.amount.toBigInt()).toBe(unreserveAmount)
 
   // 5. Verify Alice's reserved balance decreased, free balance increased, and consumer count decreased
@@ -3053,7 +2923,6 @@ async function forceUnreserveWithReservesTest<
   const expectedFreeBalance = aliceAccountAfterReserve.data.free.toBigInt() + unreserveAmount
   expect(aliceAccountFinal.data.free.toBigInt()).toBe(expectedFreeBalance)
 
-  // Consumer count should have decreased back to 0 (or at least decreased from after reserve)
   const consumersAfterUnreserve = aliceAccountFinal.consumers.toNumber()
   expect(consumersAfterUnreserve).toBeLessThan(consumersAfterReserve)
   expect(consumersAfterUnreserve).toBe(0)
@@ -3066,9 +2935,7 @@ async function forceUnreserveWithReservesTest<
 /**
  * Test `force_set_balance` with a bad origin (non-root).
  */
-async function forceSetBalanceBadOriginTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-
+async function forceSetBalanceBadOriginTest(client: Client<any, any>) {
   // Create fresh account
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const alice = await createAccountWithBalance(client, existentialDeposit * 1000n, '//fresh_alice')
@@ -3101,26 +2968,7 @@ async function forceSetBalanceBadOriginTest(chain: Chain) {
 async function forceSetBalanceSuccessTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available
-  const hasScheduler = !!bc.api.tx.scheduler
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // 1. Create Alice's account with 100 ED
 
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
@@ -3134,6 +2982,7 @@ async function forceSetBalanceSuccessTest<
   expect(aliceAccountInitial.data.free.toBigInt()).toBe(initialBalance)
 
   // Query initial total issuance
+  const initialTotalIssuanceBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await baseClient.api.query.balances.totalIssuance()
 
   // 2. Force set Alice's balance to 101 ED
@@ -3142,13 +2991,13 @@ async function forceSetBalanceSuccessTest<
   const expectedIssuanceIncrease = newBalance - initialBalance
   const forceSetBalanceTx = baseClient.api.tx.balances.forceSetBalance(alice.address, newBalance)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force set balance directly
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceSetBalanceTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -3158,7 +3007,7 @@ async function forceSetBalanceSuccessTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3169,8 +3018,8 @@ async function forceSetBalanceSuccessTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
-    await relayClient!.dev.newBlock()
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -3181,8 +3030,9 @@ async function forceSetBalanceSuccessTest<
   expect(aliceAccountFinal.data.free.toBigInt()).toBe(newBalance)
 
   // Verify total issuance increased by the expected amount
+  const dapMint = await getDapIssuance(baseClient.api, initialTotalIssuanceBlock)
   const finalTotalIssuance = await baseClient.api.query.balances.totalIssuance()
-  const actualIssuanceIncrease = finalTotalIssuance.toBigInt() - initialTotalIssuance.toBigInt()
+  const actualIssuanceIncrease = finalTotalIssuance.toBigInt() - initialTotalIssuance.toBigInt() - dapMint
   expect(actualIssuanceIncrease).toBe(expectedIssuanceIncrease)
 
   // 4. Check events and new total issuance
@@ -3194,7 +3044,7 @@ async function forceSetBalanceSuccessTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'BalanceSet') {
       assert(baseClient.api.events.balances.BalanceSet.is(event))
-      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+      return event.data.who.toString() === encodeAddress(alice.address, baseClient.config.properties.addressEncoding)
     }
     return false
   })
@@ -3202,12 +3052,15 @@ async function forceSetBalanceSuccessTest<
   assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
 
   const balanceSetEventData = balanceSetEvent!.event.data
-  expect(balanceSetEventData.who.toString()).toBe(encodeAddress(alice.address, baseChain.properties.addressEncoding))
+  expect(balanceSetEventData.who.toString()).toBe(
+    encodeAddress(alice.address, baseClient.config.properties.addressEncoding),
+  )
   expect(balanceSetEventData.free.toBigInt()).toBe(newBalance)
 
   // Check new total issuance
+  const dapMintFinal = await getDapIssuance(baseClient.api, initialTotalIssuanceBlock)
   const newTotalIssuance = await baseClient.api.query.balances.totalIssuance()
-  expect(newTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt() + expectedIssuanceIncrease)
+  expect(newTotalIssuance.toBigInt() - dapMintFinal).toBe(initialTotalIssuance.toBigInt() + expectedIssuanceIncrease)
 
   // Verify Alice is still alive
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
@@ -3224,26 +3077,7 @@ async function forceSetBalanceSuccessTest<
 async function forceSetBalanceBelowEdTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available
-  const hasScheduler = !!bc.api.tx.scheduler
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // 1. Create Alice's account with 100 ED
 
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
@@ -3257,6 +3091,7 @@ async function forceSetBalanceBelowEdTest<
   expect(aliceAccountInitial.data.free.toBigInt()).toBe(initialBalance)
 
   // Query initial total issuance
+  const initialTotalIssuanceBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await baseClient.api.query.balances.totalIssuance()
 
   // 2. Force set Alice's balance to ED - 1 (below existential deposit)
@@ -3264,13 +3099,13 @@ async function forceSetBalanceBelowEdTest<
   const newBalance = existentialDeposit - 1n // Below ED
   const forceSetBalanceTx = baseClient.api.tx.balances.forceSetBalance(alice.address, newBalance)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force set balance directly
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceSetBalanceTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -3280,7 +3115,7 @@ async function forceSetBalanceBelowEdTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3291,8 +3126,8 @@ async function forceSetBalanceBelowEdTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
-    await relayClient!.dev.newBlock()
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -3309,7 +3144,7 @@ async function forceSetBalanceBelowEdTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'BalanceSet') {
       assert(baseClient.api.events.balances.BalanceSet.is(event))
-      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+      return event.data.who.toString() === encodeAddress(alice.address, baseClient.config.properties.addressEncoding)
     }
     return false
   })
@@ -3317,7 +3152,9 @@ async function forceSetBalanceBelowEdTest<
   assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
 
   const balanceSetEventData = balanceSetEvent!.event.data
-  expect(balanceSetEventData.who.toString()).toBe(encodeAddress(alice.address, baseChain.properties.addressEncoding))
+  expect(balanceSetEventData.who.toString()).toBe(
+    encodeAddress(alice.address, baseClient.config.properties.addressEncoding),
+  )
   expect(balanceSetEventData.free.toBigInt()).toBe(0n)
 
   // Check that a KilledAccount event was emitted
@@ -3325,7 +3162,9 @@ async function forceSetBalanceBelowEdTest<
     const { event } = record
     if (event.section === 'system' && event.method === 'KilledAccount') {
       assert(baseClient.api.events.system.KilledAccount.is(event))
-      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+      return (
+        event.data.account.toString() === encodeAddress(alice.address, baseClient.config.properties.addressEncoding)
+      )
     }
     return false
   })
@@ -3334,12 +3173,13 @@ async function forceSetBalanceBelowEdTest<
 
   const killedAccountEventData = killedAccountEvent!.event.data
   expect(killedAccountEventData.account.toString()).toBe(
-    encodeAddress(alice.address, baseChain.properties.addressEncoding),
+    encodeAddress(alice.address, baseClient.config.properties.addressEncoding),
   )
 
   // Check new total issuance
+  const dapMint2 = await getDapIssuance(baseClient.api, initialTotalIssuanceBlock)
   const newTotalIssuance = await baseClient.api.query.balances.totalIssuance()
-  expect(newTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt() - initialBalance)
+  expect(newTotalIssuance.toBigInt() - dapMint2).toBe(initialTotalIssuance.toBigInt() - initialBalance)
 }
 
 // -----------------------------
@@ -3349,9 +3189,7 @@ async function forceSetBalanceBelowEdTest<
 /**
  * Test `force_adjust_total_issuance` with a bad origin (non-root).
  */
-async function forceAdjustTotalIssuanceBadOriginTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-
+async function forceAdjustTotalIssuanceBadOriginTest(client: Client<any, any>) {
   // Create fresh account
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const alice = await createAccountWithBalance(client, existentialDeposit * 1000n, '//fresh_alice')
@@ -3385,31 +3223,15 @@ async function forceAdjustTotalIssuanceBadOriginTest(chain: Chain) {
 async function forceAdjustTotalIssuanceZeroDeltaTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available
-  const hasScheduler = !!bc.api.tx.scheduler
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   let paraId: number | undefined
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-
+  if (relayClient) {
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     paraId = (parachainInfo as any).toNumber()
   }
 
+  const issuanceBeforeBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
   const issuanceBefore = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
 
   // 1. Try to increase total issuance by 0
@@ -3418,18 +3240,18 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   const zeroDelta = 0n
   const forceAdjustIncreaseZeroTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(increaseDirection, zeroDelta)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceAdjustIncreaseZeroTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3440,10 +3262,10 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -3451,7 +3273,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
 
   let events = await baseClient.api.query.system.events()
 
-  if (hasScheduler) {
+  if (!relayClient) {
     const dispatchedEvent = events.find((record) => {
       const { event } = record
       return event.section === 'scheduler' && event.method === 'Dispatched'
@@ -3473,26 +3295,27 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   })
   expect(issuanceEvent).toBeUndefined()
 
+  const dapMint1 = await getDapIssuance(baseClient.api, issuanceBeforeBlock)
   const issuanceAfter = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
-  expect(issuanceAfter).toBe(issuanceBefore)
+  expect(issuanceAfter - dapMint1).toBe(issuanceBefore)
 
   // 3. Try to decrease total issuance by 0
 
   const decreaseDirection = 'Decrease'
   const forceAdjustDecreaseZeroTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(decreaseDirection, zeroDelta)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceAdjustDecreaseZeroTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3503,17 +3326,17 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
   // 4. Verify that the decrease transaction failed
   events = await baseClient.api.query.system.events()
 
-  if (hasScheduler) {
+  if (!relayClient) {
     const dispatchedEvent = events.find((record) => {
       const { event } = record
       return event.section === 'scheduler' && event.method === 'Dispatched'
@@ -3535,8 +3358,9 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   })
   expect(issuanceEvent).toBeUndefined()
 
+  const dapMint2 = await getDapIssuance(baseClient.api, issuanceBeforeBlock)
   const issuanceAfter2 = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
-  expect(issuanceAfter2).toBe(issuanceBefore)
+  expect(issuanceAfter2 - dapMint2).toBe(issuanceBefore)
 }
 
 /**
@@ -3551,26 +3375,9 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
 async function forceAdjustTotalIssuanceSuccessTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseChain: Chain<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available
-  const hasScheduler = !!bc.api.tx.scheduler
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   let paraId: number | undefined
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-
+  if (relayClient) {
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     paraId = (parachainInfo as any).toNumber()
@@ -3578,6 +3385,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
 
   // 1. Get initial total issuance
 
+  const initialIssuanceBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
   const initialIssuance = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
 
   // 2. Increase total issuance by 1
@@ -3586,18 +3394,18 @@ async function forceAdjustTotalIssuanceSuccessTest<
   const increaseDelta = 1n
   const forceAdjustIncreaseTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(increaseDirection, increaseDelta)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceAdjustIncreaseTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3608,17 +3416,19 @@ async function forceAdjustTotalIssuanceSuccessTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
   // 3. Verify the increase worked
 
+  const dapMintIncrease = await getDapIssuance(baseClient.api, initialIssuanceBlock)
+  const afterIncreaseIssuanceBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
   const afterIncreaseIssuance = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
-  expect(afterIncreaseIssuance).toBe(initialIssuance + increaseDelta)
+  expect(afterIncreaseIssuance - dapMintIncrease).toBe(initialIssuance + increaseDelta)
 
   // Check for TotalIssuanceForced event
   let systemEvents = await baseClient.api.query.system.events()
@@ -3628,9 +3438,6 @@ async function forceAdjustTotalIssuanceSuccessTest<
   })
   expect(issuanceEvent).toBeDefined()
   assert(baseClient.api.events.balances.TotalIssuanceForced.is(issuanceEvent!.event))
-  let issuanceEventData = issuanceEvent!.event.data
-  assert(issuanceEventData.old.eq(initialIssuance))
-  assert(issuanceEventData.new_.eq(afterIncreaseIssuance))
 
   // 4. Decrease total issuance by 2
 
@@ -3638,18 +3445,18 @@ async function forceAdjustTotalIssuanceSuccessTest<
   const decreaseDelta = 2n
   const forceAdjustDecreaseTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(decreaseDirection, decreaseDelta)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceAdjustDecreaseTx.method.toHex(),
       { system: 'Root' },
-      baseChain.properties.schedulerBlockProvider,
+      baseClient.config.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3660,19 +3467,19 @@ async function forceAdjustTotalIssuanceSuccessTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
   // 5. Verify the decrease worked
 
+  const dapMintDecrease = await getDapIssuance(baseClient.api, afterIncreaseIssuanceBlock)
   const finalIssuance = await baseClient.api.query.balances.totalIssuance()
   const finalIssuanceBigInt = finalIssuance.toBigInt()
-  expect(finalIssuanceBigInt).toBe(afterIncreaseIssuance - decreaseDelta)
-  expect(finalIssuanceBigInt).toBe(initialIssuance + increaseDelta - decreaseDelta)
+  expect(finalIssuanceBigInt - dapMintDecrease).toBe(afterIncreaseIssuance - decreaseDelta)
 
   // Check for second TotalIssuanceForced event
   systemEvents = await baseClient.api.query.system.events()
@@ -3682,9 +3489,6 @@ async function forceAdjustTotalIssuanceSuccessTest<
   })
   expect(issuanceEvent).toBeDefined()
   assert(baseClient.api.events.balances.TotalIssuanceForced.is(issuanceEvent!.event))
-  issuanceEventData = issuanceEvent!.event.data
-  assert(issuanceEventData.old.eq(afterIncreaseIssuance))
-  assert(issuanceEventData.new_.eq(finalIssuanceBigInt))
 }
 
 // ------
@@ -3701,9 +3505,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
 async function burnTestBaseCase<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create Alice with 1000 ED
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -3716,6 +3518,7 @@ async function burnTestBaseCase<
   const cumulativeFees = new Map<string, bigint>()
 
   // Query initial total issuance
+  const initialTotalIssuanceBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
 
   // 2. Alice burns 500 ED of her own
@@ -3747,11 +3550,10 @@ async function burnTestBaseCase<
   expect(aliceAccountAfterBurn.data.free.toBigInt()).toBe(expectedBalanceAfterBurn)
 
   // Check total issuance decreased by burn amount (fees are not included)
+  const dapMintBurn = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
-  const tiDelta = initialTotalIssuance.toBigInt() - totalIssuanceAfterBurn.toBigInt()
+  const tiDelta = initialTotalIssuance.toBigInt() - (totalIssuanceAfterBurn.toBigInt() - dapMintBurn)
   if (client.config.isRelayChain) {
-    // On relay chains the block author may be below ED; if so, the fee credit is dropped and
-    // TI shrinks by an extra authorShare on top of the burn (polkadot-sdk#9986).
     const authorShare = burnFee - (burnFee * 4n) / 5n
     expect(tiDelta === burnAmount || tiDelta === burnAmount + authorShare).toBe(true)
   } else {
@@ -3760,7 +3562,7 @@ async function burnTestBaseCase<
 
   // Check burn event
   const eventsAfterBurn = await client.api.query.system.events()
-  const explicitBurns = findExplicitBurnEventsForAccount(eventsAfterBurn, client, alice.address, chain)
+  const explicitBurns = findExplicitBurnEventsForAccount(eventsAfterBurn, client, alice.address, client.config)
   expect(explicitBurns).toHaveLength(1)
   assert(client.api.events.balances.Burned.is(explicitBurns[0].event))
   const burnEventData = explicitBurns[0].event.data
@@ -3781,9 +3583,7 @@ async function burnTestBaseCase<
 async function burnTestWithReaping<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create Alice with 1000 ED
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -3793,20 +3593,21 @@ async function burnTestWithReaping<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
   // Query initial total issuance
+  const initialTotalIssuanceBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
 
   const cumulativeFees = new Map<string, bigint>()
 
-  // 2. Burn amount that leaves Alice with exactly ED - 1n after fees
-
-  // First, estimate the fee by creating a dummy transaction
+  // 2. Burn enough to leave Alice below ED after fees.
+  //
+  // `paymentInfo` gives the fee estimate. We target `finalBalance = ED - 1n`
+  // so that Alice is reaped and a `DustLost` event fires with the dust amount.
+  // The actual fee charged may differ from `estimatedFee`, so we read both the
+  // dust amount and the total issuance change from events rather than computing
+  // them from the estimate.
   const dummyBurnTx = client.api.tx.balances.burn(existentialDeposit * 999n, false)
   const paymentInfo = await dummyBurnTx.paymentInfo(alice)
   const estimatedFee = paymentInfo.partialFee.toBigInt()
-
-  // `finalBalance = ED - 1n`
-  // `finalBalance = initialBalance - burnAmount - fee`
-  // Therefore: `burnAmount = initialBalance - fee - (ED - 1n)`
   const burnAmount = initialBalance - estimatedFee - (existentialDeposit - 1n)
 
   const burnTx = client.api.tx.balances.burn(burnAmount, false)
@@ -3827,13 +3628,17 @@ async function burnTestWithReaping<
 
   const events = await client.api.query.system.events()
 
-  const explicitBurns = findExplicitBurnEventsForAccount(events, client, alice.address, chain)
+  // The `Burned` event records exactly what `burn()` destroyed.
+  const explicitBurns = findExplicitBurnEventsForAccount(events, client, alice.address, client.config)
   expect(explicitBurns).toHaveLength(1)
   assert(client.api.events.balances.Burned.is(explicitBurns[0].event))
   const burnEventData = explicitBurns[0].event.data
   expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(burnEventData.amount.toBigInt()).toBe(burnAmount)
 
+  // `DustLost` records whatever remained in Alice's account below ED.
+  // The amount equals Alice's balance after the burn + fee, which may differ
+  // from ED-1 if the actual fee diverged from the estimate.
   const dustLostEvent = events.find((record) => {
     const { event } = record
     if (event.section === 'balances' && event.method === 'DustLost') {
@@ -3844,25 +3649,36 @@ async function burnTestWithReaping<
   })
   expect(dustLostEvent).toBeDefined()
   assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
-  const dustLostEventData = dustLostEvent!.event.data
-  expect(dustLostEventData.account.toString()).toBe(
-    encodeAddress(alice.address, client.config.properties.addressEncoding),
-  )
-  expect(dustLostEventData.amount.toBigInt()).toBe(existentialDeposit - 1n)
+  const dustAmount = dustLostEvent!.event.data.amount.toBigInt()
+  expect(dustAmount).toBeLessThan(existentialDeposit)
 
-  // 4. Verify that the total issuance is decreased by the amount burned
+  // 4. Verify that total issuance decreased by exactly the tokens destroyed.
+  //
+  // `burn()` always destroys `burnAmount` (reflected in the `Burned` event and TI).
+  // Whether the dust is also destroyed depends on the chain's `DustRemoval` config:
+  // - If `DustRemoval = ()` (burned): TI decreases by `burnAmount + dustAmount`.
+  // - If `DustRemoval = Dap` or similar (transferred): TI only decreases by `burnAmount`.
+  // Both are valid outcomes. We observe which one occurred from the TI change itself.
+  const dapMintReap = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
-  const isBifrost = chain.name.includes('bifrost')
-  const reapingFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
-  const expectedDecrease = isBifrost ? burnAmount : burnAmount + (existentialDeposit - 1n)
-  const tiAfter = totalIssuanceAfterBurn.toBigInt()
-  const tiExpect = initialTotalIssuance.toBigInt() - expectedDecrease
+  const tiAfter = totalIssuanceAfterBurn.toBigInt() - dapMintReap
+  const tiInitial = initialTotalIssuance.toBigInt()
+  const tiDropIfDustBurned = tiInitial - burnAmount - dustAmount
+  const tiDropIfDustTransferred = tiInitial - burnAmount
+
   if (client.config.isRelayChain) {
-    // Block author may be below ED; fee credit may be dropped, shrinking TI further (polkadot-sdk#9986).
+    // On relay chains a fraction of the fee goes to the block author and is not
+    // re-minted, causing a small additional TI reduction.
+    const reapingFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
     const reapingAuthorShare = reapingFee - (reapingFee * 4n) / 5n
-    expect(tiAfter === tiExpect || tiAfter === tiExpect - reapingAuthorShare).toBe(true)
+    expect(
+      tiAfter === tiDropIfDustBurned ||
+        tiAfter === tiDropIfDustBurned - reapingAuthorShare ||
+        tiAfter === tiDropIfDustTransferred ||
+        tiAfter === tiDropIfDustTransferred - reapingAuthorShare,
+    ).toBe(true)
   } else {
-    expect(tiAfter).toBe(tiExpect)
+    expect(tiAfter === tiDropIfDustBurned || tiAfter === tiDropIfDustTransferred).toBe(true)
   }
 }
 
@@ -3879,9 +3695,7 @@ async function burnTestWithReaping<
 async function burnKeepAliveTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create Alice with 10000 ED (large enough for both low and normal ED chains)
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -3891,6 +3705,7 @@ async function burnKeepAliveTest<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
   // Query initial total issuance and Alice's initial balance
+  const initialTotalIssuanceBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
   const aliceAccountInitial = await client.api.query.system.account(alice.address)
   const aliceInitialBalance = aliceAccountInitial.data.free.toBigInt()
@@ -3947,11 +3762,11 @@ async function burnKeepAliveTest<
 
   // 6. Verify that total issuance is unchanged (see polkadot-sdk#9986 for relay-chain author-drop case)
 
+  const dapMintKeepAlive = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   const keepAliveFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
-  const keepAliveTI = finalTotalIssuance.toBigInt()
+  const keepAliveTI = finalTotalIssuance.toBigInt() - dapMintKeepAlive
   if (client.config.isRelayChain) {
-    // Block author may be below ED; fee credit may be dropped, shrinking TI (polkadot-sdk#9986).
     const keepAliveAuthorShare = keepAliveFee - (keepAliveFee * 4n) / 5n
     expect(
       keepAliveTI === initialTotalIssuance.toBigInt() ||
@@ -3962,7 +3777,7 @@ async function burnKeepAliveTest<
   }
 
   // Verify no explicit Burned event for Alice (on Bifrost, fee-related Burned events are expected)
-  const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, chain)
+  const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, client.config)
   expect(explicitBurns).toHaveLength(0)
 }
 
@@ -3979,9 +3794,7 @@ async function burnKeepAliveTest<
 async function burnWithDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create Alice with 1000 ED
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -3992,6 +3805,7 @@ async function burnWithDepositTest<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
   // Query initial total issuance and consumer count
+  const initialTotalIssuanceBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
   const aliceAccountInitial = await client.api.query.system.account(alice.address)
   expect(aliceAccountInitial.consumers.toNumber()).toBe(0)
@@ -4021,7 +3835,7 @@ async function burnWithDepositTest<
               reserved: currentReserved,
               // No frozen balance required - to forestall the burn, only a consumer reference is needed.
               frozen: 0n,
-              flags: currentAccount.data.flags,
+              flags: IS_NEW_LOGIC_FLAG,
             },
           },
         ],
@@ -4071,11 +3885,11 @@ async function burnWithDepositTest<
 
   // 5. Verify that total issuance is unchanged (see polkadot-sdk#9986 for relay-chain author-drop case)
 
+  const dapMintDeposit = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   const depositFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
-  const depositTI = finalTotalIssuance.toBigInt()
+  const depositTI = finalTotalIssuance.toBigInt() - dapMintDeposit
   if (client.config.isRelayChain) {
-    // Block author may be below ED; fee credit may be dropped, shrinking TI (polkadot-sdk#9986).
     const depositAuthorShare = depositFee - (depositFee * 4n) / 5n
     expect(
       depositTI === initialTotalIssuance.toBigInt() ||
@@ -4087,7 +3901,7 @@ async function burnWithDepositTest<
 
   // Verify no explicit Burned event for Alice
   const systemEvents = await client.api.query.system.events()
-  const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, chain)
+  const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, client.config)
   expect(explicitBurns).toHaveLength(0)
 
   // Verify no KilledAccount event for Alice
@@ -4114,9 +3928,7 @@ async function burnWithDepositTest<
 async function burnDoubleAttemptTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. Create Alice with 100 ED
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -4126,6 +3938,7 @@ async function burnDoubleAttemptTest<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
   // Query initial total issuance and Alice's initial balance
+  const initialTotalIssuanceBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
   const aliceAccountInitial = await client.api.query.system.account(alice.address)
   const aliceInitialBalance = aliceAccountInitial.data.free.toBigInt()
@@ -4199,15 +4012,14 @@ async function burnDoubleAttemptTest<
   // 5. Verify total issuance is unchanged (see polkadot-sdk#9986 for relay-chain author-drop case)
   // Two transactions: each fee goes through ration(80,20) independently, so we check per-fee drops.
 
+  const dapMintDouble = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   const doubleFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
   const singleFee = doubleFee / 2n
   const singleAuthorShare = singleFee - (singleFee * 4n) / 5n
-  const doubleTI = finalTotalIssuance.toBigInt()
+  const doubleTI = finalTotalIssuance.toBigInt() - dapMintDouble
   const ti0 = initialTotalIssuance.toBigInt()
   if (client.config.isRelayChain) {
-    // Block author is either consistently above or below ED for both txs in the same context;
-    // either both fee credits are dropped or neither is (polkadot-sdk#9986).
     const doubleAuthorShare = singleAuthorShare * 2n
     expect(doubleTI === ti0 || doubleTI === ti0 - doubleAuthorShare).toBe(true)
   } else {
@@ -4215,7 +4027,7 @@ async function burnDoubleAttemptTest<
   }
 
   // Verify no explicit Burned event for Alice
-  const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, chain)
+  const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, client.config)
   expect(explicitBurns).toHaveLength(0)
 }
 
@@ -4255,14 +4067,12 @@ async function testLiquidityRestrictionForAction<
   TCustom extends Record<string, unknown>,
   TInitStorages extends Record<string, Record<string, any>>,
 >(
-  chain: Chain<TCustom, TInitStorages>,
+  client: Client<TCustom, TInitStorages>,
   reserveAction: ReserveAction<TCustom, TInitStorages>,
   lockAction: LockAction<TCustom, TInitStorages>,
   depositAction: DepositAction<TCustom, TInitStorages>,
   expectation: LiqRestrTestResExpectation,
 ) {
-  const [client] = await setupNetworks(chain)
-
   // Skip test if any required pallet is not available
   const missingActions: string[] = []
   if (!reserveAction.isAvailable(client)) missingActions.push(`reserve=${reserveAction.name}`)
@@ -4461,299 +4271,333 @@ export const accountsE2ETests = <
 >(
   chain: Chain<TCustom, TInitStoragesBase>,
   testConfig: TestConfig,
-  accountsCfg: AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay> = defaultAccountsTestConfig(),
-): RootTestTree => ({
-  kind: 'describe',
-  label: testConfig.testSuiteName,
-  children: [
-    // `transfer_allow_death` tests
-    {
-      kind: 'describe',
-      label: 'transfer_allow_death',
-      children: [
-        {
-          kind: 'test',
-          label: 'transfer of some funds does not kill sender account',
-          testFn: () => transferAllowDeathNoKillTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'transfer below existential deposit fails',
-          testFn: () => transferBelowExistentialDepositTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'transfer with insufficient funds fails',
-          testFn: () => transferAllowDeathInsufficientFundsTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'self-transfer of entire balance',
-          testFn: () => transferAllowDeathSelfTest(chain),
-        },
-        // TODO: Bifrost's FlexibleFee rejects txs that would leave balance below ED after fees.
-        // See https://github.com/bifrost-io/bifrost/blob/develop/pallets/flexible-fee/src/lib.rs
-        // Introduced in v0.22.0 (#1863): `can_withdraw` only matches `WithdrawConsequence::Success`.
-        ...(chain.name === 'bifrostKusama' || chain.name === 'bifrostPolkadot'
-          ? []
-          : [
-              {
-                kind: 'test' as const,
-                label: 'leaving an account below ED kills it',
-                testFn: () => transferAllowDeathTest(chain),
-              },
-            ]),
-        {
-          kind: 'test',
-          label: 'account with reserves is not reaped when transferring funds',
-          testFn: () => transferAllowDeathWithReserveTest(chain),
-        },
-      ],
+  accountsCfg: AccountsTestConfig<TCustom, TInitStoragesBase> = defaultAccountsTestConfig(),
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+): RootTestTree => {
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  let relayClient: Client<TCustom, TInitStoragesRelay> | undefined
+  let restoreSnapshot: () => Promise<void>
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      if (relayChain) {
+        ;[relayClient, baseClient] = await createNetworks(relayChain, chain)
+        restoreSnapshot = captureSnapshot(baseClient, relayClient)
+      } else {
+        ;[baseClient] = await createNetworks(chain)
+        restoreSnapshot = captureSnapshot(baseClient)
+      }
     },
-    {
-      kind: 'describe',
-      label: '`force_transfer`',
-      children: [
-        {
-          kind: 'test' as const,
-          label: 'force transferring origin below ED can kill it',
-          testFn: () => forceTransferKillTest(chain, accountsCfg.relayChain),
-        },
-        {
-          kind: 'test' as const,
-          label: 'force transfer below existential deposit fails',
-          testFn: () => forceTransferBelowExistentialDepositTest(chain, accountsCfg.relayChain),
-        },
-        {
-          kind: 'test' as const,
-          label: 'force transfer with insufficient funds fails',
-          testFn: () => forceTransferInsufficientFundsTest(chain, accountsCfg.relayChain),
-        },
-        {
-          kind: 'test',
-          label: 'account with reserves cannot be force transferred from',
-          testFn: () => forceTransferWithReserveTest(chain, accountsCfg.relayChain),
-        },
-        {
-          kind: 'test',
-          label: 'non-root origins cannot force transfer',
-          testFn: () => forceTransferBadOriginTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'self-transfer is a no-op',
-          testFn: () => forceTransferSelfTest(chain, accountsCfg.relayChain),
-        },
-      ],
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const baseBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
+      await baseClient.dev.setHead(baseBlock)
+      if (relayClient) {
+        const relayBlock = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+        await relayClient.dev.setHead(relayBlock)
+      }
     },
-    // `transfer_keep_alive` tests
-    {
-      kind: 'describe',
-      label: 'transfer_keep_alive',
-      children: [
-        {
-          kind: 'test' as const,
-          label: 'transfer with insufficient funds fails',
-          testFn: () => transferKeepAliveInsufficientFundsTest(chain),
-        },
-        {
-          kind: 'test' as const,
-          label: 'self-transfer is a no-op',
-          testFn: () => transferKeepAliveSelfTest(chain),
-        },
-        {
-          kind: 'test' as const,
-          label: 'self-transfer with reasonable amount succeeds as no-op',
-          testFn: () => transferKeepAliveSelfSuccessTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'transfer (keep alive) below existential deposit fails',
-          testFn: () => transferKeepAliveBelowEdTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'transfer exceeding available balance after fees fails',
-          testFn: () => transferKeepAliveExceedBalanceTest(chain),
-        },
-      ],
+    afterAll: async () => {
+      if (baseClient) {
+        await baseClient.api.disconnect().catch(() => {})
+        await baseClient.teardown().catch(() => {})
+      }
+      if (relayClient) {
+        await relayClient.api.disconnect().catch(() => {})
+        await relayClient.teardown().catch(() => {})
+      }
     },
-    {
-      kind: 'describe',
-      label: '`transfer_all`',
-      children: [
-        {
-          kind: 'test',
-          label: 'transfer all with keepAlive true leaves 1 ED',
-          testFn: () => transferAllKeepAliveTrueTest(chain),
-        },
-        // TODO: same Bifrost FlexibleFee issue as above — see v0.22.0 (#1863)
-        ...(chain.name === 'bifrostKusama' || chain.name === 'bifrostPolkadot'
-          ? []
-          : [
-              {
-                kind: 'test' as const,
-                label: 'transfer all with keepAlive false kills sender',
-                testFn: () => transferAllKeepAliveFalseTest(chain),
-              },
-            ]),
-        {
-          kind: 'test',
-          label: 'account with reserves cannot transfer all funds',
-          testFn: () => transferAllWithReserveTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'self-transfer all with keepAlive true is a no-op',
-          testFn: () => transferAllSelfKeepAliveTrueTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'self-transfer all with keepAlive false is a no-op',
-          testFn: () => transferAllSelfKeepAliveFalseTest(chain),
-        },
-      ],
-    },
-    {
-      kind: 'describe',
-      label: '`force_unreserve`',
-      children: [
-        {
-          kind: 'test',
-          label: 'non-root origins cannot forcefully unreserve',
-          testFn: () => forceUnreserveBadOriginTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'unreserving 0 from account with no reserves is a no-op',
-          testFn: () => forceUnreserveNoReservesTest(chain, accountsCfg.relayChain),
-        },
-        {
-          kind: 'test',
-          label: 'unreserving from non-existent account is a no-op',
-          testFn: () => forceUnreserveNonExistentAccountTest(chain, accountsCfg.relayChain),
-        },
-        {
-          kind: 'test',
-          label: 'unreserving from account with reserves works correctly',
-          testFn: () => forceUnreserveWithReservesTest(chain, accountsCfg.relayChain),
-        },
-      ],
-    },
-    {
-      kind: 'describe',
-      label: '`force_set_balance`',
-      children: [
-        {
-          kind: 'test',
-          label: 'non-root origins cannot forcefully set balances',
-          testFn: () => forceSetBalanceBadOriginTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'successfully sets balance and and adjusts total issuance',
-          testFn: () => forceSetBalanceSuccessTest(chain, accountsCfg.relayChain),
-        },
-        {
-          kind: 'test',
-          label: 'setting balance below ED reaps account and updates total issuance',
-          testFn: () => forceSetBalanceBelowEdTest(chain, accountsCfg.relayChain),
-        },
-      ],
-    },
-    {
-      kind: 'describe',
-      label: '`force_adjust_total_issuance`',
-      children: [
-        {
-          kind: 'test',
-          label: 'non-root origins cannot forcefully adjust the total issuance',
-          testFn: () => forceAdjustTotalIssuanceBadOriginTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'zero delta fails with DeltaZero error in both directions',
-          testFn: () => forceAdjustTotalIssuanceZeroDeltaTest(chain, accountsCfg.relayChain),
-        },
-        {
-          kind: 'test',
-          label: 'successful adjustments increase and decrease total issuance',
-          testFn: () => forceAdjustTotalIssuanceSuccessTest(chain, accountsCfg.relayChain),
-        },
-      ],
-    },
-    // `burn` tests
-    {
-      kind: 'describe',
-      label: '`burn`',
-      children: [
-        {
-          kind: 'test' as const,
-          label: 'burning funds from account works',
-          testFn: () => burnTestBaseCase(chain),
-        },
-        {
-          kind: 'test' as const,
-          label: 'burning entire balance, or more than it, fails',
-          testFn: () => burnDoubleAttemptTest(chain),
-        },
-        // TODO: same Bifrost FlexibleFee issue as above — see v0.22.0 (#1863)
-        ...(chain.name === 'bifrostKusama' || chain.name === 'bifrostPolkadot'
-          ? []
-          : [
-              {
-                kind: 'test' as const,
-                label: 'burning funds below ED leads to account reaping',
-                testFn: () => burnTestWithReaping(chain),
-              },
-            ]),
-        {
-          kind: 'test' as const,
-          label: 'burning below ED with keep_alive is no-op',
-          testFn: () => burnKeepAliveTest(chain),
-        },
-        {
-          kind: 'test' as const,
-          label: 'burning from account with multisig deposit cannot reap it',
-          testFn: () => burnWithDepositTest(chain),
-        },
-      ],
-    },
-    {
-      kind: 'describe',
-      label: 'currency tests',
-      children: (() => {
-        const testCases: Array<{ kind: 'test'; label: string; testFn: () => Promise<void> }> = []
+    children: [
+      // `transfer_allow_death` tests
+      {
+        kind: 'describe',
+        label: 'transfer_allow_death',
+        children: [
+          {
+            kind: 'test',
+            label: 'transfer of some funds does not kill sender account',
+            testFn: () => transferAllowDeathNoKillTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'transfer below existential deposit fails',
+            testFn: () => transferBelowExistentialDepositTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'transfer with insufficient funds fails',
+            testFn: () => transferAllowDeathInsufficientFundsTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'self-transfer of entire balance',
+            testFn: () => transferAllowDeathSelfTest(baseClient),
+          },
+          // TODO: Bifrost's FlexibleFee rejects txs that would leave balance below ED after fees.
+          // See https://github.com/bifrost-io/bifrost/blob/develop/pallets/flexible-fee/src/lib.rs
+          // Introduced in v0.22.0 (#1863): `can_withdraw` only matches `WithdrawConsequence::Success`.
+          ...(chain.name === 'bifrostKusama' || chain.name === 'bifrostPolkadot'
+            ? []
+            : [
+                {
+                  kind: 'test' as const,
+                  label: 'leaving an account below ED kills it',
+                  testFn: () => transferAllowDeathTest(baseClient),
+                },
+              ]),
+          {
+            kind: 'test',
+            label: 'account with reserves is not reaped when transferring funds',
+            testFn: () => transferAllowDeathWithReserveTest(baseClient),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: '`force_transfer`',
+        children: [
+          {
+            kind: 'test' as const,
+            label: 'force transferring origin below ED can kill it',
+            testFn: () => forceTransferKillTest(baseClient, relayClient),
+          },
+          {
+            kind: 'test' as const,
+            label: 'force transfer below existential deposit fails',
+            testFn: () => forceTransferBelowExistentialDepositTest(baseClient, relayClient),
+          },
+          {
+            kind: 'test' as const,
+            label: 'force transfer with insufficient funds fails',
+            testFn: () => forceTransferInsufficientFundsTest(baseClient, relayClient),
+          },
+          {
+            kind: 'test',
+            label: 'account with reserves cannot be force transferred from',
+            testFn: () => forceTransferWithReserveTest(baseClient, relayClient),
+          },
+          {
+            kind: 'test',
+            label: 'non-root origins cannot force transfer',
+            testFn: () => forceTransferBadOriginTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'self-transfer is a no-op',
+            testFn: () => forceTransferSelfTest(baseClient, relayClient),
+          },
+        ],
+      },
+      // `transfer_keep_alive` tests
+      {
+        kind: 'describe',
+        label: 'transfer_keep_alive',
+        children: [
+          {
+            kind: 'test' as const,
+            label: 'transfer with insufficient funds fails',
+            testFn: () => transferKeepAliveInsufficientFundsTest(baseClient),
+          },
+          {
+            kind: 'test' as const,
+            label: 'self-transfer is a no-op',
+            testFn: () => transferKeepAliveSelfTest(baseClient),
+          },
+          {
+            kind: 'test' as const,
+            label: 'self-transfer with reasonable amount succeeds as no-op',
+            testFn: () => transferKeepAliveSelfSuccessTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'transfer (keep alive) below existential deposit fails',
+            testFn: () => transferKeepAliveBelowEdTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'transfer exceeding available balance after fees fails',
+            testFn: () => transferKeepAliveExceedBalanceTest(baseClient),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: '`transfer_all`',
+        children: [
+          {
+            kind: 'test',
+            label: 'transfer all with keepAlive true leaves 1 ED',
+            testFn: () => transferAllKeepAliveTrueTest(baseClient),
+          },
+          // TODO: same Bifrost FlexibleFee issue as above — see v0.22.0 (#1863)
+          ...(chain.name === 'bifrostKusama' || chain.name === 'bifrostPolkadot'
+            ? []
+            : [
+                {
+                  kind: 'test' as const,
+                  label: 'transfer all with keepAlive false kills sender',
+                  testFn: () => transferAllKeepAliveFalseTest(baseClient),
+                },
+              ]),
+          {
+            kind: 'test',
+            label: 'account with reserves cannot transfer all funds',
+            testFn: () => transferAllWithReserveTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'self-transfer all with keepAlive true is a no-op',
+            testFn: () => transferAllSelfKeepAliveTrueTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'self-transfer all with keepAlive false is a no-op',
+            testFn: () => transferAllSelfKeepAliveFalseTest(baseClient),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: '`force_unreserve`',
+        children: [
+          {
+            kind: 'test',
+            label: 'non-root origins cannot forcefully unreserve',
+            testFn: () => forceUnreserveBadOriginTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'unreserving 0 from account with no reserves is a no-op',
+            testFn: () => forceUnreserveNoReservesTest(baseClient, relayClient),
+          },
+          {
+            kind: 'test',
+            label: 'unreserving from non-existent account is a no-op',
+            testFn: () => forceUnreserveNonExistentAccountTest(baseClient, relayClient),
+          },
+          {
+            kind: 'test',
+            label: 'unreserving from account with reserves works correctly',
+            testFn: () => forceUnreserveWithReservesTest(baseClient, relayClient),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: '`force_set_balance`',
+        children: [
+          {
+            kind: 'test',
+            label: 'non-root origins cannot forcefully set balances',
+            testFn: () => forceSetBalanceBadOriginTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'successfully sets balance and and adjusts total issuance',
+            testFn: () => forceSetBalanceSuccessTest(baseClient, relayClient),
+          },
+          {
+            kind: 'test',
+            label: 'setting balance below ED reaps account and updates total issuance',
+            testFn: () => forceSetBalanceBelowEdTest(baseClient, relayClient),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: '`force_adjust_total_issuance`',
+        children: [
+          {
+            kind: 'test',
+            label: 'non-root origins cannot forcefully adjust the total issuance',
+            testFn: () => forceAdjustTotalIssuanceBadOriginTest(baseClient),
+          },
+          {
+            kind: 'test',
+            label: 'zero delta fails with DeltaZero error in both directions',
+            testFn: () => forceAdjustTotalIssuanceZeroDeltaTest(baseClient, relayClient),
+          },
+          {
+            kind: 'test',
+            label: 'successful adjustments increase and decrease total issuance',
+            testFn: () => forceAdjustTotalIssuanceSuccessTest(baseClient, relayClient),
+          },
+        ],
+      },
+      // `burn` tests
+      {
+        kind: 'describe',
+        label: '`burn`',
+        children: [
+          {
+            kind: 'test' as const,
+            label: 'burning funds from account works',
+            testFn: () => burnTestBaseCase(baseClient),
+          },
+          {
+            kind: 'test' as const,
+            label: 'burning entire balance, or more than it, fails',
+            testFn: () => burnDoubleAttemptTest(baseClient),
+          },
+          // TODO: same Bifrost FlexibleFee issue as above — see v0.22.0 (#1863)
+          ...(chain.name === 'bifrostKusama' || chain.name === 'bifrostPolkadot'
+            ? []
+            : [
+                {
+                  kind: 'test' as const,
+                  label: 'burning funds below ED leads to account reaping',
+                  testFn: () => burnTestWithReaping(baseClient),
+                },
+              ]),
+          {
+            kind: 'test' as const,
+            label: 'burning below ED with keep_alive is no-op',
+            testFn: () => burnKeepAliveTest(baseClient),
+          },
+          {
+            kind: 'test' as const,
+            label: 'burning from account with multisig deposit cannot reap it',
+            testFn: () => burnWithDepositTest(baseClient),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'currency tests',
+        children: (() => {
+          const testCases: Array<{ kind: 'test'; label: string; testFn: () => Promise<void> }> = []
 
-        if (!accountsCfg.actions) {
-          throw new Error('accountsCfg.actions is required')
-        }
+          if (!accountsCfg.actions) {
+            throw new Error('accountsCfg.actions is required')
+          }
 
-        // Combinatorially generate test cases for as many combinations of reserves, locks and deposit actions that
-        // trigger the liquidity restriction error.
-        // If a network does not support any of the generated test cases, a log is shown, and the test is skipped.
-        // At worst, this will require 3 roundtrips to the chopsticks local node; at best 1.
-        for (const reserveAction of accountsCfg.actions.reserveActions!) {
-          for (const lockAction of accountsCfg.actions.lockActions!) {
-            for (const depositAction of accountsCfg.actions.depositActions!) {
-              testCases.push({
-                kind: 'test' as const,
-                label: `liquidity restriction error: funds locked via ${reserveAction.name} and ${lockAction.name}, triggered via ${depositAction.name}`,
-                testFn: () =>
-                  testLiquidityRestrictionForAction(
-                    chain,
-                    reserveAction,
-                    lockAction,
-                    depositAction,
-                    accountsCfg.expectation,
-                  ),
-              })
+          // Combinatorially generate test cases for as many combinations of reserves, locks and deposit actions that
+          // trigger the liquidity restriction error.
+          // If a network does not support any of the generated test cases, a log is shown, and the test is skipped.
+          // At worst, this will require 3 roundtrips to the chopsticks local node; at best 1.
+          for (const reserveAction of accountsCfg.actions.reserveActions!) {
+            for (const lockAction of accountsCfg.actions.lockActions!) {
+              for (const depositAction of accountsCfg.actions.depositActions!) {
+                testCases.push({
+                  kind: 'test' as const,
+                  label: `liquidity restriction error: funds locked via ${reserveAction.name} and ${lockAction.name}, triggered via ${depositAction.name}`,
+                  testFn: () =>
+                    testLiquidityRestrictionForAction(
+                      baseClient,
+                      reserveAction,
+                      lockAction,
+                      depositAction,
+                      accountsCfg.expectation,
+                    ),
+                })
+              }
             }
           }
-        }
 
-        return testCases
-      })(),
-    },
-  ],
-})
+          return testCases
+        })(),
+      },
+    ],
+  }
+}

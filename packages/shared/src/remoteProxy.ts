@@ -1,7 +1,7 @@
 import { createProof } from '@acala-network/chopsticks'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
 
 import { compactToU8a, hexToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
 import type { HexString } from '@polkadot/util/types'
@@ -11,8 +11,7 @@ import { assert, expect } from 'vitest'
 
 import { checkEvents, type TestConfig } from './helpers/index.js'
 import type { ProxyTypeMap } from './helpers/proxyTypes.js'
-import { setupNetworks } from './setup.js'
-import type { RootTestTree } from './types.js'
+import type { Client, RootTestTree } from './types.js'
 
 /// -------
 /// Helpers
@@ -57,16 +56,27 @@ async function buildSyntheticProxyProof(
 }
 
 /**
- * Replace the most recent relay state root in the pallet's `BlockToRoot` storage with a synthetic one.
+ * Insert a synthetic relay state root into the pallet's `BlockToRoot` storage, keyed at the
+ * actual relay parent block.
  *
  * The pallet stores a bounded vector of `(relay_block, state_root)` pairs that it uses to verify
- * incoming proofs. This function reads the current entries, swaps the state root of the last entry
- * with the given `trieRootHash`, and writes the result back via `dev.setStorage`.
+ * incoming proofs. This function replaces the vector's last entry with
+ * `(parachainSystem.lastRelayChainBlockNumber, trieRootHash)` and writes the result back via
+ * `dev.setStorage`.
+ *
+ * The entry is keyed at the actual relay parent rather than the last stored `BlockToRoot` key
+ * because the two can diverge on-chain: with multiple parachain blocks per relay block, the
+ * bounded vector saturates with entries younger than the pallet's pruning cutoff, and its silent
+ * `try_push` failure lets the stored keys lag the true relay parent (observed up to 6 blocks on
+ * Kusama Asset Hub). An anchor keyed at a lagged block gets pruned when the next Chopsticks block
+ * advances the relay parent, and the extrinsic then fails with `UnknownProofAnchorBlock`. Keying
+ * at the true relay parent keeps the anchor inside the pruning window regardless of lag.
  *
  * Raw storage injection is necessary because `BlockToRoot` is keyed by a generic pallet instance
  * parameter, which the high-level `dev.setStorage({ PalletName: ... })` API does not support.
  *
- * @returns The relay block number whose root was replaced (to be used as the proof's anchor block).
+ * @returns The relay block number the synthetic root was keyed at (to be used as the proof's
+ * anchor block).
  */
 async function injectSyntheticRoot(
   client: { api: any; dev: any },
@@ -82,11 +92,14 @@ async function injectSyntheticRoot(
 
   assert(blockToRoot.length > 0, 'BlockToRoot should not be empty after building a block')
 
-  const lastRelayBlock = blockToRoot[blockToRoot.length - 1][0]
-
-  const updatedBlockToRoot = blockToRoot.map(([block, hash]) =>
-    block === lastRelayBlock ? [block, trieRootHash] : [block, hash],
+  const lastRelayBlock = (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
+  const lastStoredBlock = blockToRoot[blockToRoot.length - 1][0]
+  assert(
+    lastRelayBlock >= lastStoredBlock,
+    `BlockToRoot last entry (${lastStoredBlock}) is ahead of the relay parent (${lastRelayBlock})`,
   )
+
+  const updatedBlockToRoot = [...blockToRoot.slice(0, -1), [lastRelayBlock, trieRootHash] as [number, string]]
 
   const encodedEntries = updatedBlockToRoot.map(([block, hash]) =>
     u8aConcat(new Uint8Array(new Uint32Array([block as number]).buffer), hexToU8a(hash as string)),
@@ -121,12 +134,11 @@ async function setupWithProof<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(
-  chain: Chain<TCustom, TInitStorages>,
+  client: Client<TCustom, TInitStorages>,
   palletName: string,
   proxyType: number,
   opts?: { delay?: number; extraAccounts?: { address: string }[] },
 ) {
-  const [client] = await setupNetworks(chain)
   const accountsToFund = [testAccounts.alice, testAccounts.bob, ...(opts?.extraAccounts ?? [])]
   await fundAccounts(client, accountsToFund)
 
@@ -159,9 +171,7 @@ async function setupWithProof<
 async function remoteProxyCallTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
@@ -217,8 +227,8 @@ async function remoteProxyCallTest<
 async function remoteProxyForceTypeMatchTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any)
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const { proofNodes, lastRelayBlock } = await setupWithProof(client, palletName, proxyTypes.Any)
 
   const innerCall = client.api.tx.system.remarkWithEvent('force type match test')
   const tx = client.api.tx[palletName].remoteProxy(testAccounts.alice.address, proxyTypes.Any, innerCall, {
@@ -257,9 +267,7 @@ async function remoteProxyForceTypeMatchTest<
 async function remoteProxyUnknownAnchorBlockTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
@@ -303,9 +311,7 @@ async function remoteProxyUnknownAnchorBlockTest<
 async function remoteProxyInvalidProofTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
@@ -353,9 +359,7 @@ async function remoteProxyInvalidProofTest<
 async function remoteProxyNonZeroDelayTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
@@ -404,8 +408,8 @@ async function remoteProxyNonZeroDelayTest<
 async function remoteProxyForceTypeMismatchTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Staking)
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const { proofNodes, lastRelayBlock } = await setupWithProof(client, palletName, proxyTypes.Staking)
 
   const innerCall = client.api.tx.system.remarkWithEvent('should fail')
   const tx = client.api.tx[palletName].remoteProxy(testAccounts.alice.address, proxyTypes.Governance, innerCall, {
@@ -444,8 +448,8 @@ async function remoteProxyForceTypeMismatchTest<
 async function remoteProxyForceTypeExactMatchOnlyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any)
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const { proofNodes, lastRelayBlock } = await setupWithProof(client, palletName, proxyTypes.Any)
 
   const innerCall = client.api.tx.system.remarkWithEvent('should fail')
   const tx = client.api.tx[palletName].remoteProxy(testAccounts.alice.address, proxyTypes.NonTransfer, innerCall, {
@@ -488,9 +492,9 @@ async function remoteProxyForceTypeExactMatchOnlyTest<
 async function remoteProxyWrongSignerTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const charlie = testAccounts.charlie
-  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any, {
+  const { proofNodes, lastRelayBlock } = await setupWithProof(client, palletName, proxyTypes.Any, {
     extraAccounts: [charlie],
   })
 
@@ -531,9 +535,7 @@ async function remoteProxyWrongSignerTest<
 async function remoteProxyGarbageStorageValueTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, _proxyTypes: ProxyTypeMap) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, palletName: string, _proxyTypes: ProxyTypeMap) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
@@ -582,9 +584,9 @@ async function remoteProxyGarbageStorageValueTest<
 async function remoteProxyWrongRealAccountTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const charlie = testAccounts.charlie
-  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any, {
+  const { proofNodes, lastRelayBlock } = await setupWithProof(client, palletName, proxyTypes.Any, {
     extraAccounts: [charlie],
   })
 
@@ -626,9 +628,7 @@ async function remoteProxyWrongRealAccountTest<
 async function remoteProxyMultipleTypesSelectTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
@@ -689,9 +689,7 @@ async function remoteProxyMultipleTypesSelectTest<
 async function registeredProofCallTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
@@ -746,9 +744,7 @@ async function registeredProofCallTest<
 async function unregisteredProofCallTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, _proxyTypes: ProxyTypeMap) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, palletName: string, _proxyTypes: ProxyTypeMap) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
@@ -794,8 +790,8 @@ async function unregisteredProofCallTest<
 async function registeredProofExpiresAcrossBlocksTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any)
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const { proofNodes, lastRelayBlock } = await setupWithProof(client, palletName, proxyTypes.Any)
 
   const registerTx = client.api.tx[palletName].registerRemoteProxyProof({
     RelayChain: { proof: proofNodes, block: lastRelayBlock },
@@ -844,9 +840,7 @@ async function registeredProofExpiresAcrossBlocksTest<
 async function remoteProxyFilteringAllowedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
@@ -893,9 +887,7 @@ async function remoteProxyFilteringAllowedTest<
 async function remoteProxyFilteringBlockedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
@@ -956,9 +948,24 @@ export function remoteProxyE2ETests<
   palletName: string,
   proxyTypes: ProxyTypeMap,
 ): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: `${testConfig.testSuiteName} remote proxy tests`,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
     children: [
       {
         kind: 'describe',
@@ -967,57 +974,57 @@ export function remoteProxyE2ETests<
           {
             kind: 'test',
             label: 'dispatch inner call with valid proof',
-            testFn: async () => await remoteProxyCallTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyCallTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'dispatch with explicit force_proxy_type',
-            testFn: async () => await remoteProxyForceTypeMatchTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyForceTypeMatchTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject unknown anchor block',
-            testFn: async () => await remoteProxyUnknownAnchorBlockTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyUnknownAnchorBlockTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject invalid proof',
-            testFn: async () => await remoteProxyInvalidProofTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyInvalidProofTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject proxy with non-zero delay',
-            testFn: async () => await remoteProxyNonZeroDelayTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyNonZeroDelayTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject mismatched force_proxy_type',
-            testFn: async () => await remoteProxyForceTypeMismatchTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyForceTypeMismatchTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject force_proxy_type superset (exact match required)',
-            testFn: async () => await remoteProxyForceTypeExactMatchOnlyTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyForceTypeExactMatchOnlyTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject wrong signer',
-            testFn: async () => await remoteProxyWrongSignerTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyWrongSignerTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject garbage storage value in proof',
-            testFn: async () => await remoteProxyGarbageStorageValueTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyGarbageStorageValueTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject wrong real account',
-            testFn: async () => await remoteProxyWrongRealAccountTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyWrongRealAccountTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'dispatch with multiple proxy types via force_proxy_type',
-            testFn: async () => await remoteProxyMultipleTypesSelectTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyMultipleTypesSelectTest(client, palletName, proxyTypes),
           },
         ],
       },
@@ -1028,17 +1035,17 @@ export function remoteProxyE2ETests<
           {
             kind: 'test',
             label: 'dispatch inner call via batch(register, proxy_with_registered_proof)',
-            testFn: async () => await registeredProofCallTest(chain, palletName, proxyTypes),
+            testFn: async () => await registeredProofCallTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject call without prior proof registration',
-            testFn: async () => await unregisteredProofCallTest(chain, palletName, proxyTypes),
+            testFn: async () => await unregisteredProofCallTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject registered proof used in subsequent block',
-            testFn: async () => await registeredProofExpiresAcrossBlocksTest(chain, palletName, proxyTypes),
+            testFn: async () => await registeredProofExpiresAcrossBlocksTest(client, palletName, proxyTypes),
           },
         ],
       },
@@ -1049,12 +1056,12 @@ export function remoteProxyE2ETests<
           {
             kind: 'test',
             label: 'NonTransfer proxy allows remark',
-            testFn: async () => await remoteProxyFilteringAllowedTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyFilteringAllowedTest(client, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'NonTransfer proxy blocks transfer',
-            testFn: async () => await remoteProxyFilteringBlockedTest(chain, palletName, proxyTypes),
+            testFn: async () => await remoteProxyFilteringBlockedTest(client, palletName, proxyTypes),
           },
         ],
       },

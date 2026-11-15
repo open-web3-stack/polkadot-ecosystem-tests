@@ -1,0 +1,26 @@
+diff --git a/cjs/interfaces/xcm/definitions.js b/cjs/interfaces/xcm/definitions.js
+index b3b00ebb14cc89292378f1bb2ec329bf14cb90bf..b43d3e0e2a72a5bae4db35be517466de92f81e02 100644
+--- a/cjs/interfaces/xcm/definitions.js
++++ b/cjs/interfaces/xcm/definitions.js
+@@ -15,7 +15,7 @@ const xcm = {
+         }
+     },
+     XcmpMessageFormat: {
+-        _enum: ['ConcatenatedVersionedXcm', 'ConcatenatedEncodedBlob', 'Signals']
++        _enum: ['ConcatenatedVersionedXcm', 'ConcatenatedEncodedBlob', 'Signals', 'ConcatenatedOpaqueVersionedXcm']
+     },
+     XcmAssetId: {
+         _enum: {
+diff --git a/interfaces/xcm/definitions.js b/interfaces/xcm/definitions.js
+index 2753b56a2b27577b63cca658d37fd6b4d1482f53..32a481113255036019b41f2f76445155eb9970bd 100644
+--- a/interfaces/xcm/definitions.js
++++ b/interfaces/xcm/definitions.js
+@@ -13,7 +13,7 @@ const xcm = {
+         }
+     },
+     XcmpMessageFormat: {
+-        _enum: ['ConcatenatedVersionedXcm', 'ConcatenatedEncodedBlob', 'Signals']
++        _enum: ['ConcatenatedVersionedXcm', 'ConcatenatedEncodedBlob', 'Signals', 'ConcatenatedOpaqueVersionedXcm']
+     },
+     XcmAssetId: {
+         _enum: {

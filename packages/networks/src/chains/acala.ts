@@ -79,6 +79,28 @@ const getInitStorages = (config: typeof custom.acala | typeof custom.karura) => 
     // avoid sending xcm version change notifications to makes things faster
     $removePrefix: ['versionNotifyTargets', 'versionNotifiers'],
   },
+  // The Acala/Karura block hooks iterate several large maps every block, each iteration step
+  // becoming a remote getKeysPaged against the fork's upstream RPC. None of these are needed by
+  // the tests, so elide them to cut the per-block traffic that makes bootstrap flaky:
+  //   - Incentives.on_initialize      -> Rewards.PoolInfos, Incentives.IncentiveRewardAmounts
+  //   - DexOracle.on_initialize       -> DexOracle.AveragePrices
+  //   - IdleScheduler.on_idle         -> IdleScheduler.Tasks
+  //   - AuctionManager (Auction map)  -> Auction.AuctionEndTime
+  Rewards: {
+    $removePrefix: ['poolInfos'],
+  },
+  Incentives: {
+    $removePrefix: ['incentiveRewardAmounts'],
+  },
+  DexOracle: {
+    $removePrefix: ['averagePrices'],
+  },
+  IdleScheduler: {
+    $removePrefix: ['tasks'],
+  },
+  Auction: {
+    $removePrefix: ['auctionEndTime'],
+  },
 })
 
 export const acala = defineChain({
@@ -92,7 +114,7 @@ export const acala = defineChain({
     addressEncoding: 10,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: acalaFeeExtractor,
   },
 })
@@ -108,7 +130,7 @@ export const karura = defineChain({
     addressEncoding: 8,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: acalaFeeExtractor,
   },
 })

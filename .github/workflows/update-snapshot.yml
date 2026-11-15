@@ -11,29 +11,25 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
+  define-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      networks: ${{ steps.networks.outputs.networks }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Generate network matrix
+        id: networks
+        run: echo "networks=$(node scripts/generate-ci-matrix.mjs)" >> "$GITHUB_OUTPUT"
+
   update:
+    needs: define-matrix
     runs-on: ubuntu-latest
     timeout-minutes: 240
     strategy:
       fail-fast: false
       matrix:
-        network:
-          - name: "polkadot"
-            chains:
-              - { chain: "polkadot", port: 9000, endpoint_var: "POLKADOT_ENDPOINT" }
-              - { chain: "assetHubPolkadot", port: 9001, endpoint_var: "ASSETHUBPOLKADOT_ENDPOINT" }
-              - { chain: "bridgeHubPolkadot", port: 9002, endpoint_var: "BRIDGEHUBPOLKADOT_ENDPOINT" }
-              - { chain: "collectivesPolkadot", port: 9003, endpoint_var: "COLLECTIVESPOLKADOT_ENDPOINT" }
-              - { chain: "coretimePolkadot", port: 9004, endpoint_var: "CORETIMEPOLKADOT_ENDPOINT" }
-              - { chain: "peoplePolkadot", port: 9005, endpoint_var: "PEOPLEPOLKADOT_ENDPOINT" }
-          - name: "kusama"
-            chains:
-              - { chain: "kusama", port: 9010, endpoint_var: "KUSAMA_ENDPOINT" }
-              - { chain: "assetHubKusama", port: 9011, endpoint_var: "ASSETHUBKUSAMA_ENDPOINT" }
-              - { chain: "bridgeHubKusama", port: 9012, endpoint_var: "BRIDGEHUBKUSAMA_ENDPOINT" }
-              - { chain: "coretimeKusama", port: 9013, endpoint_var: "CORETIMEKUSAMA_ENDPOINT" }
-              - { chain: "peopleKusama", port: 9014, endpoint_var: "PEOPLEKUSAMA_ENDPOINT" }
-              - { chain: "encointerKusama", port: 9015, endpoint_var: "ENCOINTERKUSAMA_ENDPOINT" }
+        network: ${{ fromJSON(needs.define-matrix.outputs.networks) }}
     steps:
     - uses: actions/checkout@v5
 
@@ -45,23 +41,17 @@ jobs:
 
     - run: yarn --immutable
 
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Get Subway commit hash
-      id: subway-commit
-      run: echo "hash=$(git ls-remote https://github.com/AcalaNetwork/subway HEAD | cut -f1)" >> $GITHUB_OUTPUT
-
-    - name: Cache Subway binary
-      uses: Swatinem/rust-cache@v2
-      with:
-        shared-key: subway-binary-${{ steps.subway-commit.outputs.hash }}
-        save-if: ${{ github.ref == 'refs/heads/master' }}
-
     - name: Install Subway
-      run: cargo install --git https://github.com/AcalaNetwork/subway
+      run: |
+        docker create --name subway-extract acala/subway:v0.1.1
+        sudo docker cp subway-extract:/usr/local/bin/subway /usr/local/bin/subway
+        docker rm subway-extract
+        sudo chmod +x /usr/local/bin/subway
+        subway --version
 
     - name: Update known good block numbers
+      env:
+        ACALA_ENDPOINT: ${{ secrets.ACALA_ENDPOINT }}
       run: yarn update-known-good
 
     - name: Source known good block numbers
@@ -72,15 +62,22 @@ jobs:
         cat "$ENV_FILE" >> $GITHUB_ENV
 
     - name: Start all Subway instances
+      env:
+        ACALA_ENDPOINT: ${{ secrets.ACALA_ENDPOINT }}
       run: |
         echo "Starting all Subway instances for ${{ matrix.network.name }}..."
 
         echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
           CHAIN=$(echo $chain | jq -r '.chain')
           PORT=$(echo $chain | jq -r '.port')
+          ENDPOINT_VAR=$(echo $chain | jq -r '.endpoint_var')
+          ENDPOINT_OVERRIDE="${!ENDPOINT_VAR:-}"
 
-          # Get endpoints from pet-chain-endpoints.json
-          ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+          if [ -n "$ENDPOINT_OVERRIDE" ]; then
+            ENDPOINTS=$(jq -cn --arg endpoint "$ENDPOINT_OVERRIDE" '[$endpoint]')
+          else
+            ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+          fi
 
           if [ "$ENDPOINTS" = "null" ] || [ -z "$ENDPOINTS" ]; then
             echo "Error: No endpoints found for chain $CHAIN"

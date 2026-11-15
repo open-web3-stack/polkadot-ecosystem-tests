@@ -114,15 +114,7 @@ exports[`Polkadot Asset Hub Bounties > All bounty failure tests > Bounty closure
 ]
 `;
 
-exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > Bounty bond is deposited to the treasury 1`] = `
-[
-  {
-    "data": "(redacted)",
-    "method": "Deposit",
-    "section": "treasury",
-  },
-]
-`;
+exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > Bounty bond is deposited to the treasury 1`] = `[]`;
 
 exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty approved events 1`] = `
 [
@@ -333,15 +325,7 @@ exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator un
 ]
 `;
 
-exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > Bounty bond is deposited to the treasury 1`] = `
-[
-  {
-    "data": "(redacted)",
-    "method": "Deposit",
-    "section": "treasury",
-  },
-]
-`;
+exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > Bounty bond is deposited to the treasury 1`] = `[]`;
 
 exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > bounty approved events 1`] = `
 [
