@@ -3,7 +3,10 @@
 exports[`Kusama Asset Hub Bounties > All bounty failure tests > Bounty cannot be awarded if it has an active child bounty > child bounty added events 1`] = `
 [
   {
-    "data": "(redacted)",
+    "data": {
+      "childIndex": "(redacted)",
+      "index": "(redacted)",
+    },
     "method": "Added",
     "section": "childBounties",
   },
@@ -114,16 +117,6 @@ exports[`Kusama Asset Hub Bounties > All bounty failure tests > Bounty closure i
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > Bounty bond is deposited to the treasury 1`] = `
-[
-  {
-    "data": "(redacted)",
-    "method": "Deposit",
-    "section": "treasury",
-  },
-]
-`;
-
 exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty approved events 1`] = `
 [
   {
@@ -169,6 +162,18 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unas
     },
     "method": "CuratorAccepted",
     "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > curator deposit slash destination: treasury deposit 1`] = `
+[
+  {
+    "data": {
+      "value": "(rounded 170000000000)",
+    },
+    "method": "Deposit",
+    "section": "treasury",
   },
 ]
 `;
@@ -333,16 +338,6 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unas
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > Bounty bond is deposited to the treasury 1`] = `
-[
-  {
-    "data": "(redacted)",
-    "method": "Deposit",
-    "section": "treasury",
-  },
-]
-`;
-
 exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > bounty approved events 1`] = `
 [
   {
@@ -401,6 +396,18 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unas
     },
     "method": "CuratorAccepted",
     "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > curator deposit slash destination: treasury deposit 1`] = `
+[
+  {
+    "data": {
+      "value": "(rounded 170000000000)",
+    },
+    "method": "Deposit",
+    "section": "treasury",
   },
 ]
 `;
@@ -550,6 +557,18 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure T
     },
     "method": "BountyRejected",
     "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in proposed state > proposer bond slash destination: treasury deposit 1`] = `
+[
+  {
+    "data": {
+      "value": "(rounded 330000000000)",
+    },
+    "method": "Deposit",
+    "section": "treasury",
   },
 ]
 `;
@@ -922,6 +941,673 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Curator assignme
     },
     "method": "CuratorProposed",
     "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Closing a bounty > close a funded bounty that also holds USDT - both swept to the treasury > close with usdt events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000,
+      "assetId": "(rounded 2000)",
+      "from": "F3opxRbN5ZbjJNU513biNiRbxfAH8HbWZNeB6Ho2vgiNkJQ",
+      "to": "F3opxRbN5ZbjJNU511Kj2TLuzFcDq9BGduA9TgiECafpg29",
+    },
+    "method": "Transferred",
+    "section": "assets",
+  },
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyCanceled",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Closing a bounty > close in CuratorProposed state - BountyCanceled > close with a proposed curator events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyCanceled",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Closing a bounty > close with an active child bounty - HasActiveChildBounty > close with a child bounty dispatched 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x09000000",
+            "index": 95,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Curator slashing > unassign curator by a public account after the update deadline - curator slashed > public unassign after update due events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 170000000000)",
+      "who": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Curator slashing > unassign curator by a public account after the update deadline - curator slashed > public unassign slash destination: treasury deposit 1`] = `
+[
+  {
+    "data": {
+      "value": "(rounded 170000000000)",
+    },
+    "method": "Deposit",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Curator unassign by origin > unassign curator by another account in ApprovedWithCurator - BadOrigin > other account unassigns approved curator failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Curator unassign by origin > unassign curator by another account in CuratorProposed - BadOrigin > other account unassigns proposed curator failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Curator unassign by origin > unassign curator by the curator in ApprovedWithCurator - CuratorUnassigned > curator leaves approved with curator events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Curator unassign by origin > unassign curator by the curator in CuratorProposed - CuratorUnassigned > curator leaves curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Curator unassign by origin > unassign curator by the curator in PendingPayout - BadOrigin > curator leaves pending payout failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Deposit poke > poke deposit from Root - BadOrigin > poke from Root dispatched 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Deposit poke > poke deposit lowers a bond above the current rate - DepositPoked > poke lowering a bond events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "newDeposit": "(rounded 330000000000)",
+      "oldDeposit": "(rounded 670000000000)",
+      "proposer": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "DepositPoked",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Deposit poke > poke deposit on a missing bounty - InvalidIndex > poke on a missing bounty failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 95,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Deposit poke > poke deposit on an approved bounty - UnexpectedStatus > poke on an approved bounty failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x03000000",
+          "index": 95,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Deposit poke > poke deposit on an up-to-date bond - no event, fee charged > poke on an unchanged bond events 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Deposit poke > poke deposit raises a bond below the current rate - DepositPoked, fee waived > poke raising a bond events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "newDeposit": "(rounded 330000000000)",
+      "oldDeposit": "(rounded 69000000)",
+      "proposer": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "DepositPoked",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "No",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Deposit poke > poke deposit when the proposer cannot cover the increase - InsufficientBalance > poke the proposer cannot pay failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 10,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Origins and spend limits > approve from Root above the Treasurer limit - BountyApproved > root approval above the treasurer limit events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Origins and spend limits > approve from SmallTipper above its spend limit - InsufficientPermission > small tipper approval above the limit events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x02000000",
+            "index": 90,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Origins and spend limits > approve from SmallTipper at its spend limit - BountyApproved > small tipper approval at the limit events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Origins and spend limits > approve from Treasurer above its spend limit - InsufficientPermission > treasurer approval above the limit events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x02000000",
+            "index": 90,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Origins and spend limits > approve with curator from SmallTipper above its spend limit - InsufficientPermission > small tipper approval with curator above the limit events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x02000000",
+            "index": 90,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Origins and spend limits > approve, approve with curator, propose curator, close from a signed origin - BadOrigin > signed origin batch events 1`] = `
+[
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompletedWithErrors",
+    "section": "utility",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Origins and spend limits > close and unassign curator from a non-Treasurer Spender - BadOrigin > big spender close and unassign events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Origins and spend limits > close from Root - BountyCanceled > root close events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyCanceled",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Origins and spend limits > propose curator from SmallTipper above its spend limit - InsufficientPermission > small tipper curator proposal above the limit events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x02000000",
+            "index": 90,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Remaining error paths > approve when the approval queue is full - TooManyQueued > approvals beyond a full queue events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0a000000",
+            "index": 95,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0a000000",
+            "index": 95,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Remaining error paths > approve with curator with a fee equal to the value - InvalidFee > approve with curator fee equal to value events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x06000000",
+            "index": 95,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Remaining error paths > award by a non-curator - RequireCurator > award by a non-curator failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 95,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Remaining error paths > extend expiry by a non-curator - RequireCurator > extend by a non-curator failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 95,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Remaining error paths > propose curator with a fee equal to the value - InvalidFee > propose curator fee equal to value events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x06000000",
+            "index": 95,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > Remaining error paths > propose with too little balance for the bond - InsufficientProposersBalance > propose without the bond failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 95,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;

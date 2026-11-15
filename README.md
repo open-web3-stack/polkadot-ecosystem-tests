@@ -154,6 +154,14 @@ These include:
     - Bounty closure restrictions (approved/pending payout states)
     - Non-curator attempting to accept curator role
     - Child bounty constraints preventing parent bounty closure
+  - Where slashed proposer bonds and curator deposits go on each runtime (treasury pot or DAP staging account)
+  - Curator unassignment by any account once the update deadline has passed
+  - `poke_deposit` against bonds taken at older deposit rates, and its error paths
+  - Origins and spend limits: Root, `SmallTipper` and `Treasurer` limits, signed and non-`Treasurer` origins rejected
+  - Curator unassignment by the curator or another account in each bounty state
+  - Closing a bounty that also holds USDT, one with a proposed curator, and one with an active child bounty
+  - Remaining errors: proposer cannot pay the bond, invalid curator fee, non-curator award and extension, full approval
+    queue
 - E2E test suite for child bounties infrastructure:
   - Child bounty creation, curator assignment, acceptance, awarding and claiming workflows
   - Child bounty closure and fund return to parent bounty
