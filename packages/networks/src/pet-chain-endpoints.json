@@ -1,9 +1,9 @@
 {
   "polkadot": [
-    "wss://rpc-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io",
-    "wss://polkadot-rpc.n.dwellir.com",
-    "wss://rpc-polkadot.helixstreet.io"
+    "wss://rpc-polkadot.luckyfriday.io",
+    "wss://rpc-polkadot.helixstreet.io",
+    "wss://polkadot-rpc.n.dwellir.com"
   ],
   "assetHubWestend": [
     "wss://asset-hub-westend-rpc.n.dwellir.com",
@@ -21,13 +21,13 @@
   ],
   "collectivesPolkadot": [
     "wss://rpc-collectives-polkadot.luckyfriday.io",
-    "wss://dot-rpc.stakeworld.io/collectives",
-    "wss://collectives-polkadot-rpc.n.dwellir.com"
+    "wss://collectives-polkadot-rpc.n.dwellir.com",
+    "wss://dot-rpc.stakeworld.io/collectives"
   ],
   "coretimePolkadot": [
     "wss://rpc-coretime-polkadot.luckyfriday.io",
-    "wss://coretime-polkadot-rpc.n.dwellir.com",
-    "wss://dot-rpc.stakeworld.io/coretime"
+    "wss://dot-rpc.stakeworld.io/coretime",
+    "wss://coretime-polkadot-rpc.n.dwellir.com"
   ],
   "bulletinPolkadot": [
     "wss://bulletin-rpc.polkadot.io"
@@ -38,10 +38,10 @@
     "wss://people-polkadot-rpc.n.dwellir.com"
   ],
   "acala": [
+    "wss://acala-rpc-3.aca-api.network/ws",
     "wss://acala-rpc.aca-api.network",
     "wss://acala-rpc-0.aca-api.network",
     "wss://acala-rpc-1.aca-api.network",
-    "wss://acala-rpc-3.aca-api.network/ws",
     "wss://rpc-acala.luckyfriday.io"
   ],
   "bifrostPolkadot": [
@@ -49,8 +49,8 @@
     "wss://hk.p.bifrost-rpc.liebi.com/ws"
   ],
   "hydration": [
-    "wss://hydration-rpc.n.dwellir.com",
-    "wss://rpc.hydradx.cloud"
+    "wss://rpc.hydradx.cloud",
+    "wss://hydration-rpc.n.dwellir.com"
   ],
   "moonbeam": [
     "wss://moonbeam.api.onfinality.io/public-ws",
@@ -96,8 +96,8 @@
     "wss://rpc-karura.luckyfriday.io"
   ],
   "bifrostKusama": [
-    "wss://hk.bifrost-rpc.liebi.com/ws",
-    "wss://bifrost-rpc.liebi.com/ws"
+    "wss://bifrost-rpc.liebi.com/ws",
+    "wss://hk.bifrost-rpc.liebi.com/ws"
   ],
   "basilisk": [
     "wss://rpc.basilisk.cloud",
