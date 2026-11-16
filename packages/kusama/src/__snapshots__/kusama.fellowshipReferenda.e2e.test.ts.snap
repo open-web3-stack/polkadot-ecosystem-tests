@@ -1,0 +1,435 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Fellowship referenda > cancel and kill > cancel - every accepted origin, Cancelled with deposits kept > cancel by accepted origins: Dispatched and Cancelled 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > cancel and kill > cancel - other origins - BadOrigin > cancel by rejected origins: Dispatched 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > cancel and kill > kill - every accepted origin, Killed with deposits slashed > kill by accepted origins: Dispatched and referenda events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+    },
+    "method": "Killed",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "who": "FcsDo2ZoFhtBQKkwVJcuMh3jkvPS6dr7HrYekz9KY6F3iNL",
+    },
+    "method": "DepositSlashed",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "amount": "(rounded 330000000000)",
+      "who": "J6KrztsafLkhQ3DrKQBtLxpWZiEsXwDocHngQDXMogb1fBv",
+    },
+    "method": "DepositSlashed",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "hash_": "0x26edb8ec997cb29b8788ddcd0a5fd1ed2ac6bc5fcc402864062caa20b71f15ce",
+      "index": "(redacted)",
+    },
+    "method": "MetadataCleared",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > cancel and kill > kill - other origins - BadOrigin > kill by rejected origins: Dispatched 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > decision deposit > placeDecisionDeposit - after the prepare period, DecisionStarted > deposit after prepare period: DecisionDepositPlaced and DecisionStarted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x0000c066656c6c6f77736869705265666572656e6461206465706f736974206166746572207072657061726520706572696f64",
+      },
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+      "track": 1,
+    },
+    "method": "DecisionStarted",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "amount": "(rounded 330000000000)",
+      "index": "(redacted)",
+      "who": "FaSYyrWGVCReZfQbdwASnQgtP6vhrYooBku6CfACnKDtDFM",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > decision deposit > placeDecisionDeposit - paid by a non-member, deposit reserved and preparing > deposit in prepare period: DecisionDepositPlaced 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 330000000000)",
+      "index": "(redacted)",
+      "who": "H9forKtDjuBT8Gan1xfkYb6VXeA66cnFn3yxH3Rvqj2x8di",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > lifecycle > nudgeReferendum - confirm period over, Confirmed and enactment scheduled > confirmed: Confirmed 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 1,
+        "bareAyes": 1,
+        "nays": 0,
+      },
+    },
+    "method": "Confirmed",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > lifecycle > nudgeReferendum - no decision deposit by the timeout, TimedOut > timeout without deposit: TimedOut 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+    },
+    "method": "TimedOut",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > lifecycle > vote - passing tally near the end of the decision period, ConfirmStarted > confirm on passing tally: ConfirmStarted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "ConfirmStarted",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > lifecycle > vote - passing tally near the end of the decision period, ConfirmStarted > confirm on passing tally: Voted 1`] = `
+[
+  {
+    "data": {
+      "poll": "(redacted)",
+      "tally": {
+        "ayes": 1,
+        "bareAyes": 1,
+        "nays": 0,
+      },
+      "vote": {
+        "Aye": 1,
+      },
+      "who": "HvSd6K1ADCFuynFkriwJ5c5WrhTzWfenoyGJQYttmwJZai9",
+    },
+    "method": "Voted",
+    "section": "fellowshipCollective",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > refunds > refunds - after cancel, anyone returns both deposits to the depositors > refunds after cancel: both deposits refunded 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 330000000000)",
+      "index": "(redacted)",
+      "who": "GRxXE1q9DtYgWZk56r5tYgC6VF6VpvCs1VGHmDcCqUgrDuh",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "index": "(redacted)",
+      "who": "GXHdoz794MAkizdusbkr2Xdey97VewrC3HCxmZ7PeVT7jCn",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > submission > submit - below the minimum rank or not a member - BadOrigin > submit by non-member on track 1: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 50000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > submission > submit - below the minimum rank or not a member - BadOrigin > submit by rank 0 on track 0: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 50000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > submission > submit - member at the minimum rank on the top track, Submitted > submit at minimum rank: Submitted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x0000a866656c6c6f77736869705265666572656e6461207375626d6974206174206d696e696d756d2072616e6b",
+      },
+      "track": 9,
+    },
+    "method": "Submitted",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > submission > submit - proposal origin with no track - NoTrack > submit with a Root proposal origin: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x07000000",
+          "index": 23,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 50000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > voting behavior > vote - weight by excess rank over the track minimum, RankTooLow below it > vote below the minimum rank of track 3: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 22,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 90000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Fellowship referenda > voting behavior > vote - weight by excess rank over the track minimum, RankTooLow below it > votes on track 3: Voted 1`] = `
+[
+  {
+    "data": {
+      "poll": "(redacted)",
+      "tally": {
+        "ayes": 1,
+        "bareAyes": 1,
+        "nays": 0,
+      },
+      "vote": {
+        "Aye": 1,
+      },
+      "who": "GL9X8o5Ez8sn7wmZawVV6MuY9LkJPbpL6PdyqoCm6AsfgmW",
+    },
+    "method": "Voted",
+    "section": "fellowshipCollective",
+  },
+  {
+    "data": {
+      "poll": "(redacted)",
+      "tally": {
+        "ayes": 4,
+        "bareAyes": 2,
+        "nays": 0,
+      },
+      "vote": {
+        "Aye": 3,
+      },
+      "who": "DJVHZnhgarFDLKC1PRyveV59j8wuU8UvTx5KzPCyF1CLDf6",
+    },
+    "method": "Voted",
+    "section": "fellowshipCollective",
+  },
+  {
+    "data": {
+      "poll": "(redacted)",
+      "tally": {
+        "ayes": 10,
+        "bareAyes": 3,
+        "nays": 0,
+      },
+      "vote": {
+        "Aye": 6,
+      },
+      "who": "J7Wn3YwaAsVKWZ89e9ABowVTbMkE8z8hhSX8yyXDNxwBPdn",
+    },
+    "method": "Voted",
+    "section": "fellowshipCollective",
+  },
+]
+`;

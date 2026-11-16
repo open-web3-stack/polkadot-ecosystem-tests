@@ -1,5 +1,1470 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Fellowship referenda > cancel and kill > cancel - enacted by a real Architects referendum, Cancelled > real Architects referendum: enactment and Cancelled 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > cancel and kill > cancel - every accepted origin, Cancelled with deposits kept > cancel by accepted origins: Dispatched and Cancelled 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > cancel and kill > cancel - other origins - BadOrigin > cancel by rejected origins: Dispatched 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > cancel and kill > cancel and kill - finished referendum - NotOngoing > cancel and kill a finished referendum: Dispatched 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 61,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 61,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > cancel and kill > kill - every accepted origin, Killed with deposits slashed > kill by accepted origins: Dispatched and referenda events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+    },
+    "method": "Killed",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "who": "143Yhowm2fxRsHWq8RYa9ZACSndoKjNojQkHRPhYPpuGVHz9",
+    },
+    "method": "DepositSlashed",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "amount": 50000000000,
+      "who": "16X1M1p4p5bJPHEJ3Fe98YRyDbRemAgBRjBXT2vvS6VcT5Z4",
+    },
+    "method": "DepositSlashed",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "hash_": "0x26edb8ec997cb29b8788ddcd0a5fd1ed2ac6bc5fcc402864062caa20b71f15ce",
+      "index": "(redacted)",
+    },
+    "method": "MetadataCleared",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > cancel and kill > kill - every accepted origin, Killed with deposits slashed > kill by accepted origins: slashed deposits teleported to the relay treasury 1`] = `
+[
+  {
+    "data": {
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
+          },
+        },
+      },
+    },
+    "method": "Attempted",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [
+        {
+          "ReceiveTeleportedAsset": [
+            {
+              "fun": {
+                "Fungible": 50000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 0,
+              },
+            },
+          ],
+        },
+        "ClearOrigin",
+        {
+          "BuyExecution": {
+            "fees": {
+              "fun": {
+                "Fungible": 50000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 0,
+              },
+            },
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "DepositAsset": {
+            "assets": {
+              "Wild": {
+                "AllCounted": 1,
+              },
+            },
+            "beneficiary": {
+              "interior": {
+                "X1": [
+                  {
+                    "AccountId32": {
+                      "id": "0x6d6f646c70792f74727372790000000000000000000000000000000000000000",
+                      "network": null,
+                    },
+                  },
+                ],
+              },
+              "parents": 0,
+            },
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": "Here",
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > cancel and kill > kill - other origins - BadOrigin > kill by rejected origins: Dispatched 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > decision deposit > placeDecisionDeposit - after the prepare period, DecisionStarted > deposit after prepare period: DecisionDepositPlaced and DecisionStarted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x0000c066656c6c6f77736869705265666572656e6461206465706f736974206166746572207072657061726520706572696f64",
+      },
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+      "track": 3,
+    },
+    "method": "DecisionStarted",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "amount": 50000000000,
+      "index": "(redacted)",
+      "who": "14182zmhVuSyLSrUnaB7gysqbQpLbVHmRJedrqNZH58FKc4G",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > decision deposit > placeDecisionDeposit - already placed - HasDeposit > deposit twice: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > decision deposit > placeDecisionDeposit - paid by a non-member, deposit reserved and preparing > deposit in prepare period: DecisionDepositPlaced 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000,
+      "index": "(redacted)",
+      "who": "15aMHsF5TA9j91TexxCczk4FCZMZyjMjstwiiukq18Y4PU6e",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > decision deposit > placeDecisionDeposit - payer cannot cover the deposit - InsufficientBalance > deposit unaffordable: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 10,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > decision deposit > placeDecisionDeposit - unknown or finished referendum - NotOngoing > deposit on a cancelled referendum: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > decision deposit > placeDecisionDeposit - unknown or finished referendum - NotOngoing > deposit on an unused index: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > lifecycle > nudgeReferendum - confirm period over, Confirmed and enactment scheduled > confirmed: Confirmed 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 1,
+        "bareAyes": 1,
+        "nays": 0,
+      },
+    },
+    "method": "Confirmed",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > lifecycle > nudgeReferendum - decision period over without passing, Rejected > rejected at decision end: Rejected 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+    },
+    "method": "Rejected",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > lifecycle > nudgeReferendum - no decision deposit by the timeout, TimedOut > timeout without deposit: TimedOut 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+    },
+    "method": "TimedOut",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > lifecycle > vote - passing tally near the end of the decision period, ConfirmStarted > confirm on passing tally: ConfirmStarted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "ConfirmStarted",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > lifecycle > vote - passing tally near the end of the decision period, ConfirmStarted > confirm on passing tally: Voted 1`] = `
+[
+  {
+    "data": {
+      "poll": "(redacted)",
+      "tally": {
+        "ayes": 1,
+        "bareAyes": 1,
+        "nays": 0,
+      },
+      "vote": {
+        "Aye": 1,
+      },
+      "who": "16M877ECPdSobryKwnxtYH5EDtQst9QcQvs153GHy4kKzqMG",
+    },
+    "method": "Voted",
+    "section": "fellowshipCollective",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > lifecycle > vote - tally stops passing while confirming, ConfirmAborted > confirm aborts: ConfirmAborted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "ConfirmAborted",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > metadata > setMetadata - finished referendum, set fails and anyone may clear > metadata cleared by anyone after the referendum ended: MetadataCleared 1`] = `
+[
+  {
+    "data": {
+      "hash_": "0x383847cc215c20151579222af10710303f4dacafa70824b2c2259ad70ca308c0",
+      "index": "(redacted)",
+    },
+    "method": "MetadataCleared",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > metadata > setMetadata - finished referendum, set fails and anyone may clear > metadata set after the referendum ended: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > metadata > setMetadata - hash without a preimage - PreimageNotExist > metadata without a preimage: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0c000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > metadata > setMetadata - not the submitter - NoPermission > metadata cleared by another member: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > metadata > setMetadata - not the submitter - NoPermission > metadata set by another member: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > metadata > setMetadata - submitter sets then clears, MetadataSet and MetadataCleared > metadata: MetadataCleared 1`] = `
+[
+  {
+    "data": {
+      "hash_": "0xc31cd51179f606dc4b02ea9c278a2e9b2111cc293589a0a12d85f2066c177873",
+      "index": "(redacted)",
+    },
+    "method": "MetadataCleared",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > metadata > setMetadata - submitter sets then clears, MetadataSet and MetadataCleared > metadata: MetadataSet 1`] = `
+[
+  {
+    "data": {
+      "hash_": "0xc31cd51179f606dc4b02ea9c278a2e9b2111cc293589a0a12d85f2066c177873",
+      "index": "(redacted)",
+    },
+    "method": "MetadataSet",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > refunds > refundDecisionDeposit - already refunded or killed - NoDeposit > refund decision deposit of a killed referendum: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > refunds > refundDecisionDeposit - already refunded or killed - NoDeposit > refund decision deposit twice: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > refunds > refundDecisionDeposit - ongoing referendum - Unfinished > refund decision deposit while ongoing: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x08000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > refunds > refundSubmissionDeposit - ongoing or killed - BadStatus > refund submission deposit of a killed referendum: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > refunds > refundSubmissionDeposit - ongoing or killed - BadStatus > refund submission deposit while ongoing: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > refunds > refunds - Root accepted, collective origin - BadOrigin > refunds by Fellows and Root: Dispatched and refunds 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "amount": 50000000000,
+      "index": "(redacted)",
+      "who": "13GFgxC9Xp6sBZUtBd3bQFsKthg6kJ9NTFdHjjoYRE6xnQ16",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "index": "(redacted)",
+      "who": "15BXm3X7rokDA1YSDxv2FjAatdvVxjhuHYV2wKMxPPDbohDm",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > refunds > refunds - after cancel, anyone returns both deposits to the depositors > refunds after cancel: both deposits refunded 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000,
+      "index": "(redacted)",
+      "who": "14re1Ew2Ne96NPkpG3638k9LoWxWPTfAV8P14Pw1H8HiHMxW",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "index": "(redacted)",
+      "who": "14wy7puJNUbiScBi6oqi6DznMzrXPHgopAAwjQGWTwJUZHxq",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > refunds > refunds - unknown referendum - BadReferendum > refund decision deposit of an unused index: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > refunds > refunds - unknown referendum - BadReferendum > refund submission deposit of an unused index: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > root-only calls > nudgeReferendum - finished referendum - NotOngoing > nudge a cancelled referendum: Dispatched 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 61,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > root-only calls > oneFewerDeciding - full track, queued referendum starts deciding > oneFewerDeciding with a queue: Dispatched and DecisionStarted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x00006866656c6c6f77736869705265666572656e646120717565756564",
+      },
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+      "track": 21,
+    },
+    "method": "DecisionStarted",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > root-only calls > oneFewerDeciding - unknown track - BadTrack > oneFewerDeciding on an unknown track: Dispatched 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x02000000",
+            "index": 61,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > root-only calls > wrong origin for signed-only and Root-only calls - BadOrigin > Root placeDecisionDeposit and setMetadata: Dispatched 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > root-only calls > wrong origin for signed-only and Root-only calls - BadOrigin > signed nudgeReferendum: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > root-only calls > wrong origin for signed-only and Root-only calls - BadOrigin > signed oneFewerDeciding: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > submission > submit - allow-listed account without rank, Submitted > allow-list: Submitted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x00009066656c6c6f77736869705265666572656e646120616c6c6f772d6c697374206166746572",
+      },
+      "track": 9,
+    },
+    "method": "Submitted",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > submission > submit - allow-listed account without rank, Submitted > allow-list: set by Root 1`] = `
+[
+  {
+    "data": {
+      "key": {
+        "Fellowship": "AllowedProposers",
+      },
+      "newValue": {
+        "Fellowship": {
+          "AllowedProposers": [
+            "15KN4MJmEuyR92FZEQHDi1W34inPVzu6NJK84eLzZF7jydek",
+          ],
+        },
+      },
+      "oldValue": null,
+    },
+    "method": "Updated",
+    "section": "parameters",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > submission > submit - below the minimum rank or not a member - BadOrigin > submit by non-member on track 1: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > submission > submit - below the minimum rank or not a member - BadOrigin > submit by rank 2 on track 3: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > submission > submit - member at the minimum rank on the top track, Submitted > submit at minimum rank: Submitted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x0000a866656c6c6f77736869705265666572656e6461207375626d6974206174206d696e696d756d2072616e6b",
+      },
+      "track": 9,
+    },
+    "method": "Submitted",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > submission > submit - members may open referenda on voice tracks up to their rank > voice tracks, rank 1: batch items and Submitted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x00003872616e6b203120766f6963652031",
+      },
+      "track": 1,
+    },
+    "method": "Submitted",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {},
+    "method": "ItemCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompletedWithErrors",
+    "section": "utility",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > submission > submit - members may open referenda on voice tracks up to their rank > voice tracks, rank 2: batch items and Submitted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x00003872616e6b203220766f6963652031",
+      },
+      "track": 1,
+    },
+    "method": "Submitted",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {},
+    "method": "ItemCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x00003872616e6b203220766f6963652032",
+      },
+      "track": 2,
+    },
+    "method": "Submitted",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {},
+    "method": "ItemCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompletedWithErrors",
+    "section": "utility",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > submission > submit - preimage noted with another length - PreimageStoredWithDifferentLength > submit with a wrong preimage length: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0d000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > submission > submit - proposal origin with no track - NoTrack > submit with a Root proposal origin: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x07000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > voting behavior > a member below the track rank cannot vote > rank too low: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 60,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > voting behavior > vote - retention track minimum is its track id minus 8 - RankTooLow > rank 4 on a retention track: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 60,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > voting behavior > vote - retention track minimum is its track id minus 8 - RankTooLow > rank 5 on a retention track: Voted 1`] = `
+[
+  {
+    "data": {
+      "poll": "(redacted)",
+      "tally": {
+        "ayes": 1,
+        "bareAyes": 1,
+        "nays": 0,
+      },
+      "vote": {
+        "Aye": 1,
+      },
+      "who": "12NWafYUcUFhq7xW9PE7mcpHim9BEhQKw28iJAfgBm1TME4z",
+    },
+    "method": "Voted",
+    "section": "fellowshipCollective",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > voting behavior > vote - retention track support counts members at its minimum rank, ConfirmStarted > retention support: ConfirmStarted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "ConfirmStarted",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship referenda > voting behavior > vote weight is geometric in rank > geometric weight: Voted 1`] = `
+[
+  {
+    "data": {
+      "poll": "(redacted)",
+      "tally": {
+        "ayes": 1,
+        "bareAyes": 1,
+        "nays": 0,
+      },
+      "vote": {
+        "Aye": 1,
+      },
+      "who": "13EFEiUQf9Z7Uu4RquXnoHj7W3wbNmqxNBVYWtwL8QqwiGXo",
+    },
+    "method": "Voted",
+    "section": "fellowshipCollective",
+  },
+  {
+    "data": {
+      "poll": "(redacted)",
+      "tally": {
+        "ayes": 1,
+        "bareAyes": 1,
+        "nays": 6,
+      },
+      "vote": {
+        "Nay": 6,
+      },
+      "who": "1FFM9Xdgq5wDPXZcVak79ujXEqbrLdSEcqoUZsxyg6MW95n",
+    },
+    "method": "Voted",
+    "section": "fellowshipCollective",
+  },
+]
+`;
+
 exports[`Polkadot Fellowship referenda > whitelist a call via a real fellowship referendum > collectives sends fellowship whitelist xcm to the destination 1`] = `
 [
   {
