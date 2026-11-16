@@ -1,0 +1,760 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Collectives Ambassador Salary > Account swap > exchange_member - Swapped, claimant moves to the new account > exchange member: Swapped 1`] = `
+[
+  {
+    "data": {
+      "newWho": "13Qg2cNEYm4ZztaLCSSe1rr3RAvfuGr1gHL9XF8yrdFAdZAF",
+      "who": "142wgyYXcVBFDtE6F6e6PeV7TeKJ11npUigfwdkqPdasbx6s",
+    },
+    "method": "Swapped",
+    "section": "ambassadorSalary",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Budget > payout - registrations above the budget - prorated > prorated payouts: Paid 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 70000000000)",
+      "beneficiary": "14nPZmxMpLY69v4Wk4C3BGWyR3vfSeB21VsGUmBpp2BSyML",
+      "id": "(redacted)",
+      "who": "14nPZmxMpLY69v4Wk4C3BGWyR3vfSeB21VsGUmBpp2BSyML",
+    },
+    "method": "Paid",
+    "section": "ambassadorSalary",
+  },
+  {
+    "data": {
+      "amount": "(rounded 70000000000)",
+      "beneficiary": "1F5yncmnseWtyRNt2cmPNvyKNqjEVqqNqCtDxTKYxAgupeg",
+      "id": "(redacted)",
+      "who": "1F5yncmnseWtyRNt2cmPNvyKNqjEVqqNqCtDxTKYxAgupeg",
+    },
+    "method": "Paid",
+    "section": "ambassadorSalary",
+  },
+  {
+    "data": {
+      "amount": "(rounded 70000000000)",
+      "beneficiary": "15362BbnmBf3XJmSRr6b1yBAMaPqoKTCBfxBEnhJiQLAVVrk",
+      "id": "(redacted)",
+      "who": "15362BbnmBf3XJmSRr6b1yBAMaPqoKTCBfxBEnhJiQLAVVrk",
+    },
+    "method": "Paid",
+    "section": "ambassadorSalary",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Budget > payout - stale registration from the previous cycle - paid from the pot > stale registration payout: Paid 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 110000000000)",
+      "beneficiary": "121zqMZ4gC3prMpmpiVJFkXSgfSVDUYakFJqHerWDyggE5eW",
+      "id": "(redacted)",
+      "who": "121zqMZ4gC3prMpmpiVJFkXSgfSVDUYakFJqHerWDyggE5eW",
+    },
+    "method": "Paid",
+    "section": "ambassadorSalary",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Budget > payout - unregistered member after registrations use the budget - ClaimZero > unregistered payout with an empty pot: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Cycle > bump - NotYet one block early, then CycleStarted at the boundary > bump at the boundary: CycleStarted 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "CycleStarted",
+    "section": "ambassadorSalary",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Cycle > bump - NotYet one block early, then CycleStarted at the boundary > bump one block early: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x08000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Cycle > calls before init - NotStarted > calls before init: utility events 1`] = `
+[
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 74,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 74,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 74,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 74,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 74,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 74,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompletedWithErrors",
+    "section": "utility",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Cycle > init - CycleStarted, cycle 0 opens with the budget > init: CycleStarted 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+    },
+    "method": "CycleStarted",
+    "section": "ambassadorSalary",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Cycle > init - already started - AlreadyStarted > second init: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Induction > induct - Inducted, claimant opens at the current cycle > induct: Inducted 1`] = `
+[
+  {
+    "data": {
+      "who": "165GUgKbdMhfLZJg5pgS4r6G5pjqqfbxHwjEjVbhZ8GCHE8c",
+    },
+    "method": "Inducted",
+    "section": "ambassadorSalary",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Induction > induct - twice - AlreadyInducted > second induct: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Induction > induct and register - Fellowship member - NotMember > fellow induct: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Induction > induct and register - Fellowship member - NotMember > fellow register: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Origins > all calls - Root origin - BadOrigin > salary calls as Root: utility events 1`] = `
+[
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompletedWithErrors",
+    "section": "utility",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payment status > check_payment - after a delivered payout - claimant reset to Nothing > delivered payment: ResponseReady 1`] = `
+[
+  {
+    "data": {
+      "queryId": "(redacted)",
+      "response": {
+        "ExecutionResult": null,
+      },
+    },
+    "method": "ResponseReady",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payment status > check_payment - after the next cycle starts - NotCurrent > check after the next cycle: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0d000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payment status > check_payment - before Asset Hub responds - Inconclusive > check of a pending payment: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0c000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payment status > check_payment - failed transfer on Asset Hub - claim back to Registered, retry pays > underfunded payment: Asset Hub Processed 1`] = `
+[
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": {
+        "Sibling": "(rounded 1000)",
+      },
+      "success": false,
+      "weightUsed": {
+        "proofSize": "(rounded 10000)",
+        "refTime": "(rounded 600000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payment status > check_payment - failed transfer on Asset Hub - claim back to Registered, retry pays > underfunded payment: ResponseReady 1`] = `
+[
+  {
+    "data": {
+      "queryId": "(redacted)",
+      "response": {
+        "ExecutionResult": [
+          3,
+          "FailedToTransactAsset",
+        ],
+      },
+    },
+    "method": "ResponseReady",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payment status > check_payment - nothing attempted - NoClaim > check with nothing paid: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payout > payout - last block of the registration window - TooEarly > payout in the registration window: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x07000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payout > payout - registered member paid in USDT on Asset Hub from the paymaster sovereign > payout: Asset Hub Transferred 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 110000000000)",
+      "assetId": "(rounded 2000)",
+      "from": "12NJQuvAGvuic28vwHcPHXxJc5jx4DR6zYhXTLSouzALJzR2",
+      "to": "1t6FU26AReogLLtczNMk8qhMD48NLJxij8La8ogce6W9fF7",
+    },
+    "method": "Transferred",
+    "section": "assets",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payout > payout - registered member paid in USDT on Asset Hub from the paymaster sovereign > payout: Paid 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 110000000000)",
+      "beneficiary": "1t6FU26AReogLLtczNMk8qhMD48NLJxij8La8ogce6W9fF7",
+      "id": "(redacted)",
+      "who": "1t6FU26AReogLLtczNMk8qhMD48NLJxij8La8ogce6W9fF7",
+    },
+    "method": "Paid",
+    "section": "ambassadorSalary",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payout > payout - twice in a cycle - NoClaim > second payout: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Payout > payout_other - beneficiary paid on Asset Hub > payout_other: Paid 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 110000000000)",
+      "beneficiary": "1vJvAo2Qp9juue4KoVa9whE1o4bFycgmkuuhiHRNuWTweqf",
+      "id": "(redacted)",
+      "who": "16cCecvqnk98QaasXKJ1pWp3UsMtcTCEZQoE7fjJEqQnCC7q",
+    },
+    "method": "Paid",
+    "section": "ambassadorSalary",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Registration > register - Registered with the rank 1 salary > register: Registered 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 110000000000)",
+      "who": "16cz64r521LETwHMiLtP7bMpJ8ePc456BhtWTEdDBu5ZBrpv",
+    },
+    "method": "Registered",
+    "section": "ambassadorSalary",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Registration > register - first block after the registration window - TooLate > register after the window: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Registration > register - in the induction cycle - NoClaim > register in the induction cycle: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Registration > register - rank 0 candidate - ClaimZero > candidate register: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 74,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Ambassador Salary > Registration > register, payout, check_payment - not inducted - NotInducted > calls without induction: utility events 1`] = `
+[
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x03000000",
+          "index": 74,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x03000000",
+          "index": 74,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x03000000",
+          "index": 74,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x03000000",
+          "index": 74,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompletedWithErrors",
+    "section": "utility",
+  },
+]
+`;
