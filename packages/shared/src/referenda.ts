@@ -1783,8 +1783,16 @@ async function submitterSetsAndClearsMetadata(client: Client<any, any>) {
 
   const events = await client.api.query.system.events()
   expect(events.filter(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))).toHaveLength(0)
-  expect(events.filter(({ event }) => client.api.events.system.ExtrinsicSuccess.is(event)).length).toBeGreaterThan(0)
-  expect(events.filter(({ event }) => event.section === 'referenda')).toHaveLength(0)
+  // The block's inherents succeed with class `Mandatory`, so the one `Normal` success is the clear.
+  const normalSuccesses = events.filter(
+    ({ event }) => client.api.events.system.ExtrinsicSuccess.is(event) && event.data.dispatchInfo.class.isNormal,
+  )
+  expect(normalSuccesses).toHaveLength(1)
+  // Live referenda may emit events in this block, so only this referendum's events are counted.
+  const ownEvents = events.filter(
+    ({ event }) => event.section === 'referenda' && (event.data as any).index?.toNumber() === index,
+  )
+  expect(ownEvents).toHaveLength(0)
 }
 
 /**
