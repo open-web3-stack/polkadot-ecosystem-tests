@@ -238,6 +238,25 @@ These include:
   - Merge-based seeding preserves the real electorate: new members are appended at
     the live `memberCount` per tier, keeping the ranked-collective index invariants
     intact so live members and their (rank, index) slots are untouched
+- E2E test suite for the `referenda` pallet on Polkadot and Kusama Asset Hub, next to the
+  governance suite's lifecycle tests:
+  - Submission: `Submitted` with the deposit reserved and the timeout alarm set in relay blocks;
+    `NoTrack`, `PreimageStoredWithDifferentLength` and an unfunded submitter
+  - Decision deposit: the real prepare-period alarm starting the deciding phase; `HasDeposit`
+    and per-track deposit shortfalls
+  - Deciding slots: a full track queueing a prepared referendum, `one_fewer_deciding` from Root
+    starting it, and `BadTrack`
+  - Time-driven transitions: a Root nudge just before the undeciding timeout re-arming the alarm
+    that then times the referendum out; `ConfirmStarted` and `ConfirmAborted` through a real vote
+  - Cancel and kill through the `ReferendumCanceller` and `ReferendumKiller` origins, including
+    the deciding slot released a block later and each chain's slash destination (the DAP staging
+    account on Polkadot, the treasury on Kusama)
+  - Refunds from third parties and from Root, and the `NoDeposit`, `Unfinished` and `BadStatus`
+    cases
+  - Metadata: setting and clearing by the submitter, `NoPermission`, `PreimageNotExist`, and
+    clearing after the referendum ends
+  - Rejected origins for every call (signed, Root, and admin origins outside their gate), and
+    calls on an unknown referendum index
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
