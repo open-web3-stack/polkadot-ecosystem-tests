@@ -66,4 +66,7 @@ jobs:
     with:
       advisory: true
       environment: westend
+      # The default gate_ref is master, which does not carry this branch's chains yet.
+      # Drop this line when the branch merges.
+      gate_ref: release-gate
       runs_on: ubuntu-latest
