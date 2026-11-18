@@ -1,0 +1,59 @@
+# Self-contained test for release-gate.yml, on this repo's runners and permissions.
+#
+# A release pipeline normally supplies the candidate runtime as a run artifact. This
+# wrapper stands in for that pipeline: it takes the live chain's current `:code` as the
+# candidate (live Westend already runs the current weekly, so the bytes are a realistic
+# stand-in), uploads it under the artifact name srtool would use, and calls the gate.
+# The gate then runs exactly as it would under a release pipeline, minus the cross-run
+# artifact download, which only a caller with its own build artifacts can exercise.
+#
+# Delete this file when the gate has a production caller.
+
+name: Test - release gate self-run
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch the live runtime as the candidate
+        run: |
+          mkdir -p out
+          python3 - <<'PY'
+          import json, urllib.request
+          body = json.dumps({
+              "id": 1, "jsonrpc": "2.0",
+              "method": "state_getStorage",
+              "params": ["0x3a636f6465"],
+          }).encode()
+          req = urllib.request.Request(
+              "https://asset-hub-westend-rpc.n.dwellir.com",
+              data=body, headers={"Content-Type": "application/json"})
+          code = json.load(urllib.request.urlopen(req, timeout=120))["result"]
+          wasm = bytes.fromhex(code[2:])
+          with open("out/asset_hub_westend_runtime.compact.compressed.wasm", "wb") as f:
+              f.write(wasm)
+          print(f"candidate wasm: {len(wasm)} bytes")
+          PY
+
+      - name: Upload as a runtime artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: asset-hub-westend-runtime
+          path: out/asset_hub_westend_runtime.compact.compressed.wasm
+          if-no-files-found: error
+          retention-days: 1
+
+  gate:
+    needs: candidate
+    uses: ./.github/workflows/release-gate.yml
+    permissions:
+      contents: read
+      actions: read
+    with:
+      advisory: true
+      environment: westend
+      runs_on: ubuntu-latest
