@@ -13,6 +13,9 @@ name: Test - release gate self-run
 
 on:
   workflow_dispatch: {}
+  # workflow_dispatch needs the file on the default branch; a push trigger does not.
+  push:
+    branches: [release-gate]
 
 jobs:
   candidate:
