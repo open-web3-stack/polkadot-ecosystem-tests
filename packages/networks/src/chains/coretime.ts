@@ -11,14 +11,20 @@ const custom = {
   coretimeKusama: {
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
   },
+  coretimeWestend: {
+    wnd: { Concrete: { parents: 1, interior: 'Here' } },
+  },
 }
 
-const getInitStorages = (_config: typeof custom.coretimePolkadot | typeof custom.coretimeKusama) => ({
+const getInitStorages = (
+  _config: typeof custom.coretimePolkadot | typeof custom.coretimeKusama | typeof custom.coretimeWestend,
+  free = 1000e10,
+) => ({
   System: {
     account: [
-      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[testAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+      [[defaultAccounts.alice.address], { providers: 1, data: { free } }],
+      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free } }],
+      [[testAccounts.alice.address], { providers: 1, data: { free } }],
     ],
   },
 })
@@ -48,6 +54,23 @@ export const coretimeKusama = defineChain({
   initStorages: getInitStorages(custom.coretimeKusama),
   properties: {
     addressEncoding: 2,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
+    relayBlocksPerParaBlock: 2,
+    feeExtractor: standardFeeExtractor,
+  },
+})
+
+export const coretimeWestend = defineChain({
+  name: 'coretimeWestend',
+  endpoint: endpoints.coretimeWestend,
+  paraId: 1005,
+  networkGroup: 'westend',
+  custom: custom.coretimeWestend,
+  // See peopleWestend: Westend fee levels ask for a larger float on the dev accounts.
+  initStorages: getInitStorages(custom.coretimeWestend, 100_000e10),
+  properties: {
+    addressEncoding: 42,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'NonLocal',
     relayBlocksPerParaBlock: 2,

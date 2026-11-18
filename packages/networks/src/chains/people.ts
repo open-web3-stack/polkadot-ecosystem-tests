@@ -11,6 +11,9 @@ const custom = {
   peopleKusama: {
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
   },
+  peopleWestend: {
+    wnd: { Concrete: { parents: 1, interior: 'Here' } },
+  },
 }
 
 const aliceRegistrar = {
@@ -25,14 +28,17 @@ const bobRegistrar = {
   fields: 0,
 }
 
-const getInitStorages = (_config: typeof custom.peoplePolkadot | typeof custom.peopleKusama) => ({
+const getInitStorages = (
+  _config: typeof custom.peoplePolkadot | typeof custom.peopleKusama | typeof custom.peopleWestend,
+  free = 1000e10,
+) => ({
   System: {
     account: [
-      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccounts.bob.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccountsSr25519.bob.address], { providers: 1, data: { free: 1000e10 } }],
-      [[testAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+      [[defaultAccounts.alice.address], { providers: 1, data: { free } }],
+      [[defaultAccounts.bob.address], { providers: 1, data: { free } }],
+      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free } }],
+      [[defaultAccountsSr25519.bob.address], { providers: 1, data: { free } }],
+      [[testAccounts.alice.address], { providers: 1, data: { free } }],
     ],
   },
   // Registrars to be used in E2E tests - required to test `RegistrarOrigin`-locked extrinsics.
@@ -66,6 +72,25 @@ export const peopleKusama = defineChain({
   initStorages: getInitStorages(custom.peopleKusama),
   properties: {
     addressEncoding: 2,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
+    relayBlocksPerParaBlock: 2,
+    feeExtractor: standardFeeExtractor,
+  },
+})
+
+export const peopleWestend = defineChain({
+  name: 'peopleWestend',
+  endpoint: endpoints.peopleWestend,
+  paraId: 1004,
+  networkGroup: 'westend',
+  custom: custom.peopleWestend,
+  // Westend fees for megabyte-scale calls run to tens of WND, where the same calls cost
+  // fractions of a KSM or DOT: the same-wasm upgrade tests submit the whole runtime in one
+  // extrinsic, so the dev accounts carry a larger float here.
+  initStorages: getInitStorages(custom.peopleWestend, 100_000e10),
+  properties: {
+    addressEncoding: 42,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'NonLocal',
     relayBlocksPerParaBlock: 2,

@@ -54,8 +54,10 @@ const getAhwInitStorages = (config: typeof custom.assetHubWestend) => {
   return {
     System: {
       account: [
-        [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-        [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
+        // The self-upgrade tests submit the AH runtime itself in one extrinsic, and Westend
+        // fees for that run to tens of WND: the dev accounts carry a larger float here.
+        [[defaultAccounts.alice.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 100_000e10 } }],
         // testAccounts funded at 100k WND — enough to cover recovery SecurityDeposit (10 WND) plus fees
         [[testAccounts.alice.address], { providers: 1, data: { free: 100_000e10 } }],
         [[testAccounts.bob.address], { providers: 1, data: { free: 100_000e10 } }],

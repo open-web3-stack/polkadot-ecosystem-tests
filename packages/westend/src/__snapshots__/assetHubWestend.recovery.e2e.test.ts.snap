@@ -12,8 +12,6 @@ exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend
 ]
 `;
 
-exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Bob approves recovery attempt 1`] = `[]`;
-
 exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Bob finishes recovery attempt 1`] = `
 [
   {
