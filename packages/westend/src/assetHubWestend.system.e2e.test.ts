@@ -7,12 +7,14 @@ const testConfig: TestConfig = {
 
 // AH-Westend referenda cannot run today: `placeDecisionDeposit` declares proofSize
 // 12,778,893 against a `normal.maxExtrinsic` cap of 7,340,032, so the pool rejects the
-// deposit with ExhaustsResources and no referendum reaches deciding. Reported upstream.
+// deposit with ExhaustsResources and no referendum reaches deciding.
+// Reported upstream: https://github.com/paritytech/polkadot-sdk/issues/13900
 // registerTestTree(governanceChainSelfUpgradeViaRootReferendumSuite(assetHubWestend, testConfig))
 
 // Chopsticks' relay-to-para wiring (`connectVertical`) still reads `Dmp.downwardMessageQueues`,
 // which Westend retired for paged DMP storage, so suites that pair the relay with a parachain
-// cannot run yet. Restore them when chopsticks supports paged DMP.
+// cannot run yet. Restore them when chopsticks supports paged DMP:
+// https://github.com/AcalaNetwork/chopsticks/issues/1104
 // registerTestTree(systemE2ETestsViaRemoteScheduler(westend, assetHubWestend, testConfig))
 
 registerTestTree(systemE2ETestsForParaWithScheduler(assetHubWestend, testConfig))
