@@ -1,0 +1,236 @@
+# Reusable release gate: a release pipeline calls this workflow to judge the runtimes it
+# just built, before it publishes them. The caller passes its runtime artifacts; the gate
+# forks the live network with chopsticks, overrides each chain's code with the candidate
+# wasm, and runs the network's test package against the result.
+#
+# The gate needs no node binaries and no secrets: chopsticks executes the wasm itself,
+# and all chain state comes from public RPC through a local Subway cache.
+#
+# Advisory mode (`advisory: true`): the test jobs fail visibly (red, conclusion
+# `failure` in the API, so the caller's reporting can find them), but they do not fail
+# the calling job or block the caller's run.
+#
+# The caller's `uses:` ref selects this FILE; `gate_ref` (default master) selects the
+# code and test suites the gate runs. The two can drift: bump the caller's pin when
+# this file changes.
+
+name: Release gate
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Network to gate. Only `westend` is supported today.
+        type: string
+        default: westend
+      advisory:
+        description: Fail visibly without blocking the caller.
+        type: boolean
+        default: true
+      runtime_pattern:
+        description: Artifact name pattern for the candidate runtimes.
+        type: string
+        default: "*-runtime"
+      source_run_id:
+        description: >-
+          Run to take the runtime artifacts from. Defaults to the calling run. Set it to
+          replay a past run's artifacts, for example to test gate changes without a build.
+        type: string
+        default: ""
+      gate_ref:
+        description: polkadot-ecosystem-tests ref to run.
+        type: string
+        default: master
+      runs_on:
+        description: Runner label for the test jobs.
+        type: string
+        default: ubuntu-latest
+
+jobs:
+  # Chains, ports and wasm blob names per gated network. One place to grow coverage.
+  environment-map:
+    runs-on: ${{ inputs.runs_on }}
+    timeout-minutes: 2
+    outputs:
+      chains: ${{ steps.map.outputs.chains }}
+      test_script: ${{ steps.map.outputs.test_script }}
+    steps:
+      - name: Resolve ${{ inputs.environment }}
+        id: map
+        run: |
+          case "${{ inputs.environment }}" in
+            westend)
+              echo 'chains=[{"chain":"assetHubWestend","port":9200,"endpoint_var":"ASSETHUBWESTEND_ENDPOINT","wasm_var":"ASSETHUBWESTEND_WASM","wasm_blob":"asset_hub_westend_runtime.compact.compressed.wasm"}]' >> "$GITHUB_OUTPUT"
+              echo 'test_script=test:westend' >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unsupported gate environment '${{ inputs.environment }}'"
+              exit 1
+              ;;
+          esac
+
+  # Resolve fresh known-good block numbers once; the shards share them by artifact,
+  # so every shard forks the same blocks.
+  resolve-pins:
+    runs-on: ${{ inputs.runs_on }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: open-web3-stack/polkadot-ecosystem-tests
+          ref: ${{ inputs.gate_ref }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: yarn
+      - run: yarn --immutable
+      - run: yarn update-known-good
+      - name: Upload pins
+        uses: actions/upload-artifact@v6
+        with:
+          name: pet-gate-pins-${{ inputs.environment }}
+          path: KNOWN_GOOD_BLOCK_NUMBERS_*.env
+          if-no-files-found: error
+          retention-days: 1
+
+  tests:
+    needs: [environment-map, resolve-pins]
+    name: pet (${{ inputs.environment }}, shard ${{ matrix.shard }}/2)
+    runs-on: ${{ inputs.runs_on }}
+    timeout-minutes: 60
+    # Advisory: red job, green run. The job's API conclusion stays `failure`, which is
+    # what the caller's failure reporting keys on.
+    continue-on-error: ${{ inputs.advisory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: open-web3-stack/polkadot-ecosystem-tests
+          ref: ${{ inputs.gate_ref }}
+
+      - name: Download candidate runtimes
+        uses: actions/download-artifact@v7
+        with:
+          pattern: ${{ inputs.runtime_pattern }}
+          path: candidate-runtimes
+          merge-multiple: true
+          run-id: ${{ inputs.source_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Set wasm overrides
+        run: |
+          echo '${{ needs.environment-map.outputs.chains }}' | jq -c '.[]' | while read -r chain; do
+            WASM_VAR=$(echo "$chain" | jq -r '.wasm_var')
+            WASM_BLOB=$(echo "$chain" | jq -r '.wasm_blob')
+            WASM_PATH=$(find candidate-runtimes -name "$WASM_BLOB" | head -1)
+            if [ -z "$WASM_PATH" ]; then
+              echo "::error::No $WASM_BLOB among the candidate runtime artifacts"
+              exit 1
+            fi
+            echo "Setting ${WASM_VAR}=$(pwd)/${WASM_PATH}"
+            echo "${WASM_VAR}=$(pwd)/${WASM_PATH}" >> "$GITHUB_ENV"
+          done
+
+      - name: Install Subway
+        run: |
+          docker create --name subway-extract acala/subway:v0.1.1
+          sudo docker cp subway-extract:/usr/local/bin/subway /usr/local/bin/subway
+          docker rm subway-extract
+          sudo chmod +x /usr/local/bin/subway
+          subway --version
+
+      - name: Start Subway instances
+        run: |
+          echo '${{ needs.environment-map.outputs.chains }}' | jq -c '.[]' | while read -r chain; do
+            CHAIN=$(echo "$chain" | jq -r '.chain')
+            PORT=$(echo "$chain" | jq -r '.port')
+            ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+            if [ -z "$ENDPOINTS" ] || [ "$ENDPOINTS" = "null" ]; then
+              echo "::error::No endpoints for $CHAIN in pet-chain-endpoints.json"
+              exit 1
+            fi
+            sed -e "s/{{PORT}}/$PORT/g" -e "s|{{ENDPOINTS}}|$ENDPOINTS|g" .github/subway-template.yml > /tmp/subway-$PORT.yml
+            subway --config /tmp/subway-$PORT.yml > /tmp/subway-$PORT.log 2>&1 &
+            echo $! >> /tmp/subway.pids
+          done
+
+          echo '${{ needs.environment-map.outputs.chains }}' | jq -c '.[]' | while read -r chain; do
+            PORT=$(echo "$chain" | jq -r '.port')
+            for i in $(seq 1 60); do
+              if curl -sf http://127.0.0.1:$PORT/health > /dev/null 2>&1; then
+                echo "Subway on port $PORT is up"
+                break
+              fi
+              if [ "$i" = "60" ]; then
+                echo "::error::Timeout waiting for Subway on port $PORT"
+                cat /tmp/subway-$PORT.log
+                exit 1
+              fi
+              sleep 1
+            done
+          done
+
+      - name: Set endpoint variables
+        run: |
+          echo '${{ needs.environment-map.outputs.chains }}' | jq -c '.[]' | while read -r chain; do
+            ENDPOINT_VAR=$(echo "$chain" | jq -r '.endpoint_var')
+            PORT=$(echo "$chain" | jq -r '.port')
+            echo "${ENDPOINT_VAR}=ws://localhost:${PORT}" >> "$GITHUB_ENV"
+          done
+
+      - name: Download pins
+        uses: actions/download-artifact@v7
+        with:
+          name: pet-gate-pins-${{ inputs.environment }}
+
+      - name: Source pins
+        run: |
+          NETWORK_UPPER=$(echo "${{ inputs.environment }}" | tr '[:lower:]' '[:upper:]')
+          cat "KNOWN_GOOD_BLOCK_NUMBERS_${NETWORK_UPPER}.env" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: yarn
+      - run: yarn --immutable
+
+      # Flags, same rationale as CI's test job:
+      #   -u                 snapshots regenerate instead of failing on drift; a gate
+      #                      cannot commit them, so the verdict rests on the asserts
+      #   --pool=forks       child-process isolation
+      #   --maxWorkers=8     up to 8 test files in parallel per shard
+      #   --retry=2          absorbs endpoint flakiness
+      #   --passWithNoTests  a shard may receive no files while coverage is small
+      # The junit file is the gate's verdict for machine consumers; the console
+      # reporters keep the job log and annotations readable.
+      - name: Run ${{ inputs.environment }} tests (shard ${{ matrix.shard }}/2)
+        run: >-
+          yarn ${{ needs.environment-map.outputs.test_script }} -u
+          --pool=forks --maxWorkers=8 --retry=2 --passWithNoTests
+          --shard=${{ matrix.shard }}/2
+          --reporter=verbose --reporter=github-actions --reporter=junit
+          --outputFile=test-results/junit-shard-${{ matrix.shard }}.xml
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: pet-gate-test-results-${{ inputs.environment }}-shard-${{ matrix.shard }}
+          path: test-results/*
+          retention-days: 90
+
+      - name: Cleanup Subway instances
+        if: always()
+        run: |
+          if [ -f /tmp/subway.pids ]; then
+            cat /tmp/subway.pids | xargs kill || true
+          fi
+          for log in /tmp/subway-*.log; do
+            if [ -f "$log" ]; then
+              echo "=== $log ==="
+              tail -20 "$log" || true
+            fi
+          done
