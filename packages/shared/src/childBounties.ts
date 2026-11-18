@@ -1349,21 +1349,35 @@ async function createChildBountiesInEveryStatus<
 }
 
 /**
- * Read everything a child-bounty call can change under one parent bounty: each child bounty, the active and total
- * counters, the cumulative child curator fees, and the reserved balance of the child curator.
+ * Read everything a child-bounty call can change under one parent bounty: each child bounty and its description,
+ * the active and total counters, the cumulative child curator fees, the free balances of the parent bounty account
+ * and of the account of every child index the parent has handed out, and the reserved balance of the child curator.
  *
  * Failure tests read this before and after a rejected call and compare the two, to prove the call changed nothing.
+ * Bounty and child bounty accounts never pay transaction fees, so their balances must match exactly. The account
+ * of the next child index is included too, since a wrongly accepted add would fund it.
  */
 async function getChildBountiesState(client: Client<any, any>, parentIndex: number, childCurator: string) {
   const entries = await client.api.query.childBounties.childBounties.entries(parentIndex)
+  const descriptions = await client.api.query.childBounties.childBountyDescriptionsV1.entries(parentIndex)
+  const totalCount = await getParentTotalChildBountiesCount(client, parentIndex)
+  const childAccountBalances: Record<number, bigint> = {}
+  for (let childIndex = 0; childIndex <= totalCount; childIndex++) {
+    childAccountBalances[childIndex] = await getFreeBalance(client, childBountyAccount(client, parentIndex, childIndex))
+  }
   const curatorAccount = await client.api.query.system.account(childCurator)
   return {
     childBounties: Object.fromEntries(
       entries.map(([key, childBounty]) => [key.args[1].toNumber(), childBounty.toJSON()]),
     ),
+    descriptions: Object.fromEntries(
+      descriptions.map(([key, description]) => [key.args[1].toNumber(), description.toHex()]),
+    ),
     activeCount: await getParentChildBountiesCount(client, parentIndex),
-    totalCount: await getParentTotalChildBountiesCount(client, parentIndex),
+    totalCount,
     childrenCuratorFees: (await client.api.query.childBounties.childrenCuratorFees(parentIndex)).toBigInt(),
+    parentAccountBalance: await getFreeBalance(client, bountyAccount(client, parentIndex)),
+    childAccountBalances,
     curatorReserved: curatorAccount.data.reserved.toBigInt(),
   }
 }
@@ -2073,15 +2087,18 @@ export function allUnassignChildBountyCuratorTests<
  * The parent curator can award a child bounty that has its own curator.
  *
  * `award_child_bounty` accepts the child curator or the parent curator. This is the parent curator's way to pay a
- * beneficiary when the child curator does not act. The pallet records the account that awarded as the curator
- * of the pending payout, and sets the unlock block to the current block of the treasury's block provider plus
- * `BountyDepositPayoutDelay`.
+ * beneficiary when the child curator does not act. The pallet sets the unlock block to the current block of the
+ * treasury's block provider plus `BountyDepositPayoutDelay`.
+ *
+ * The test does not check which account the pending payout records as its curator. The pallet records the
+ * account that awarded rather than the child curator, which is a known bug
+ * (https://github.com/paritytech/polkadot-sdk/issues/12190), so that field changes once the fix reaches the
+ * runtime.
  *
  * 1. Create an active parent bounty (Bob) with an active child bounty (Charlie)
  * 2. Bob, the parent curator, awards the child bounty to Dave
  * 3. Verify the Awarded event names the child bounty and Dave
- * 4. Verify the child bounty is PendingPayout for Dave, awarded by Bob, unlocking at the award block plus the
- *    payout delay
+ * 4. Verify the child bounty is PendingPayout for Dave, unlocking at the award block plus the payout delay
  * 5. Verify Charlie's deposit is still recorded and reserved
  */
 export async function childBountyAwardByParentCuratorTest<
@@ -2125,12 +2142,11 @@ export async function childBountyAwardByParentCuratorTest<
   expect(awardedEvents[0].childIndex.toNumber()).toBe(childIndex)
   expect(awardedEvents[0].beneficiary.eq(testAccounts.dave.address)).toBe(true)
 
-  // 4. PendingPayout for Dave, awarded by Bob. The award ran in the latest block, so the block provider's current
-  // number is the block the pallet saw.
+  // 4. PendingPayout for Dave. The award ran in the latest block, so the block provider's current number is the
+  // block the pallet saw.
   const awardedChildBounty = await getChildBounty(client, parentIndex, childIndex)
   assert(awardedChildBounty.status.isPendingPayout)
-  const { curator, beneficiary, unlockAt } = awardedChildBounty.status.asPendingPayout
-  expect(curator.eq(testAccounts.bob.address)).toBe(true)
+  const { beneficiary, unlockAt } = awardedChildBounty.status.asPendingPayout
   expect(beneficiary.eq(testAccounts.dave.address)).toBe(true)
   const awardBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   expect(unlockAt.toNumber()).toBe(awardBlock + client.api.consts.bounties.bountyDepositPayoutDelay.toNumber())
@@ -3114,7 +3130,11 @@ export async function childBountyTooManyChildBountiesErrorTest<
 
   await client.dev.newBlock()
 
-  // closing freed one slot
+  // closing removed child bounty 0 from storage and freed one slot
+  expect(await getChildBounty(client, bountyIndex, 0)).toBeNull()
+  expect(await client.api.query.childBounties.childBounties.keys(bountyIndex)).toHaveLength(
+    maxActiveChildBountyCount - 1,
+  )
   expect(await getParentChildBountiesCount(client, bountyIndex)).toBe(maxActiveChildBountyCount - 1)
 
   await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
@@ -3127,6 +3147,7 @@ export async function childBountyTooManyChildBountiesErrorTest<
   expect(parentIndex).toBe(bountyIndex)
   expect(childIndex).toBe(maxActiveChildBountyCount)
   expect(await getParentChildBountiesCount(client, bountyIndex)).toBe(maxActiveChildBountyCount)
+  expect(await client.api.query.childBounties.childBounties.keys(bountyIndex)).toHaveLength(maxActiveChildBountyCount)
   expect(await getParentTotalChildBountiesCount(client, bountyIndex)).toBe(maxActiveChildBountyCount + 1)
 }
 
