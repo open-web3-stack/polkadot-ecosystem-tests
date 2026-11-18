@@ -249,6 +249,47 @@ exports[`Westend Asset Hub PSM > External asset management > addExternalAsset �
 ]
 `;
 
+exports[`Westend Asset Hub PSM > External asset management > external decimals diverge from snapshot — the snapshot governs > divergent decimals: Minted event 1`] = `
+[
+  {
+    "data": {
+      "externalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "externalConsumed": 100000000,
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalFee": 500000,
+      "internalReceived": "(rounded 100000000)",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Minted",
+    "section": "psm",
+  },
+]
+`;
+
 exports[`Westend Asset Hub PSM > External asset management > removeExternalAsset — per-external configuration wiped, re-approval defaults > remove external: ExternalAssetRemoved event 1`] = `
 [
   {
@@ -415,7 +456,7 @@ exports[`Westend Asset Hub PSM > Instance lifecycle > create PSM with zero minim
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },

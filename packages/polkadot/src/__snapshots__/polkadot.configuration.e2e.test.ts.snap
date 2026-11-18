@@ -54,11 +54,11 @@ exports[`Polkadot Configuration > configuration tests > configuration test - can
   "noShowSlots": 3,
   "nodeFeatures": "0x0b",
   "pvfVotingTtl": 2,
-  "relayVrfModuloSamples": 6,
+  "relayVrfModuloSamples": 8,
   "schedulerParams": {
     "groupRotationFrequency": 10,
     "lookahead": 5,
-    "maxValidatorsPerCore": 5,
+    "maxValidatorsPerCore": 4,
     "numCores": 100,
     "onDemandBaseFee": "(rounded 300000000)",
     "onDemandFeeVariability": 30000000,

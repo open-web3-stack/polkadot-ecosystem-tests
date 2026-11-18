@@ -1,0 +1,997 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Asset Hub Referenda > Cancel and kill > calls on a cancelled referendum from Root - NotOngoing > calls on a cancelled referendum: Dispatched events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 62,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 62,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 62,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Cancel and kill > cancel a deciding referendum from ReferendumCanceller - Cancelled, slot released next block > canceller cancels: Dispatched and Cancelled events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Cancel and kill > kill from ReferendumKiller - Killed, deposits slashed, metadata cleared > killer kills: Killed, DepositSlashed and MetadataCleared events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Killed",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "DepositSlashed",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "DepositSlashed",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "hash_": "0x48ebaa1fc319ac5df8e2cbe64d42f36dfe5e7aeec3b4be4bffe3dff52b91dce7",
+      "index": "(redacted)",
+    },
+    "method": "MetadataCleared",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Cancel and kill > kill from ReferendumKiller - Killed, deposits slashed, metadata cleared > killer kills: deposits slashed and credited to the slash destination 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "13UVJyLkAxdQn6zM3Gz49SmCLi8SZW3bdtm7DTY29ScavqW2",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "13UVJyLkAxdQn6zM3Gz49SmCLi8SZW3bdtm7DTY29ScavqW2",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Deciding slots > deposit on a full track - queued, then one_fewer_deciding from Root starts it > one fewer deciding: Dispatched and DecisionStarted events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x0000347265666572656e646120653265",
+      },
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+      "track": 30,
+    },
+    "method": "DecisionStarted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Deciding slots > one_fewer_deciding on an unknown track - BadTrack > unknown track: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x02000000",
+            "index": 62,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Decision deposit > place decision deposit - DecisionDepositPlaced, then DecisionStarted once prepared > deposit: DecisionDepositPlaced and Reserved events 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Reserved",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000,
+      "index": "(redacted)",
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Decision deposit > place decision deposit - DecisionDepositPlaced, then DecisionStarted once prepared > prepare period end: alarm Dispatched and DecisionStarted events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x0000347265666572656e646120653265",
+      },
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+      "track": 30,
+    },
+    "method": "DecisionStarted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Decision deposit > place decision deposit twice - HasDeposit > second deposit: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Decision deposit > place decision deposit without the track's deposit - InsufficientBalance > insufficient decision deposit: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 10,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Metadata > metadata from another account on an ongoing referendum - NoPermission > set metadata by another account: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Metadata > metadata of a finished referendum - anyone clears it, nobody sets it > clear metadata after cancel: MetadataCleared event 1`] = `
+[
+  {
+    "data": {
+      "hash_": "0x48ebaa1fc319ac5df8e2cbe64d42f36dfe5e7aeec3b4be4bffe3dff52b91dce7",
+      "index": "(redacted)",
+    },
+    "method": "MetadataCleared",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Metadata > metadata of a finished referendum - anyone clears it, nobody sets it > set metadata after cancel: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Metadata > set and clear metadata by the submitter - MetadataSet, MetadataCleared > clear metadata: MetadataCleared event 1`] = `
+[
+  {
+    "data": {
+      "hash_": "0x48ebaa1fc319ac5df8e2cbe64d42f36dfe5e7aeec3b4be4bffe3dff52b91dce7",
+      "index": "(redacted)",
+    },
+    "method": "MetadataCleared",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Metadata > set and clear metadata by the submitter - MetadataSet, MetadataCleared > set metadata: MetadataSet event 1`] = `
+[
+  {
+    "data": {
+      "hash_": "0x48ebaa1fc319ac5df8e2cbe64d42f36dfe5e7aeec3b4be4bffe3dff52b91dce7",
+      "index": "(redacted)",
+    },
+    "method": "MetadataSet",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Metadata > set metadata without a noted preimage - PreimageNotExist > metadata without preimage: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0c000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Origins and indices > Root-gated and admin-gated calls from a signed origin - BadOrigin > signed origin: force_batch events 1`] = `
+[
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompletedWithErrors",
+    "section": "utility",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Origins and indices > admin origins outside their gate - BadOrigin > admin origins outside their gate: Dispatched events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Origins and indices > calls on an unknown referendum - NotOngoing and BadReferendum > unknown referendum: force_batch events 1`] = `
+[
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 62,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 62,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 62,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 62,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompletedWithErrors",
+    "section": "utility",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Origins and indices > signed-only calls from Root - BadOrigin > Root origin: Dispatched events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Refunds > refund both deposits of a cancelled referendum from Root - refunded to the depositors > Root refunds: Dispatched, Cancelled and refund events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "amount": 10000000000,
+      "index": "(redacted)",
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "amount": 100000000000,
+      "index": "(redacted)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Refunds > refund both deposits of a cancelled referendum from a third party - refunded once, then NoDeposit > repeated refund: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Refunds > refund both deposits of a cancelled referendum from a third party - refunded once, then NoDeposit > third party refund: DecisionDepositRefunded and Unreserved events 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Unreserved",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000,
+      "index": "(redacted)",
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Refunds > refund both deposits of a cancelled referendum from a third party - refunded once, then NoDeposit > third party refund: SubmissionDepositRefunded and Unreserved events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Unreserved",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 100000000000,
+      "index": "(redacted)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Refunds > refund decision deposit of an ongoing referendum - NoDeposit, then Unfinished > refund before a deposit: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Refunds > refund decision deposit of an ongoing referendum - NoDeposit, then Unfinished > refund while ongoing: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x08000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Refunds > refund deposits of a killed referendum - NoDeposit and BadStatus > decision refund after kill: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Refunds > refund deposits of a killed referendum - NoDeposit and BadStatus > submission refund after kill: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission > submit - Submitted, deposit reserved, timeout alarm set > submit: Submitted and Reserved events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Reserved",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x0000347265666572656e646120653265",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission > submit with a lookup length that differs from the noted preimage - PreimageStoredWithDifferentLength > lookup length: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0d000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission > submit with a proposal origin that has no track - NoTrack > no track: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x07000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission > submit without the submission deposit - InsufficientBalance > insufficient submission deposit: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 10,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Time-driven transitions > nudge from Root just before the undeciding timeout - alarm re-armed, then TimedOut > undeciding timeout: alarm Dispatched and TimedOut events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "TimedOut",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Time-driven transitions > support gained, then lost, while deciding - ConfirmStarted, then ConfirmAborted > no longer passing: ConfirmAborted event 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "ConfirmAborted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Time-driven transitions > support gained, then lost, while deciding - ConfirmStarted, then ConfirmAborted > passing: ConfirmStarted event 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "ConfirmStarted",
+    "section": "referenda",
+  },
+]
+`;

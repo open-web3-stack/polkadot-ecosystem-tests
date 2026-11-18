@@ -1135,6 +1135,11 @@ export const configurationE2ETests = <
       await restoreSnapshot()
       const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
       await client.dev.setHead(blockNumber)
+      // Live governance can have its own configuration update in flight at the forked block.
+      // These tests assert on `pendingConfigs` entries they schedule themselves, so a
+      // pre-existing entry breaks every assertion. Clear it: the fork is ephemeral, and the
+      // tests check the scheduling mechanics, not the live schedule.
+      await client.dev.setStorage({ Configuration: { pendingConfigs: [] } })
     },
     afterAll: async () => {
       await client.api.disconnect().catch(() => {})
