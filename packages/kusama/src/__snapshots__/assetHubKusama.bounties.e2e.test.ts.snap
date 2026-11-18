@@ -951,7 +951,7 @@ exports[`Kusama Asset Hub Bounties > Closing a bounty > close a funded bounty th
     "data": {
       "amount": 5000000,
       "assetId": "(rounded 2000)",
-      "from": "F3opxRbN5ZbjJNU513biNiRbxfAH8HbWZNeB6Ho2vgiNkJQ",
+      "from": "(redacted)",
       "to": "F3opxRbN5ZbjJNU511Kj2TLuzFcDq9BGduA9TgiECafpg29",
     },
     "method": "Transferred",

@@ -166,7 +166,7 @@ exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator un
 ]
 `;
 
-exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > curator deposit slash destination: balance deposits 1`] = `
+exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > curator deposit slash destination: staging deposit 1`] = `
 [
   {
     "data": {
@@ -401,7 +401,7 @@ exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator un
 ]
 `;
 
-exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > curator deposit slash destination: balance deposits 1`] = `
+exports[`Polkadot Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > curator deposit slash destination: staging deposit 1`] = `
 [
   {
     "data": {
@@ -563,7 +563,7 @@ exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty Closure
 ]
 `;
 
-exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in proposed state > proposer bond slash destination: balance deposits 1`] = `
+exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in proposed state > proposer bond slash destination: staging deposit 1`] = `
 [
   {
     "data": {
@@ -954,7 +954,7 @@ exports[`Polkadot Asset Hub Bounties > Closing a bounty > close a funded bounty 
     "data": {
       "amount": 5000000,
       "assetId": "(rounded 2000)",
-      "from": "13UVJyLnbVp9RBZYFwHYxaBn6CXLhGbappaRRevzjjVSUtqE",
+      "from": "(redacted)",
       "to": "13UVJyLnbVp9RBZYFwFGyDvVd1y27Tt8tkntv6Q7JVPhFsTB",
     },
     "method": "Transferred",
@@ -1032,19 +1032,11 @@ exports[`Polkadot Asset Hub Bounties > Curator slashing > unassign curator by a 
 ]
 `;
 
-exports[`Polkadot Asset Hub Bounties > Curator slashing > unassign curator by a public account after the update deadline - curator slashed > public unassign slash destination: balance deposits 1`] = `
+exports[`Polkadot Asset Hub Bounties > Curator slashing > unassign curator by a public account after the update deadline - curator slashed > public unassign slash destination: staging deposit 1`] = `
 [
   {
     "data": {
       "amount": 2000000000000,
-      "who": "13UVJyLkAxdQn6zM3Gz49SmCLi8SZW3bdtm7DTY29ScavqW2",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 7300000)",
       "who": "13UVJyLkAxdQn6zM3Gz49SmCLi8SZW3bdtm7DTY29ScavqW2",
     },
     "method": "Deposit",

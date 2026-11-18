@@ -205,16 +205,23 @@ function bountyAccount(client: Client<any, any>, bountyIndex: number): HexString
 }
 
 /**
- * Check the pallet's `do_try_state` invariants: `BountyCount` is at least the number of stored bounties and of
- * stored descriptions, and every stored bounty has a description.
+ * Check the pallet's `do_try_state` invariants, by index rather than by count: bounties and descriptions are stored
+ * under exactly the same indices, and every stored index is below `BountyCount`.
+ *
+ * Comparing counts alone would miss a bounty without a description paired with an orphan description elsewhere.
  */
 async function checkBountiesTryState(client: Client<any, any>) {
   const bountyCount = await getBountyCount(client)
-  const bountyKeys = await client.api.query.bounties.bounties.keys()
-  const descriptionKeys = await client.api.query.bounties.bountyDescriptions.keys()
-  expect(bountyCount).toBeGreaterThanOrEqual(bountyKeys.length)
-  expect(bountyCount).toBeGreaterThanOrEqual(descriptionKeys.length)
-  expect(descriptionKeys.length).toBe(bountyKeys.length)
+  const bountyIndices = (await client.api.query.bounties.bounties.keys())
+    .map((key) => (key.args[0] as any).toNumber() as number)
+    .sort((a, b) => a - b)
+  const descriptionIndices = (await client.api.query.bounties.bountyDescriptions.keys())
+    .map((key) => (key.args[0] as any).toNumber() as number)
+    .sort((a, b) => a - b)
+  expect(descriptionIndices).toEqual(bountyIndices)
+  for (const index of bountyIndices) {
+    expect(index).toBeLessThan(bountyCount)
+  }
 }
 
 /**
@@ -279,6 +286,19 @@ async function startSpendPeriodNextBlock(client: Client<any, any>) {
 }
 
 /**
+ * Push the next treasury spend period a full `SpendPeriod` away, so `spend_funds` cannot fund an approved bounty while
+ * a test still inspects it.
+ *
+ * Without this, a fork block close to a spend period boundary would fund approved bounties mid-test, and a test that
+ * expects `Approved` or `ApprovedWithCurator` would see `Funded` or `CuratorProposed` instead.
+ */
+async function holdSpendPeriod(client: Client<any, any>) {
+  const now = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  await client.dev.setStorage({ Treasury: { lastSpendPeriod: now } })
+  expect((await client.api.query.treasury.lastSpendPeriod()).unwrap().toNumber()).toBe(now)
+}
+
+/**
  * Create a `Funded` bounty: Alice proposes it, `Treasurer` approves it, and the next spend period funds it.
  */
 async function createFundedBounty(client: Client<any, any>, value: bigint, description: string): Promise<number> {
@@ -330,7 +350,7 @@ async function getTreasuryPotFree(client: Client<any, any>): Promise<bigint> {
  * - `treasury`: one `treasury.Deposit { value: amount }`, and the pot grew by exactly `amount`.
  * - `dapStaging`: one `balances.Deposit { who: <DAP staging>, amount }`, no `treasury.Deposit`, and the pot did not
  *   move. Transaction fees also land in the DAP staging account on this runtime, so the slash is found by account
- *   and amount.
+ *   and amount, and only that event is snapshotted.
  *
  * @param potFreeBefore The treasury pot's free balance before the head block.
  */
@@ -361,10 +381,12 @@ async function checkSlashDestination(
         if (!client.api.events.balances.Deposit.is(event)) return false
         return event.data.who.toHex() === staging && event.data.amount.toBigInt() === amount
       })
-      await checkSystemEvents(client, { section: 'balances', method: 'Deposit' }).toMatchSnapshot(
-        `${snapshotPrefix}: balance deposits`,
-      )
       expect(stagingDeposits).toHaveLength(1)
+      // Only the matched slash deposit is snapshotted: fees paid in the same block also land in the staging account,
+      // and their amounts change with the fork block.
+      await checkEvents({ events: Promise.resolve(stagingDeposits) }).toMatchSnapshot(
+        `${snapshotPrefix}: staging deposit`,
+      )
       expect(treasuryDeposits).toHaveLength(0)
       expect(potFreeAfter).toBe(potFreeBefore)
     })
@@ -3797,6 +3819,8 @@ async function pokeDepositUnchangedTest(client: Client<any, any>) {
  *
  * The bond is lowered first, so only the status check stands between the call and a change.
  *
+ * The next treasury spend period is held off first, so the approved bounty is not funded during the test.
+ *
  * 1. Alice proposes a bounty, and its bond is lowered to the rate before `BountyDepositBase` was raised
  * 2. `Treasurer` approves the bounty
  * 3. Alice pokes the deposit
@@ -3805,6 +3829,9 @@ async function pokeDepositUnchangedTest(client: Client<any, any>) {
  */
 async function pokeDepositApprovedBountyTest(client: Client<any, any>) {
   await setupTestAccounts(client, ['alice'])
+
+  // The next spend period is held off, so the approved bounty stays unfunded while the test inspects it.
+  await holdSpendPeriod(client)
 
   const bountyValue = client.api.consts.bounties.bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for poking an approved bounty'
@@ -4100,6 +4127,8 @@ async function signedOriginRejectedTest(client: Client<any, any>) {
  * `SmallTipper`, the lowest `Spender` track, can approve a bounty worth exactly its spend limit: the `Spender` arm of
  * `SpendOrigin` passes when the bounty value is at most the track's limit.
  *
+ * The next treasury spend period is held off first, so the approved bounty is not funded during the test.
+ *
  * 1. Alice proposes a bounty worth exactly the `SmallTipper` limit
  * 2. Dispatch `approve_bounty` from `SmallTipper`
  * 3. Verify the dispatch succeeded and `BountyApproved` was emitted
@@ -4107,6 +4136,9 @@ async function signedOriginRejectedTest(client: Client<any, any>) {
  */
 async function smallTipperApprovesAtLimitTest(client: Client<any, any>, testConfig: BountiesTestConfig) {
   await setupTestAccounts(client, ['alice'])
+
+  // The next spend period is held off, so the approved bounty stays unfunded while the test inspects it.
+  await holdSpendPeriod(client)
 
   // 1. Bounty at the limit
   const bountyValue = testConfig.smallTipperSpendLimit
@@ -4322,6 +4354,8 @@ async function treasurerApprovesAboveLimitTest(client: Client<any, any>, testCon
  * Root, the other arm of `SpendOrigin`, has no spend limit: it approves a bounty worth more than the `Treasurer`
  * limit, which no `Spender` track could approve.
  *
+ * The next treasury spend period is held off first, so the approved bounty is not funded during the test.
+ *
  * 1. Alice proposes a bounty worth the `Treasurer` limit plus one
  * 2. Dispatch `approve_bounty` from Root
  * 3. Verify the dispatch succeeded and `BountyApproved` was emitted
@@ -4329,6 +4363,9 @@ async function treasurerApprovesAboveLimitTest(client: Client<any, any>, testCon
  */
 async function rootApprovesAboveTreasurerLimitTest(client: Client<any, any>, testConfig: BountiesTestConfig) {
   await setupTestAccounts(client, ['alice'])
+
+  // The next spend period is held off, so the approved bounty stays unfunded while the test inspects it.
+  await holdSpendPeriod(client)
 
   // 1. Bounty one unit above the Treasurer limit
   const bountyValue = testConfig.treasurerSpendLimit + 1n
@@ -4553,6 +4590,8 @@ export function originAndSpendLimitTests(
  * A curator who has been approved with a bounty, but not yet funded, can withdraw themselves: the bounty goes back
  * to `Approved` and stays queued for funding.
  *
+ * The next treasury spend period is held off first, so the approved bounty is not funded during the test.
+ *
  * 1. Alice proposes a bounty, and `Treasurer` approves it with Bob as curator
  * 2. Bob unassigns himself
  * 3. Verify `CuratorUnassigned`
@@ -4560,6 +4599,9 @@ export function originAndSpendLimitTests(
  */
 async function curatorLeavesApprovedWithCuratorTest(client: Client<any, any>) {
   await setupTestAccounts(client, ['alice', 'bob'])
+
+  // The next spend period is held off, so the approved bounty stays unfunded while the test inspects it.
+  await holdSpendPeriod(client)
 
   const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum.toBigInt()
   const bountyValue = bountyValueMinimum * BOUNTY_MULTIPLIER
@@ -4748,6 +4790,8 @@ async function curatorLeavesPendingPayoutTest(client: Client<any, any>) {
  * Before funding, a curator approved with the bounty can be unassigned only by themselves or a `RejectOrigin`. Any
  * other signed account fails with `BadOrigin`.
  *
+ * The next treasury spend period is held off first, so the approved bounty is not funded during the test.
+ *
  * 1. Alice proposes a bounty, and `Treasurer` approves it with Bob as curator
  * 2. Charlie tries to unassign Bob
  * 3. Verify the call failed with `BadOrigin`
@@ -4755,6 +4799,9 @@ async function curatorLeavesPendingPayoutTest(client: Client<any, any>) {
  */
 async function otherAccountUnassignsApprovedWithCuratorTest(client: Client<any, any>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+
+  // The next spend period is held off, so the approved bounty stays unfunded while the test inspects it.
+  await holdSpendPeriod(client)
 
   const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum.toBigInt()
   const bountyValue = bountyValueMinimum * BOUNTY_MULTIPLIER
@@ -4924,8 +4971,10 @@ async function closeBountyHoldingUsdtTest(client: Client<any, any>, testConfig: 
   await client.dev.newBlock()
 
   // 5. BountyCanceled, and both balances moved to the pot
+  // The bounty account is derived from the bounty index, which depends on the fork block, so `from` is redacted and
+  // checked exactly below.
   await checkSystemEvents(client, 'bounties', { section: 'assets', method: 'Transferred' })
-    .redact({ redactKeys: /index/ })
+    .redact({ redactKeys: /^(index|from)$/ })
     .toMatchSnapshot('close with usdt events')
   const results = await schedulerDispatchedResults(client)
   expect(results).toHaveLength(1)
@@ -5370,8 +5419,7 @@ async function approvalQueueFullTest(client: Client<any, any>) {
   const maxApprovals = client.api.consts.treasury.maxApprovals.toNumber()
 
   // 1. No spend period during the test
-  const relayNow = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
-  await client.dev.setStorage({ Treasury: { lastSpendPeriod: relayNow } })
+  await holdSpendPeriod(client)
 
   // 2. Enough proposals to fill the queue, plus two
   const queuedBefore = (await getBountyApprovals(client)).length
