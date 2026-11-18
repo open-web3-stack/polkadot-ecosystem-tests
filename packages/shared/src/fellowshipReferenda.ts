@@ -855,16 +855,18 @@ export async function submitOnVoiceTracks(client: Client<any, any>, cfg: RankedR
 
 /**
  * On the Collectives Fellowship, an account in the `AllowedProposers` dynamic parameter may open a
- * referendum on any track without being a member. The list is empty by default and set by
- * governance.
+ * referendum on any track without being a member. The list is set by governance and empty by
+ * default.
  *
  * Setting the list is setup here, injected with a `Root` origin; the origin under test is
- * `SubmitOrigin`.
+ * `SubmitOrigin`. Governance may already have filled the list, so the test relies only on its own
+ * account being absent. It then replaces the list with that account: on a fork this only drops
+ * entries no test uses, and it keeps the inline call within the scheduler's 128-byte limit.
  *
- * 1. Fund a non-member and check the allow-list is unset
+ * 1. Fund a non-member, and check it is not in the allow-list, whether or not the list is set
  * 2. Check the non-member's submission on the Fellowship9Dan track fails with `BadOrigin`
  * 3. Set the allow-list to that account through `parameters.setParameter` with `Root`
- * 4. Check the call dispatched and `parameters.Updated` carries the new list
+ * 4. Check the call dispatched, `parameters.Updated` was emitted, and the list holds the account
  * 5. Submit again from the account on the same track
  * 6. Check `Submitted`, and that the stored deposit record names the account
  */
@@ -876,12 +878,17 @@ export async function submitFromAllowList(client: Client<any, any>, cfg: RankedR
   // `parameters` pallet is reached untyped, like the referenda instances.
   const parameters = { tx: (client.api.tx as any).parameters, query: (client.api.query as any).parameters }
   const allowListKey = { Fellowship: 'AllowedProposers' }
+  // The accounts in the allow-list, or none when the parameter has never been set.
+  const allowList = async (): Promise<string[]> => {
+    const value = await parameters.query.parameters(allowListKey)
+    return value.isSome ? value.unwrap().asFellowship.asAllowedProposers.map((who: any) => who.toHex()) : []
+  }
 
-  // 1. Fund a non-member; the allow-list is unset
+  // 1. Fund a non-member that is not in the allow-list
 
   await fundAccounts(client, [proposer], endowment(client, cfg))
   expect((await referenda.collectiveQuery.members(proposer.address)).isNone).toBe(true)
-  expect((await parameters.query.parameters(allowListKey)).isNone).toBe(true)
+  expect(await allowList()).not.toContain(u8aToHex(proposer.publicKey))
 
   // 2. The non-member is rejected
 
@@ -904,20 +911,21 @@ export async function submitFromAllowList(client: Client<any, any>, cfg: RankedR
   )
   await client.dev.newBlock()
 
-  // 4. Dispatched, and `parameters.Updated` carries the new list
+  // 4. Dispatched, `parameters.Updated` emitted, and the list holds the account
 
+  // `oldValue` is whatever governance had set at the fork point, so it is redacted.
   await checkSystemEvents(client, 'parameters', { section: 'scheduler', method: 'Dispatched' })
-    .redact({ redactKeys: /^task$/ })
+    .redact({ redactKeys: /^(task|oldValue)$/ })
     .toMatchSnapshot('allow-list: set by Root')
   expect(
     (await dispatchedResults(client)).map((result) => result.isOk),
     'setting the allow-list should dispatch',
   ).toEqual([true])
-
-  const allowList = await parameters.query.parameters(allowListKey)
-  assert(allowList.isSome, 'the allow-list should be set')
-  const listed = allowList.unwrap().asFellowship.asAllowedProposers.map((who: any) => who.toHex())
-  expect(listed).toEqual([u8aToHex(proposer.publicKey)])
+  const updated = (await client.api.query.system.events()).filter(({ event }) =>
+    client.api.events.parameters.Updated.is(event),
+  )
+  expect(updated).toHaveLength(1)
+  expect(await allowList()).toEqual([u8aToHex(proposer.publicKey)])
 
   // 5. Submit again from the allow-listed account
 
@@ -1850,6 +1858,19 @@ export async function cancelByRealArchitectsReferendum(client: Client<any, any>,
 }
 
 /**
+ * The encoded calls of every `Transact` in the `polkadotXcm.Sent` events of the head block.
+ * `polkadotXcm` is not in the PJS type augmentation PET loads, so its event data is untyped.
+ */
+async function sentTransactCalls(client: Client<any, any>): Promise<HexString[]> {
+  return (await client.api.query.system.events())
+    .map(({ event }) => event)
+    .filter((event) => client.api.events.polkadotXcm.Sent.is(event))
+    .flatMap((event) => [...(event.data as any).message])
+    .filter((instruction: any) => instruction.isTransact)
+    .map((instruction: any) => instruction.asTransact.call.encoded.toHex())
+}
+
+/**
  * The Ambassador referenda `CancelOrigin` includes the `FellowshipAdmin` voice of Asset Hub, so
  * Polkadot OpenGov on Asset Hub can cancel an Ambassador referendum over XCM.
  *
@@ -1860,7 +1881,7 @@ export async function cancelByRealArchitectsReferendum(client: Client<any, any>,
  * 1. Seed a submitter and submit an Ambassador referendum
  * 2. On Asset Hub, inject `polkadotXcm.send` with the `FellowshipAdmin` origin, carrying
  *    `ambassadorReferenda.cancel` to the Collectives chain
- * 3. Check the send dispatched and Asset Hub emits `Sent`
+ * 3. Check the send dispatched, Asset Hub emits `Sent`, and its `Transact` carries the `cancel`
  * 4. On the Collectives chain, check the message is processed successfully and the referendum
  *    emits `Cancelled`
  * 5. Check the referendum is stored as cancelled
@@ -1899,15 +1920,18 @@ export async function cancelByAssetHubFellowshipAdmin(
   )
   await assetHubClient.dev.newBlock()
 
-  // 3. Dispatched on Asset Hub, and `Sent`
+  // 3. Dispatched on Asset Hub, and `Sent` carrying the `cancel`
 
+  // The encoded call holds the referendum index, which depends on how many referenda the live
+  // chain holds, so the snapshot redacts it and the typed check below pins it instead.
   await checkSystemEvents(assetHubClient, { section: 'polkadotXcm', method: 'Sent' })
-    .redact({ hash: false, redactKeys: /^messageId$/ })
+    .redact({ hash: false, redactKeys: /^(messageId|encoded)$/ })
     .toMatchSnapshot('cancel over XCM: Asset Hub sends')
   expect(
     (await dispatchedResults(assetHubClient)).map((result) => result.isOk),
     'the FellowshipAdmin send should dispatch',
   ).toEqual([true])
+  expect(await sentTransactCalls(assetHubClient)).toEqual([referenda.tx.cancel(index).method.toHex()])
 
   // 4. Processed on the Collectives chain, and `Cancelled`
 
@@ -1935,6 +1959,96 @@ export async function cancelByAssetHubFellowshipAdmin(
 
   const info = await referenda.query.referendumInfoFor(index)
   assert(info.isSome && info.unwrap().isCancelled, `referendum ${index} should be cancelled`)
+}
+
+/**
+ * The Ambassador referenda `KillOrigin` also includes the `FellowshipAdmin` voice of Asset Hub, so
+ * Polkadot OpenGov on Asset Hub can kill an Ambassador referendum over XCM, slashing its deposits.
+ *
+ * As for the cancel, the `FellowshipAdmin` origin is injected on Asset Hub (setup), and the
+ * Collectives side is real XCM. The referendum holds only its submission deposit, which is zero on
+ * this runtime, so the kill slashes a zero amount from the submitter.
+ *
+ * 1. Seed a submitter and submit an Ambassador referendum
+ * 2. On Asset Hub, inject `polkadotXcm.send` with the `FellowshipAdmin` origin, carrying
+ *    `ambassadorReferenda.kill` to the Collectives chain
+ * 3. Check the send dispatched, Asset Hub emits `Sent`, and its `Transact` carries the `kill`
+ * 4. On the Collectives chain, check the message is processed successfully, and the referendum
+ *    emits `Killed` and `DepositSlashed` for the submission deposit
+ * 5. Check the referendum is stored as killed in that block
+ */
+export async function killByAssetHubFellowshipAdmin(
+  assetHubClient: Client<any, any>,
+  collectivesClient: Client<any, any>,
+  cfg: RankedReferendaTestConfig,
+) {
+  const referenda = instance(collectivesClient, cfg)
+  const submitter = keyring.addFromUri(`//${cfg.referenda}_xcm_kill_submitter`)
+
+  // 1. Submit an Ambassador referendum
+
+  await seedRankedMembers(
+    collectivesClient,
+    cfg,
+    [{ pair: submitter, rank: cfg.submitAnyTrack.rank }],
+    endowment(collectivesClient, cfg),
+  )
+  const index = await submitReferendum(collectivesClient, cfg, submitter, cfg.track, `${cfg.referenda} xcm kill`)
+
+  // 2. Send the kill from Asset Hub as `FellowshipAdmin`
+
+  const send = createXcmTransactSend(
+    assetHubClient,
+    getXcmRoute(assetHubClient.config, collectivesClient.config),
+    referenda.tx.kill(index).method.toHex(),
+    'Xcm',
+  )
+  await scheduleInlineCallWithOrigin(
+    assetHubClient,
+    send.method.toHex(),
+    { Origins: 'FellowshipAdmin' },
+    assetHubClient.config.properties.schedulerBlockProvider,
+  )
+  await assetHubClient.dev.newBlock()
+
+  // 3. Dispatched on Asset Hub, and `Sent` carrying the `kill`
+
+  // The encoded call holds the live referendum index, so the snapshot redacts it and the typed
+  // check below pins it instead.
+  await checkSystemEvents(assetHubClient, { section: 'polkadotXcm', method: 'Sent' })
+    .redact({ hash: false, redactKeys: /^(messageId|encoded)$/ })
+    .toMatchSnapshot('kill over XCM: Asset Hub sends')
+  expect(
+    (await dispatchedResults(assetHubClient)).map((result) => result.isOk),
+    'the FellowshipAdmin send should dispatch',
+  ).toEqual([true])
+  expect(await sentTransactCalls(assetHubClient)).toEqual([referenda.tx.kill(index).method.toHex()])
+
+  // 4. Processed on the Collectives chain; `Killed` and the slashed submission deposit
+
+  await collectivesClient.dev.newBlock()
+  const killedAt = (await collectivesClient.api.rpc.chain.getHeader()).number.toNumber()
+  await checkSystemEvents(collectivesClient, { section: 'messageQueue', method: 'Processed' }, cfg.referenda)
+    .redact({ hash: false, redactKeys: /^(id|index|origin)$/ })
+    .toMatchSnapshot('kill over XCM: Collectives processes and kills')
+  const events = (await collectivesClient.api.query.system.events()).map(({ event }) => event)
+  const processed = events.filter((event) => collectivesClient.api.events.messageQueue.Processed.is(event))
+  expect(processed.length).toBeGreaterThan(0)
+  for (const event of processed) {
+    assert(collectivesClient.api.events.messageQueue.Processed.is(event))
+    expect(event.data.success.isTrue, 'the kill message should process successfully').toBe(true)
+  }
+  expect(await referendumEvents(collectivesClient, cfg, 'Killed', index)).toHaveLength(1)
+  const slashed = events
+    .filter((event) => referenda.events.DepositSlashed.is(event))
+    .map((event) => [(event.data as any).who.toHex(), (event.data as any).amount.toBigInt()])
+  expect(slashed).toEqual([[u8aToHex(submitter.publicKey), referenda.consts.submissionDeposit.toBigInt()]])
+
+  // 5. Stored as killed
+
+  const info = await referenda.query.referendumInfoFor(index)
+  assert(info.isSome && info.unwrap().isKilled, `referendum ${index} should be killed`)
+  expect(info.unwrap().asKilled.toNumber()).toBe(killedAt)
 }
 
 /// -------
@@ -2412,24 +2526,26 @@ export async function timeOutWithoutDeposit(client: Client<any, any>, cfg: Ranke
 
 /**
  * Move a deciding referendum's decision start back to 20 blocks before the end of its decision
- * period, then cast one aye vote at the track's minimum rank, and build the block after it.
- * Near the end of the decision period both curves are close to their floors, so one aye passes,
- * and the vote's own alarm services the referendum in the next block. Returns the vote block.
+ * period, then have every one of `voters` vote aye, and build the block holding those votes.
+ * Near the end of the decision period both curves are close to their floors, so a few ayes pass,
+ * and the votes' own alarm services the referendum in the next block. Returns the vote block.
  *
- * Setup shared by the confirmation tests; the vote and its tally are real.
+ * Setup shared by the confirmation tests; the votes and the tally are real.
  */
 async function voteIntoConfirmation(
   client: Client<any, any>,
   cfg: RankedReferendaTestConfig,
   trackId: number,
   index: number,
-  voter: KeyringPair,
+  voters: KeyringPair[],
 ): Promise<number> {
   const referenda = instance(client, cfg)
   const head = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const decisionPeriod = trackInfo(client, cfg, trackId).decisionPeriod.toNumber()
   await setTimeAnchors(client, cfg, index, { deciding: { since: head - decisionPeriod + 20, confirming: null } })
-  await sendTransaction(referenda.collectiveTx.vote(index, true).signAsync(voter))
+  for (const voter of voters) {
+    await sendTransaction(referenda.collectiveTx.vote(index, true).signAsync(voter))
+  }
   await client.dev.newBlock()
   return (await client.api.rpc.chain.getHeader()).number.toNumber()
 }
@@ -2460,7 +2576,7 @@ export async function confirmStartsOnPassingTally(client: Client<any, any>, cfg:
 
   // 2. Move the decision start back, and vote aye
 
-  const voteBlock = await voteIntoConfirmation(client, cfg, cfg.track.id, index, member)
+  const voteBlock = await voteIntoConfirmation(client, cfg, cfg.track.id, index, [member])
 
   // 3. `Voted`, the tally, and the alarm
 
@@ -2520,7 +2636,7 @@ export async function confirmAbortsWhenTallyFails(client: Client<any, any>, cfg:
 
   // 2. Into confirmation
 
-  await voteIntoConfirmation(client, cfg, cfg.track.id, index, aye)
+  await voteIntoConfirmation(client, cfg, cfg.track.id, index, [aye])
   await client.dev.newBlock()
   expect(await referendumEvents(client, cfg, 'ConfirmStarted', index)).toHaveLength(1)
 
@@ -2561,7 +2677,9 @@ export async function confirmAbortsWhenTallyFails(client: Client<any, any>, cfg:
  * 5. Check the enactment task: named for the referendum, due after `minEnactmentPeriod` (at least
  *    one block), carrying the proposal and the track's origin
  * 6. Build the next block, and check the track's deciding count is back where it started
- * 7. Check both deposits are refunded after approval
+ * 7. The payer refunds both deposits
+ * 8. Check each refund event names its depositor and amount, the payer's deposit moved from
+ *    reserved back to free (less the fee), and the approved referendum holds neither deposit
  */
 export async function confirmedAndEnactmentScheduled(client: Client<any, any>, cfg: RankedReferendaTestConfig) {
   const referenda = instance(client, cfg)
@@ -2579,7 +2697,7 @@ export async function confirmedAndEnactmentScheduled(client: Client<any, any>, c
 
   // 2. Into confirmation
 
-  await voteIntoConfirmation(client, cfg, cfg.track.id, index, member)
+  await voteIntoConfirmation(client, cfg, cfg.track.id, index, [member])
   await client.dev.newBlock()
   expect(await referendumEvents(client, cfg, 'ConfirmStarted', index)).toHaveLength(1)
 
@@ -2624,16 +2742,44 @@ export async function confirmedAndEnactmentScheduled(client: Client<any, any>, c
   await client.dev.newBlock()
   expect((await referenda.query.decidingCount(cfg.track.id)).toNumber()).toBe(decidingCountBefore)
 
-  // 7. Both deposits are refunded after approval
+  // 7. The payer refunds both deposits
 
+  const payerBefore = (await client.api.query.system.account(payer.address)).data
   await sendTransaction(
     client.api.tx.utility
       .batchAll([referenda.tx.refundDecisionDeposit(index), referenda.tx.refundSubmissionDeposit(index)])
       .signAsync(payer),
   )
   await client.dev.newBlock()
-  expect(await referendumEvents(client, cfg, 'DecisionDepositRefunded', index)).toHaveLength(1)
-  expect(await referendumEvents(client, cfg, 'SubmissionDepositRefunded', index)).toHaveLength(1)
+
+  // 8. Refund events, balances, and the approved record
+
+  await checkSystemEvents(
+    client,
+    { section: cfg.referenda, method: 'DecisionDepositRefunded' },
+    { section: cfg.referenda, method: 'SubmissionDepositRefunded' },
+  )
+    .redact({ redactKeys: /^index$/ })
+    .toMatchSnapshot('confirmed: both deposits refunded after approval')
+  const deposit = track.decisionDeposit.toBigInt()
+  const decisionRefunds = await referendumEvents(client, cfg, 'DecisionDepositRefunded', index)
+  expect(decisionRefunds.map((data) => [data.who.toHex(), data.amount.toBigInt()])).toEqual([
+    [u8aToHex(payer.publicKey), deposit],
+  ])
+  const submissionRefunds = await referendumEvents(client, cfg, 'SubmissionDepositRefunded', index)
+  expect(submissionRefunds.map((data) => [data.who.toHex(), data.amount.toBigInt()])).toEqual([
+    [u8aToHex(member.publicKey), referenda.consts.submissionDeposit.toBigInt()],
+  ])
+  const fee = await feePaidBy(client, payer)
+  const payerAfter = (await client.api.query.system.account(payer.address)).data
+  expect(payerBefore.reserved.toBigInt() - payerAfter.reserved.toBigInt()).toBe(deposit)
+  expect(payerAfter.free.toBigInt() - payerBefore.free.toBigInt()).toBe(deposit - fee)
+  const refunded = await referenda.query.referendumInfoFor(index)
+  assert(refunded.isSome && refunded.unwrap().isApproved, `referendum ${index} should still be approved`)
+  const [refundedMoment, submissionLeft, decisionLeft] = refunded.unwrap().asApproved
+  expect(refundedMoment.toNumber()).toBe(confirmedAt)
+  expect(submissionLeft.isNone).toBe(true)
+  expect(decisionLeft.isNone).toBe(true)
 }
 
 /**
@@ -3341,61 +3487,86 @@ export async function retentionTrackMinimumRank(client: Client<any, any>, cfg: R
 /**
  * Support is the share of members at the track's minimum rank who voted aye, so on a retention
  * track it is counted against the rank-5 tier, not the whole Fellowship. Near the end of the
- * decision period track 13's support curve is at its floor. One aye among the few rank-5 members
- * clears that floor, while one aye among all rank-3 members would not, so `ConfirmStarted` shows
- * which tier the support was counted against.
+ * decision period track 13's support curve is at its floor. The test casts just enough rank-5 ayes
+ * to clear that floor against the rank-5 tier, while the same ayes stay below it against the
+ * rank-3 tier, so `ConfirmStarted` shows which tier the support was counted against.
  *
- * The decision start is moved back to 20 blocks before the end of the decision period; the vote and
- * the member counts are real.
+ * Both tiers are live, so the number of voters is worked out from the live member counts, and
+ * rank-3 members who do not vote are added when the rank-3 tier is too small to keep the two
+ * apart. The decision start is moved back to 20 blocks before the end of the decision period; the
+ * votes and the member counts are real.
  *
- * 1. Seed a rank-3 submitter, a payer and a rank-5 voter; open a deciding referendum on track 13
- * 2. Check, from the live member counts, that one aye clears the support threshold against the
+ * 1. From the live member counts, work out how many rank-5 voters clear the support threshold, and
+ *    how many extra rank-3 members keep the same ayes below it against the rank-3 tier
+ * 2. Seed a rank-3 submitter, the rank-5 voters and the extra rank-3 members, fund a payer, and
+ *    open a deciding referendum on track 13
+ * 3. Check, from the member counts after seeding, that the ayes clear the threshold against the
  *    rank-5 tier but not against the rank-3 tier
- * 3. Move the decision start back, and the rank-5 member votes aye
- * 4. Build the next block, and check `ConfirmStarted` for the referendum
+ * 4. Move the decision start back, and every rank-5 voter votes aye
+ * 5. Build the next block, and check `ConfirmStarted` for the referendum
  */
 export async function retentionSupportCountsMinimumRank(client: Client<any, any>, cfg: RankedReferendaTestConfig) {
   const referenda = instance(client, cfg)
   const submitter = keyring.addFromUri(`//${cfg.referenda}_support_submitter`)
   const payer = keyring.addFromUri(`//${cfg.referenda}_support_payer`)
-  const voter = keyring.addFromUri(`//${cfg.referenda}_support_rank_5`)
   const track: RankedReferendaTrack = { id: 13, origin: { FellowshipOrigins: 'RetainAt3Dan' } }
   const info = trackInfo(client, cfg, track.id)
 
-  // 1. A deciding referendum on track 13
+  // 1. Size the voters and the extra rank-3 members from the live tiers
+
+  // The votes land 19 blocks and are serviced 18 blocks before the end of the decision period, where
+  // a linear decreasing curve has fallen to `floor + (ceil - floor) * 18 / decisionPeriod`.
+  const curve = info.minSupport.asLinearDecreasing
+  const floor = curve.floor.toNumber() / 1e9
+  const ceil = curve.ceil.toNumber() / 1e9
+  const threshold = floor + ((ceil - floor) * 18) / info.decisionPeriod.toNumber()
+  expect(threshold, 'the support threshold must be reachable').toBeLessThan(1)
+  const liveRank5 = (await referenda.collectiveQuery.memberCount(5)).toNumber()
+  const liveRank3 = (await referenda.collectiveQuery.memberCount(3)).toNumber()
+  // The fewest rank-5 voters whose ayes reach the threshold once they are counted in the rank-5 tier.
+  let voterCount = 1
+  while (voterCount / (liveRank5 + voterCount) < threshold) voterCount++
+  // Extra rank-3 members until the same ayes fall below the threshold against the rank-3 tier,
+  // which also counts the voters.
+  let extraCount = 0
+  while (voterCount / (liveRank3 + voterCount + extraCount) >= threshold) extraCount++
+  const voters = Array.from({ length: voterCount }, (_, i) =>
+    keyring.addFromUri(`//${cfg.referenda}_support_rank_5_${i}`),
+  )
+  const extras = Array.from({ length: extraCount }, (_, i) =>
+    keyring.addFromUri(`//${cfg.referenda}_support_rank_3_${i}`),
+  )
+
+  // 2. Seed, and open a deciding referendum on track 13
 
   await seedRankedMembers(
     client,
     cfg,
     [
       { pair: submitter, rank: 3 },
-      { pair: voter, rank: 5 },
+      ...voters.map((pair) => ({ pair, rank: 5 })),
+      ...extras.map((pair) => ({ pair, rank: 3 })),
     ],
     endowment(client, cfg),
   )
   await fundAccounts(client, [payer], endowment(client, cfg))
   const index = await openDecidingReferendum(client, cfg, submitter, payer, track, `${cfg.referenda} support`)
 
-  // 2. One aye clears the threshold against rank 5, not against rank 3
+  // 3. The ayes clear the threshold against rank 5, not against rank 3
 
-  // The vote lands 19 blocks and is serviced 18 blocks before the end of the decision period, where
-  // a linear decreasing curve has fallen to `floor + (ceil - floor) * 18 / decisionPeriod`.
-  const curve = info.minSupport.asLinearDecreasing
-  const floor = curve.floor.toNumber() / 1e9
-  const ceil = curve.ceil.toNumber() / 1e9
-  const threshold = floor + ((ceil - floor) * 18) / info.decisionPeriod.toNumber()
   const membersAtRank5 = (await referenda.collectiveQuery.memberCount(5)).toNumber()
   const membersAtRank3 = (await referenda.collectiveQuery.memberCount(3)).toNumber()
-  expect(1 / membersAtRank5, 'one aye among rank-5 members should clear the support floor').toBeGreaterThanOrEqual(
-    threshold,
-  )
-  expect(1 / membersAtRank3, 'one aye among rank-3 members should not').toBeLessThan(threshold)
+  expect(
+    voterCount / membersAtRank5,
+    'the ayes among rank-5 members should clear the threshold',
+  ).toBeGreaterThanOrEqual(threshold)
+  expect(voterCount / membersAtRank3, 'the same ayes among rank-3 members should not').toBeLessThan(threshold)
 
-  // 3. Move the decision start back, and vote
+  // 4. Move the decision start back, and vote
 
-  await voteIntoConfirmation(client, cfg, track.id, index, voter)
+  await voteIntoConfirmation(client, cfg, track.id, index, voters)
 
-  // 4. `ConfirmStarted`
+  // 5. `ConfirmStarted`
 
   await client.dev.newBlock()
   await checkSystemEvents(client, { section: cfg.referenda, method: 'ConfirmStarted' })
@@ -3831,6 +4002,11 @@ export function ambassadorReferendaE2ETests<
             kind: 'test',
             label: 'cancel - FellowshipAdmin voice from Asset Hub over XCM, Cancelled',
             testFn: () => cancelByAssetHubFellowshipAdmin(assetHubClient, collectivesClient, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'kill - FellowshipAdmin voice from Asset Hub over XCM, Killed',
+            testFn: () => killByAssetHubFellowshipAdmin(assetHubClient, collectivesClient, testConfig),
           },
         ],
       },

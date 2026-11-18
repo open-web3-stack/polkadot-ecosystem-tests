@@ -471,6 +471,29 @@ exports[`Polkadot Fellowship referenda > lifecycle > nudgeReferendum - confirm p
 ]
 `;
 
+exports[`Polkadot Fellowship referenda > lifecycle > nudgeReferendum - confirm period over, Confirmed and enactment scheduled > confirmed: both deposits refunded after approval 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000,
+      "index": "(redacted)",
+      "who": "15mHy7jVWFxBRjmeT9kFgUiLorQ7WKN7PsPS6Ua2Bx72GMaR",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "index": "(redacted)",
+      "who": "1c54CKDGksNH9wo9KqprswVR5XUiLnpP899vn3jVidAS3cU",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
 exports[`Polkadot Fellowship referenda > lifecycle > nudgeReferendum - decision period over without passing, Rejected > rejected at decision end: Rejected 1`] = `
 [
   {
@@ -1119,7 +1142,7 @@ exports[`Polkadot Fellowship referenda > submission > submit - allow-listed acco
           ],
         },
       },
-      "oldValue": null,
+      "oldValue": "(redacted)",
     },
     "method": "Updated",
     "section": "parameters",

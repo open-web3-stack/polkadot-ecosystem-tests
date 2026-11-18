@@ -202,6 +202,29 @@ exports[`Kusama Fellowship referenda > lifecycle > nudgeReferendum - confirm per
 ]
 `;
 
+exports[`Kusama Fellowship referenda > lifecycle > nudgeReferendum - confirm period over, Confirmed and enactment scheduled > confirmed: both deposits refunded after approval 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 330000000000)",
+      "index": "(redacted)",
+      "who": "HLcV6pJGqhdjraaGDWJSHFC6pghcgd9mkVhKqrd7fHzq3ZL",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "fellowshipReferenda",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "index": "(redacted)",
+      "who": "DBPaBQ23LcpbGkixPbscgULi3p4pi3rm1FRA9LLRRp8zmo5",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "fellowshipReferenda",
+  },
+]
+`;
+
 exports[`Kusama Fellowship referenda > lifecycle > nudgeReferendum - no decision deposit by the timeout, TimedOut > timeout without deposit: TimedOut 1`] = `
 [
   {

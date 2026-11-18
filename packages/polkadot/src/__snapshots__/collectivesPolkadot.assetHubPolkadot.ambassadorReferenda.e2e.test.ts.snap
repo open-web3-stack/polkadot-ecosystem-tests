@@ -24,7 +24,7 @@ exports[`Polkadot Ambassador referenda > cancel and kill > cancel - FellowshipAd
         {
           "Transact": {
             "call": {
-              "encoded": "0x470301000000",
+              "encoded": "(redacted)",
             },
             "fallbackMaxWeight": {
               "proofSize": 10000,
@@ -157,6 +157,101 @@ exports[`Polkadot Ambassador referenda > cancel and kill > cancel - other origin
     },
     "method": "Dispatched",
     "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Ambassador referenda > cancel and kill > kill - FellowshipAdmin voice from Asset Hub over XCM, Killed > kill over XCM: Asset Hub sends 1`] = `
+[
+  {
+    "data": {
+      "destination": {
+        "interior": {
+          "X1": [
+            {
+              "Parachain": "(rounded 1000)",
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "message": [
+        {
+          "UnpaidExecution": {
+            "checkOrigin": null,
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "Transact": {
+            "call": {
+              "encoded": "(redacted)",
+            },
+            "fallbackMaxWeight": {
+              "proofSize": 10000,
+              "refTime": 100000000,
+            },
+            "originKind": "Xcm",
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": {
+                  "Index": 1,
+                },
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`Polkadot Ambassador referenda > cancel and kill > kill - FellowshipAdmin voice from Asset Hub over XCM, Killed > kill over XCM: Collectives processes and kills 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "bareAyes": 0,
+        "nays": 0,
+      },
+    },
+    "method": "Killed",
+    "section": "ambassadorReferenda",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "who": "16feu3FNWQkQeqd2i4U2pEzNUss4W94ccj7i8xVr5EiGmwsx",
+    },
+    "method": "DepositSlashed",
+    "section": "ambassadorReferenda",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": "(redacted)",
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 200000)",
+        "refTime": "(rounded 700000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
   },
 ]
 `;
@@ -495,6 +590,29 @@ exports[`Polkadot Ambassador referenda > lifecycle > nudgeReferendum - confirm p
       },
     },
     "method": "Confirmed",
+    "section": "ambassadorReferenda",
+  },
+]
+`;
+
+exports[`Polkadot Ambassador referenda > lifecycle > nudgeReferendum - confirm period over, Confirmed and enactment scheduled > confirmed: both deposits refunded after approval 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000,
+      "index": "(redacted)",
+      "who": "143W5WPxGRVcbZ1CLgnE1F6rxkqfxZEGMDxx3GJh4Pf3Yfwq",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "ambassadorReferenda",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "index": "(redacted)",
+      "who": "16UQCnWJnVTnEL3XT67DYHfH645PaEQzJnm1UCLeGtcBjzoi",
+    },
+    "method": "SubmissionDepositRefunded",
     "section": "ambassadorReferenda",
   },
 ]
