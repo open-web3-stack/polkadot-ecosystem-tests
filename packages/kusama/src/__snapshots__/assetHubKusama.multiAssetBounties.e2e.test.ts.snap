@@ -189,14 +189,14 @@ exports[`Kusama Asset Hub Multi-Asset Bounties > Award > award and settle in sec
       },
       "childIndex": null,
       "index": "(bounty index)",
-      "value": "(rounded 8000000000)",
+      "value": "(redacted)",
     },
     "method": "BountyPayoutProcessed",
     "section": "multiAssetBounties",
   },
   {
     "data": {
-      "amount": "(rounded 100000000000)",
+      "amount": "(redacted)",
       "reason": {
         "MultiAssetBounties": "CuratorDeposit",
       },

@@ -412,6 +412,19 @@ function redactBountyIndex(events: any[]) {
 const VOLATILE_KEYS = { redactKeys: /^task$/ }
 
 /**
+ * `VOLATILE_KEYS`, plus the amounts in the events of a bounty in `asset`. For steps whose events
+ * carry the bounty's value or a curator deposit computed from it.
+ *
+ * For an asset priced through `AssetRate`, both follow the asset's live rate, so a rate update
+ * would change the snapshot of a correct run. They are redacted there, and the test asserts each
+ * of them exactly against the rate it read. A native bounty's amounts come from chain constants
+ * alone, and stay in the snapshot.
+ */
+function volatileKeysWithAmounts(asset: BountyAsset) {
+  return asset.pallet === 'balances' ? VOLATILE_KEYS : { redactKeys: /^(task|value|oldValue|newValue|amount)$/ }
+}
+
+/**
  * Fund a bounty as `Treasurer`, and return its index as `BountyCreated` reports it. The bounty
  * is left `FundingAttempted`, with `curator` proposed.
  */
@@ -633,17 +646,22 @@ async function fundBountyMovesFunds(client: Client<any, any>, asset: BountyAsset
 }
 
 /**
- * The `SmallTipper` track may fund a bounty worth exactly its spend limit, measured in native
- * value after conversion.
+ * The `SmallTipper` track may fund a bounty worth up to its spend limit, measured in native value
+ * after conversion.
  *
- * 1. Fund a bounty worth the track's limit as `SmallTipper`
+ * The value funded is the largest the limit admits. For the native asset that is the limit itself.
+ * For a priced asset the limit need not be a whole number of asset units, so it is the last value
+ * whose native worth, rounded down, still fits.
+ *
+ * 1. Fund a bounty of the largest value within the track's limit as `SmallTipper`
  * 2. Verify the call dispatched and created the bounty with that value
  */
 async function fundAtSmallTipperLimit(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
   const asset = testConfig.primaryAsset
   const rate = await rateOf(client, asset)
-  const value = (testConfig.smallTipperLimit * RATE_ONE) / rate
-  expect(toNative(value, rate)).toBe(testConfig.smallTipperLimit)
+  const value = fromNative(testConfig.smallTipperLimit + 1n, rate) - 1n
+  expect(toNative(value, rate)).toBeLessThanOrEqual(testConfig.smallTipperLimit)
+  expect(toNative(value + 1n, rate)).toBeGreaterThan(testConfig.smallTipperLimit)
   const index = await nextBountyIndex(client)
 
   // 1. Fund at the limit as SmallTipper
@@ -661,17 +679,20 @@ async function fundAtSmallTipperLimit(client: Client<any, any>, testConfig: Mult
 }
 
 /**
- * One unit above the `SmallTipper` limit, the track may not fund the bounty.
+ * One unit above the largest value the `SmallTipper` limit admits, the track may not fund the
+ * bounty.
  *
- * 1. Fund a bounty worth one unit more than the track's limit as `SmallTipper`
+ * 1. Fund a bounty of the smallest value whose native worth exceeds the track's limit as
+ *    `SmallTipper`
  * 2. Verify the call failed with `InsufficientPermission`
  * 3. Verify no bounty was created and the treasury kept its funds
  */
 async function fundAboveSmallTipperLimitFails(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
   const asset = testConfig.primaryAsset
   const rate = await rateOf(client, asset)
-  const value = (testConfig.smallTipperLimit * RATE_ONE) / rate + 1n
+  const value = fromNative(testConfig.smallTipperLimit + 1n, rate)
   expect(toNative(value, rate)).toBeGreaterThan(testConfig.smallTipperLimit)
+  expect(toNative(value - 1n, rate)).toBeLessThanOrEqual(testConfig.smallTipperLimit)
   const index = await nextBountyIndex(client)
   const treasuryBefore = await balanceOf(client, asset, treasuryPot(client))
 
@@ -1016,7 +1037,7 @@ async function acceptCuratorHoldsDeposit(client: Client<any, any>, testConfig: M
   // 3. BountyBecameActive and Held
   await checkSystemEvents(client, ...DEPOSIT_EVENTS)
     .map(redactBountyIndex)
-    .redact(VOLATILE_KEYS)
+    .redact(volatileKeysWithAmounts(asset))
     .toMatchSnapshot('accept curator: events')
   await expectNoExtrinsicFailure(client)
   const active = await bountyEvent(client, 'BountyBecameActive', index)
@@ -1156,7 +1177,7 @@ async function curatorUnassignsSelf(client: Client<any, any>, testConfig: MultiA
   // 3. CuratorUnassigned and Released
   await checkSystemEvents(client, ...DEPOSIT_EVENTS)
     .map(redactBountyIndex)
-    .redact(VOLATILE_KEYS)
+    .redact(volatileKeysWithAmounts(asset))
     .toMatchSnapshot('curator unassigns self: events')
   await expectNoExtrinsicFailure(client)
   await bountyEvent(client, 'CuratorUnassigned', index)
@@ -1197,7 +1218,7 @@ async function treasurerUnassignsCuratorBurnsDeposit(
   // 3. CuratorUnassigned and BurnedHeld
   await checkSystemEvents(client, ...DEPOSIT_EVENTS)
     .map(redactBountyIndex)
-    .redact(VOLATILE_KEYS)
+    .redact(volatileKeysWithAmounts(asset))
     .toMatchSnapshot('treasurer unassigns curator: events')
   expectDispatchOk(result)
   await bountyEvent(client, 'CuratorUnassigned', index)
@@ -1462,7 +1483,7 @@ async function awardAndSettle(client: Client<any, any>, asset: BountyAsset) {
   // 5. BountyPayoutProcessed and Released
   await checkSystemEvents(client, ...DEPOSIT_EVENTS)
     .map(redactBountyIndex)
-    .redact(VOLATILE_KEYS)
+    .redact(volatileKeysWithAmounts(asset))
     .toMatchSnapshot(`settle payout in ${asset.symbol}: events`)
   await expectNoExtrinsicFailure(client)
   const processed = await bountyEvent(client, 'BountyPayoutProcessed', index)
@@ -1660,7 +1681,7 @@ async function curatorClosesOwnBounty(client: Client<any, any>, testConfig: Mult
   // 5. Deposit released, not burned
   await checkSystemEvents(client, ...DEPOSIT_EVENTS)
     .map(redactBountyIndex)
-    .redact(VOLATILE_KEYS)
+    .redact(volatileKeysWithAmounts(asset))
     .toMatchSnapshot('settle refund of curator-closed bounty: events')
   await expectNoExtrinsicFailure(client)
   await bountyEvent(client, 'BountyRefundProcessed', index)
@@ -1996,7 +2017,7 @@ async function awardChildThenParent(client: Client<any, any>, testConfig: MultiA
   // 5. BountyPayoutProcessed, child removed
   await checkSystemEvents(client, ...DEPOSIT_EVENTS)
     .map(redactBountyIndex)
-    .redact(VOLATILE_KEYS)
+    .redact(volatileKeysWithAmounts(asset))
     .toMatchSnapshot('settle child payout: events')
   await expectNoExtrinsicFailure(client)
   expect((await bountyEvent(client, 'BountyPayoutProcessed', index)).data.value.toBigInt()).toBe(cv)
@@ -2365,7 +2386,7 @@ async function increaseValueRepricesDeposit(client: Client<any, any>, testConfig
   // 3. BountyValueIncreased and Held
   await checkSystemEvents(client, ...DEPOSIT_EVENTS)
     .map(redactBountyIndex)
-    .redact(VOLATILE_KEYS)
+    .redact(volatileKeysWithAmounts(asset))
     .toMatchSnapshot('increase value: events')
   await expectNoExtrinsicFailure(client)
   const increased = await bountyEvent(client, 'BountyValueIncreased', index)

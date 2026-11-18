@@ -91,14 +91,14 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Award > award and settle in pr
       },
       "childIndex": null,
       "index": "(bounty index)",
-      "value": 6000000000,
+      "value": "(redacted)",
     },
     "method": "BountyPayoutProcessed",
     "section": "multiAssetBounties",
   },
   {
     "data": {
-      "amount": 600000000000,
+      "amount": "(redacted)",
       "reason": {
         "MultiAssetBounties": "CuratorDeposit",
       },
@@ -276,7 +276,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Child bounties > award child, 
       },
       "childIndex": 0,
       "index": "(bounty index)",
-      "value": 200000000,
+      "value": "(redacted)",
     },
     "method": "BountyPayoutProcessed",
     "section": "multiAssetBounties",
@@ -750,7 +750,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Close > curator closes own Act
   },
   {
     "data": {
-      "amount": 600000000000,
+      "amount": "(redacted)",
       "reason": {
         "MultiAssetBounties": "CuratorDeposit",
       },
@@ -782,7 +782,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Curator > Treasurer unassigns 
 [
   {
     "data": {
-      "amount": 600000000000,
+      "amount": "(redacted)",
       "reason": {
         "MultiAssetBounties": "CuratorDeposit",
       },
@@ -840,7 +840,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Curator > accept curator - dep
 [
   {
     "data": {
-      "amount": 600000000000,
+      "amount": "(redacted)",
       "reason": {
         "MultiAssetBounties": "CuratorDeposit",
       },
@@ -912,7 +912,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Curator > curator unassigns se
 [
   {
     "data": {
-      "amount": 600000000000,
+      "amount": "(redacted)",
       "reason": {
         "MultiAssetBounties": "CuratorDeposit",
       },
@@ -1240,7 +1240,7 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Increase value > increase valu
 [
   {
     "data": {
-      "amount": 200000000000,
+      "amount": "(redacted)",
       "reason": {
         "MultiAssetBounties": "CuratorDeposit",
       },
@@ -1252,8 +1252,8 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Increase value > increase valu
   {
     "data": {
       "index": "(bounty index)",
-      "newValue": 8000000000,
-      "oldValue": 6000000000,
+      "newValue": "(redacted)",
+      "oldValue": "(redacted)",
     },
     "method": "BountyValueIncreased",
     "section": "multiAssetBounties",
