@@ -13,37 +13,47 @@ name: Test - release gate self-run
 
 on:
   workflow_dispatch: {}
+  # Temporary: dispatch cannot see a workflow that is not on the default branch yet.
+  # Remove this trigger when the file reaches master.
+  push:
+    branches: [release-gate]
 
 jobs:
   candidate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Fetch the live runtime as the candidate
+      - name: Fetch the live runtimes as candidates
         run: |
           mkdir -p out
           python3 - <<'PY'
           import json, urllib.request
-          body = json.dumps({
-              "id": 1, "jsonrpc": "2.0",
-              "method": "state_getStorage",
-              "params": ["0x3a636f6465"],
-          }).encode()
-          req = urllib.request.Request(
-              "https://asset-hub-westend-rpc.n.dwellir.com",
-              data=body, headers={"Content-Type": "application/json"})
-          code = json.load(urllib.request.urlopen(req, timeout=120))["result"]
-          wasm = bytes.fromhex(code[2:])
-          with open("out/asset_hub_westend_runtime.compact.compressed.wasm", "wb") as f:
-              f.write(wasm)
-          print(f"candidate wasm: {len(wasm)} bytes")
+          chains = {
+              "westend_runtime": "https://westend-rpc.n.dwellir.com",
+              "asset_hub_westend_runtime": "https://asset-hub-westend-rpc.n.dwellir.com",
+              "people_westend_runtime": "https://people-westend-rpc.n.dwellir.com",
+              "coretime_westend_runtime": "https://coretime-westend-rpc.n.dwellir.com",
+              "bridge_hub_westend_runtime": "https://bridge-hub-westend-rpc.n.dwellir.com",
+          }
+          for name, url in chains.items():
+              body = json.dumps({
+                  "id": 1, "jsonrpc": "2.0",
+                  "method": "state_getStorage",
+                  "params": ["0x3a636f6465"],
+              }).encode()
+              req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+              code = json.load(urllib.request.urlopen(req, timeout=120))["result"]
+              wasm = bytes.fromhex(code[2:])
+              with open(f"out/{name}.compact.compressed.wasm", "wb") as f:
+                  f.write(wasm)
+              print(f"{name}: {len(wasm)} bytes")
           PY
 
       - name: Upload as a runtime artifact
         uses: actions/upload-artifact@v6
         with:
-          name: asset-hub-westend-runtime
-          path: out/asset_hub_westend_runtime.compact.compressed.wasm
+          name: self-run-westend-runtime
+          path: out/*.wasm
           if-no-files-found: error
           retention-days: 1
 

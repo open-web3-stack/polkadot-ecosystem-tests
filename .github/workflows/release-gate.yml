@@ -60,7 +60,14 @@ jobs:
         run: |
           case "${{ inputs.environment }}" in
             westend)
-              echo 'chains=[{"chain":"assetHubWestend","port":9200,"endpoint_var":"ASSETHUBWESTEND_ENDPOINT","wasm_var":"ASSETHUBWESTEND_WASM","wasm_blob":"asset_hub_westend_runtime.compact.compressed.wasm"}]' >> "$GITHUB_OUTPUT"
+              CHAINS='[
+                {"chain":"westend","port":9201,"endpoint_var":"WESTEND_ENDPOINT","wasm_var":"WESTEND_WASM","wasm_blob":"westend_runtime.compact.compressed.wasm"},
+                {"chain":"assetHubWestend","port":9200,"endpoint_var":"ASSETHUBWESTEND_ENDPOINT","wasm_var":"ASSETHUBWESTEND_WASM","wasm_blob":"asset_hub_westend_runtime.compact.compressed.wasm"},
+                {"chain":"peopleWestend","port":9202,"endpoint_var":"PEOPLEWESTEND_ENDPOINT","wasm_var":"PEOPLEWESTEND_WASM","wasm_blob":"people_westend_runtime.compact.compressed.wasm"},
+                {"chain":"coretimeWestend","port":9203,"endpoint_var":"CORETIMEWESTEND_ENDPOINT","wasm_var":"CORETIMEWESTEND_WASM","wasm_blob":"coretime_westend_runtime.compact.compressed.wasm"},
+                {"chain":"bridgeHubWestend","port":9204,"endpoint_var":"BRIDGEHUBWESTEND_ENDPOINT","wasm_var":"BRIDGEHUBWESTEND_WASM","wasm_blob":"bridge_hub_westend_runtime.compact.compressed.wasm"}
+              ]'
+              echo "chains=$(echo "$CHAINS" | jq -c .)" >> "$GITHUB_OUTPUT"
               echo 'test_script=test:westend' >> "$GITHUB_OUTPUT"
               ;;
             *)
