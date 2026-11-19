@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, captureSnapshot, createNetworks, dmpQueuesClearance, testAccounts } from '@e2e-test/networks'
+import { type Chain, captureSnapshot, clearDmpQueues, createNetworks, testAccounts } from '@e2e-test/networks'
 import type { Client, RootTestTree } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -1411,7 +1411,6 @@ async function unappliedSlashTest<
       ParasDisputes: {
         $removePrefix: ['disputes', 'included'],
       },
-      Dmp: dmpQueuesClearance(client.api),
       Staking: {
         $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
       },
@@ -1419,6 +1418,7 @@ async function unappliedSlashTest<
         $removePrefix: ['nextKeys'],
       },
     })
+    await clearDmpQueues(client)
   }
 
   // With this block, the slash will have been applied.
@@ -1627,7 +1627,6 @@ async function cancelDeferredSlashTest<
       ParasDisputes: {
         $removePrefix: ['disputes', 'included'],
       },
-      Dmp: dmpQueuesClearance(client.api),
       Staking: {
         $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
       },
@@ -1635,6 +1634,7 @@ async function cancelDeferredSlashTest<
         $removePrefix: ['nextKeys'],
       },
     })
+    await clearDmpQueues(client)
   }
 
   // This new block marks the start of the new era.
