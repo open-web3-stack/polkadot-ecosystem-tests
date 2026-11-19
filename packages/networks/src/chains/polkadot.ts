@@ -25,10 +25,9 @@ const getInitStorages = () => ({
     // these can makes block building super slow
     $removePrefix: ['disputes'],
   },
-  Dmp: {
-    // clear existing dmp to avoid impacting test result
-    $removePrefix: ['downwardMessageQueues'],
-  },
+  // The DMP queues are cleared by `createNetwork`, which picks the storage layout the
+  // runtime has; a static entry here would name the wrong item on one side of the 2.6.0
+  // paged-DMP migration.
 })
 
 export const polkadot = defineChain({
