@@ -6,51 +6,54 @@ import { xxhashAsU8a } from '@polkadot/util-crypto'
 
 import { assert, test } from 'vitest'
 
-const retiredPrefix = () => u8aConcat(xxhashAsU8a('Dmp', 128), xxhashAsU8a('DownwardMessageQueues', 128))
+const oldItemPrefix = () => u8aConcat(xxhashAsU8a('Dmp', 128), xxhashAsU8a('DownwardMessageQueues', 128))
 
-const retiredKey = (paraId: number) => {
+const oldItemKey = (paraId: number) => {
   const id = new Uint8Array(4)
   new DataView(id.buffer).setUint32(0, paraId, true)
-  return u8aToHex(u8aConcat(retiredPrefix(), xxhashAsU8a(id, 64), id))
+  return u8aToHex(u8aConcat(oldItemPrefix(), xxhashAsU8a(id, 64), id))
 }
 
 // Vec with one InboundDownwardMessage { sentAt: 1, msg: 0xdeadbeef }
-const retiredValue = '0x040100000010deadbeef'
+const oldItemValue = '0x040100000010deadbeef'
 
 /**
- * Regression case for the paged-DMP cleanup in `clearDmpQueues`.
+ * Regression test for `clearDmpQueues` on runtimes with paged DMP storage.
  *
- * polkadot-sdk stable2609 moved the DMP queues to paged storage, and the runtime migrates
- * entries it finds under the retired `DownwardMessageQueues` prefix. A fork that overrides
- * a pre-upgrade block therefore resurrects retired-prefix messages into the paged queues
- * one block later, which is exactly the fork traffic the cleanup exists to remove. The
- * cleanup must delete the retired prefix too, by raw key, since the paged metadata cannot
- * name it.
+ * polkadot-sdk stable2609 moved the relay chain's downward message queues to paged storage.
+ * The old item, `DownwardMessageQueues`, is gone from the metadata, but a fork that loads a
+ * 2.6.0 wasm on top of an older block still has its messages stored under the old keys. The
+ * runtime migrates those messages into the paged queues in the next block. So a cleanup that
+ * only clears the paged items loses: the old messages come back one block after it ran. The
+ * cleanup has to delete the old keys too, and since the metadata no longer knows the old
+ * item, it computes the storage prefix by hand.
  *
- * The test needs a paged-DMP runtime: it runs under a 2.6.0+ wasm override and after
- * enactment, and skips on earlier runtimes.
+ * This situation only exists on a runtime with paged DMP, so the test skips on older
+ * runtimes. It runs when CI overrides the chain with a 2.6.0 candidate wasm, and it will run
+ * against the live chain once 2.6.0 is enacted.
  */
-test('retired DMP entries neither survive the cleanup nor resurrect', async (ctx) => {
+test('messages under the old DMP keys do not come back after the cleanup', async (ctx) => {
   const [client] = await createNetworks(kusama)
   try {
     if (!client.api.query.dmp.downwardMessageQueueMeta) {
       ctx.skip(true, 'the runtime does not have paged DMP storage yet')
       return
     }
-    const key = retiredKey(1000)
+    const key = oldItemKey(1000)
 
-    // Control: an entry under the retired prefix resurrects into the paged queues.
-    await client.dev.setStorage([[key, retiredValue]])
+    // Control: show the problem is real. Put a message under the old keys, build a block,
+    // and watch the runtime move it into the paged queues.
+    await client.dev.setStorage([[key, oldItemValue]])
     await client.dev.newBlock({ count: 1 })
     const resurrected = await client.api.query.dmp.downwardMessageQueuePages.entries()
     assert(resurrected.length > 0, 'the control did not resurrect, so the test proves nothing')
 
-    // The cleanup deletes the retired prefix, so nothing resurrects.
-    await client.dev.setStorage([[key, retiredValue]])
+    // Now the same thing with the cleanup in between: nothing comes back.
+    await client.dev.setStorage([[key, oldItemValue]])
     await client.dev.setStorage({ Dmp: { $removePrefix: ['downwardMessageQueueMeta', 'downwardMessageQueuePages'] } })
     await clearDmpQueues(client)
-    const retired = await client.api.rpc.state.getKeysPaged(u8aToHex(retiredPrefix()), 10)
-    assert(retired.length === 0, `the retired prefix still has ${retired.length} keys`)
+    const leftover = await client.api.rpc.state.getKeysPaged(u8aToHex(oldItemPrefix()), 10)
+    assert(leftover.length === 0, `the old prefix still has ${leftover.length} keys`)
     await client.dev.newBlock({ count: 1 })
     const pages = await client.api.query.dmp.downwardMessageQueuePages.entries()
     assert(pages.length === 0, `the paged queues gained ${pages.length} entries after the cleanup`)

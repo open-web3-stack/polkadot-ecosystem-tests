@@ -31,19 +31,20 @@ async function setupContextWithBlockFallback<T extends Chain>(chainConfig: T) {
 }
 
 /**
- * Clear the relay chain's downward message queues, in whichever layout the runtime has.
+ * Clear the relay chain's downward message queues, in whichever layout the runtime stores them.
  *
- * polkadot-sdk stable2609 replaced `Dmp.DownwardMessageQueues` with the paged
- * `DownwardMessageQueueMeta` and `DownwardMessageQueuePages` (polkadot-sdk#11909). The
- * fellowship runtimes adopt the paged layout in 2.6.0, so until enactment the live chains
- * carry the old item and the release candidates carry the new ones. Clearing a storage item
- * the runtime does not have fails the whole setup, so the choice must follow the metadata.
+ * polkadot-sdk stable2609 replaced the single `Dmp.DownwardMessageQueues` item with two paged
+ * items, `DownwardMessageQueueMeta` and `DownwardMessageQueuePages` (polkadot-sdk#11909). The
+ * fellowship runtimes pick this up in 2.6.0. Until 2.6.0 is enacted, the live chains have the
+ * old item and the release candidates have the new ones. Chopsticks fails the whole setup when
+ * it is told to clear an item the runtime does not have, so this function checks the metadata
+ * first and clears what is actually there.
  *
- * Paged metadata does not mean the state is paged. A fork that overrides a pre-upgrade
- * block with a 2.6.0 runtime still holds its messages under the retired
- * `DownwardMessageQueues` prefix, and the runtime's migration would move them into the
- * paged queues after this cleanup. The retired item is absent from the new metadata, so
- * its prefix is deleted by raw key.
+ * One trap: new metadata does not mean the state has moved yet. When a fork loads a 2.6.0 wasm
+ * on top of an older block, the messages are still stored under the old keys, and the runtime
+ * migrates them into the paged queues in the next block, after this cleanup already ran. So the
+ * old keys have to be deleted as well. The metadata no longer knows the old item, so its storage
+ * prefix is computed here by hand.
  */
 export async function clearDmpQueues(client: {
   api: { query: Record<string, any> }
@@ -67,9 +68,9 @@ export async function createNetwork<T extends Chain>(chainConfig: T) {
     await network.dev.setStorage(chainConfig.initStorages)
   }
 
-  // Pending downward messages at the fork point can impact test results, so relay chains
-  // start with cleared queues. This cannot sit in the static chain definitions: the layout
-  // depends on the runtime the fork finds, see `clearDmpQueues`.
+  // Messages that were in flight when the fork was taken can change test results, so every
+  // relay chain starts with empty queues. This cannot live in the static chain definitions,
+  // because which storage items to clear depends on the runtime; see `clearDmpQueues`.
   if (chainConfig.isRelayChain) {
     await clearDmpQueues(network as any)
   }
