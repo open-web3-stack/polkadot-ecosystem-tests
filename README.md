@@ -257,6 +257,22 @@ These include:
     clearing after the referendum ends
   - Rejected origins for every call (signed, Root, and admin origins outside their gate), and
     calls on an unknown referendum index
+- E2E test suite for the conviction voting pallet on the Asset Hubs:
+  - Voting: conviction-weighted tallies of real referenda, vote replacement, one lock
+    shared by several votes of a class, and the `MaxVotes` limit
+  - Delegation: delegated votes added to and removed from the target's open vote, the
+    conviction lock kept after `undelegate`, and split votes not carrying delegations
+  - Removing votes: during a poll, after cancellation, and after rejection, where only
+    winning votes with conviction stay locked, for `VoteLockingPeriod` times 1, 4 or 32
+  - `remove_other_vote`: refused while the poll runs and until the exact block the
+    vote's lock ends, then open to anyone
+  - Locks: one lock per class, the `pyconvot` balance lock equal to the largest, released
+    class by class with `unlock`, and enforced by the balances pallet on transfers
+  - Comprehensive failure mode testing:
+    - `InsufficientFunds`, `NotOngoing`, `AlreadyDelegating`, `MaxVotesReached`
+    - `Nonsense`, `BadClass`, `AlreadyVoting`, `NotDelegating`
+    - `ClassNeeded`, `NotVoter`, `NoPermission`, `NoPermissionYet`
+    - `BadOrigin` for every call when dispatched as Root
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
