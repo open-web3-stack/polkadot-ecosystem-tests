@@ -166,6 +166,18 @@ These include:
     - Accepting curators in wrong child bounty states
     - Closing child bounties in pending payout status
     - Non-curator attempting to create child bounties
+- E2E test suite for multi-asset bounties on Polkadot, Kusama and Westend Asset Hub. Bounties are
+  funded from the treasury in the native token or any asset `AssetRate` can price, and paid through
+  `LocalPay`, so each payment is confirmed with `check_status`. Tests are grouped into:
+  - funding: spend limits after asset conversion (including across a batch), minimum value,
+    metadata preimage, unpriced assets, treasury shortfall
+  - payment status: confirming payments, and retries of payments that cannot fail
+  - curator: deposit formula and cap, acceptance, removal by the curator (deposit returned) or the
+    reject origin (deposit burned), and re-proposal by a spender track within its limit
+  - award and close: payouts and refunds with exact balance changes, origin checks, open children
+  - child bounties: parent-curated and separately curated children, payout and refund accounting
+    against the parent, the active child limit, and the parent curator's powers over children
+  - increase value: deposit re-pricing, and the top-up an increase needs before it can be paid
 - E2E test suite for the PSM (Peg Stability Module), covering mint/redeem
   swaps between pUSD and three external stablecoins: USDT (1984, 6 dec), USDX (1338, 2 dec), DAI
   (1339, 18 dec). PSM storage and extrinsics are keyed by XCM V5 location rather than asset ID.
