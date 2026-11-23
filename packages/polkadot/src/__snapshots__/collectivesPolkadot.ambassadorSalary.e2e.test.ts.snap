@@ -598,6 +598,21 @@ exports[`Polkadot Collectives Ambassador Salary > Payout > payout - twice in a c
 ]
 `;
 
+exports[`Polkadot Collectives Ambassador Salary > Payout > payout_other - beneficiary paid on Asset Hub > payout_other: Asset Hub Transferred 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 110000000000)",
+      "assetId": "(rounded 2000)",
+      "from": "12NJQuvAGvuic28vwHcPHXxJc5jx4DR6zYhXTLSouzALJzR2",
+      "to": "1vJvAo2Qp9juue4KoVa9whE1o4bFycgmkuuhiHRNuWTweqf",
+    },
+    "method": "Transferred",
+    "section": "assets",
+  },
+]
+`;
+
 exports[`Polkadot Collectives Ambassador Salary > Payout > payout_other - beneficiary paid on Asset Hub > payout_other: Paid 1`] = `
 [
   {

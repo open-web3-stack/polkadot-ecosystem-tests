@@ -3,8 +3,11 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
 
 import type { ApiPromise } from '@polkadot/api'
-import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { AugmentedEvent, SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
+import type { Option, u32, u64, u128 } from '@polkadot/types'
+import type { AccountId32 } from '@polkadot/types/interfaces'
+import type { Codec, ITuple } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect, type TestContext } from 'vitest'
@@ -1704,6 +1707,48 @@ type ClaimState =
   | { registered: bigint }
   | { attempted: { registered: bigint | null; id: bigint; amount: bigint } }
 
+/**
+ * The instance's events, with the field types of `pallet-salary`'s `Event` enum. The salary pallets are not in the
+ * bundled API types, so `api.events.<instance>` is untyped; giving each event its signature lets `.is()` narrow an
+ * event record to typed fields.
+ */
+function salaryEvents(client: AnyClient, instance: SalaryInstance) {
+  const events = client.api.events[instance.pallet]
+  return {
+    CycleStarted: events.CycleStarted as AugmentedEvent<'promise', [u32], { index: u32 }>,
+    Inducted: events.Inducted as AugmentedEvent<'promise', [AccountId32], { who: AccountId32 }>,
+    Registered: events.Registered as AugmentedEvent<'promise', [AccountId32, u128], { who: AccountId32; amount: u128 }>,
+    Paid: events.Paid as AugmentedEvent<
+      'promise',
+      [AccountId32, AccountId32, u128, u64],
+      { who: AccountId32; beneficiary: AccountId32; amount: u128; id: u64 }
+    >,
+    Swapped: events.Swapped as AugmentedEvent<
+      'promise',
+      [AccountId32, AccountId32],
+      { who: AccountId32; newWho: AccountId32 }
+    >,
+  }
+}
+
+/** The fields of a `Paid` event. */
+type PaidEventData = { who: AccountId32; beneficiary: AccountId32; amount: u128; id: u64 }
+
+/** The `ExecutionResult` arm of an XCM `Response`: the index and error of the failed instruction, if any. */
+interface ExecutionResultResponse extends Codec {
+  readonly isExecutionResult: boolean
+  readonly asExecutionResult: Option<ITuple<[u32, Codec]>>
+}
+
+/** `polkadotXcm.ResponseReady` with its field types; `polkadotXcm` is not in the bundled API types either. */
+function responseReadyEvent(client: AnyClient) {
+  return client.api.events.polkadotXcm.ResponseReady as AugmentedEvent<
+    'promise',
+    [u64, ExecutionResultResponse],
+    { queryId: u64; response: ExecutionResultResponse }
+  >
+}
+
 /// ----------------------------
 /// Instance readers and writers
 /// ----------------------------
@@ -2076,13 +2121,13 @@ async function processPaymentOnAssetHub(assetHubClient: AnyClient): Promise<void
 }
 
 /** The `Paid` events in the head block, keyed by the paid member's address. */
-async function paidEvents(client: AnyClient, instance: SalaryInstance): Promise<Map<string, any>> {
+async function paidEvents(client: AnyClient, instance: SalaryInstance): Promise<Map<string, PaidEventData>> {
   const events = await client.api.query.system.events()
-  const paid = new Map<string, any>()
+  const paidEvent = salaryEvents(client, instance).Paid
+  const paid = new Map<string, PaidEventData>()
   for (const { event } of events) {
-    if (client.api.events[instance.pallet].Paid.is(event)) {
-      const data = event.data as any
-      paid.set(data.who.toString(), data)
+    if (paidEvent.is(event)) {
+      paid.set(event.data.who.toString(), event.data)
     }
   }
   return paid
@@ -2122,9 +2167,10 @@ export async function salaryInitOpensCycleZeroTest(client: AnyClient, instance: 
     'init: CycleStarted',
   )
   const events = await client.api.query.system.events()
-  const started = events.find(({ event }) => client.api.events[instance.pallet].CycleStarted.is(event))
-  assert(started)
-  expect((started.event.data as any).index.toNumber()).toBe(0)
+  const cycleStarted = salaryEvents(client, instance).CycleStarted
+  const started = events.find(({ event }) => cycleStarted.is(event))
+  assert(started && cycleStarted.is(started.event))
+  expect(started.event.data.index.toNumber()).toBe(0)
   expect(await feePaidBy(client, caller)).toBe(0n)
 
   // 4. Status of the new cycle
@@ -2209,9 +2255,10 @@ export async function salaryBumpAtCycleBoundaryTest(client: AnyClient, instance:
     .redact({ redactKeys: /^index$/ })
     .toMatchSnapshot('bump at the boundary: CycleStarted')
   const events = await client.api.query.system.events()
-  const started = events.find(({ event }) => client.api.events[instance.pallet].CycleStarted.is(event))
-  assert(started)
-  expect((started.event.data as any).index.toNumber()).toBe(before.cycleIndex + 1)
+  const cycleStarted = salaryEvents(client, instance).CycleStarted
+  const started = events.find(({ event }) => cycleStarted.is(event))
+  assert(started && cycleStarted.is(started.event))
+  expect(started.event.data.index.toNumber()).toBe(before.cycleIndex + 1)
   expect(await feePaidBy(client, member)).toBe(0n)
 
   // 5. New cycle status
@@ -2295,9 +2342,10 @@ export async function salaryInductTest(client: AnyClient, instance: SalaryInstan
   // 3. Inducted, free
   await checkSystemEvents(client, { section: instance.pallet, method: 'Inducted' }).toMatchSnapshot('induct: Inducted')
   const events = await client.api.query.system.events()
-  const inducted = events.find(({ event }) => client.api.events[instance.pallet].Inducted.is(event))
-  assert(inducted)
-  expect((inducted.event.data as any).who.toString()).toBe(
+  const inductedEvent = salaryEvents(client, instance).Inducted
+  const inducted = events.find(({ event }) => inductedEvent.is(event))
+  assert(inducted && inductedEvent.is(inducted.event))
+  expect(inducted.event.data.who.toString()).toBe(
     encodeAddress(member.address, client.config.properties.addressEncoding),
   )
   expect(await feePaidBy(client, member)).toBe(0n)
@@ -2418,9 +2466,10 @@ export async function salaryRegisterTest(client: AnyClient, instance: SalaryInst
     'register: Registered',
   )
   const events = await client.api.query.system.events()
-  const registered = events.find(({ event }) => client.api.events[instance.pallet].Registered.is(event))
-  assert(registered)
-  const data = registered.event.data as any
+  const registeredEvent = salaryEvents(client, instance).Registered
+  const registered = events.find(({ event }) => registeredEvent.is(event))
+  assert(registered && registeredEvent.is(registered.event))
+  const data = registered.event.data
   expect(data.who.toString()).toBe(encodeAddress(member.address, client.config.properties.addressEncoding))
   expect(data.amount.toBigInt()).toBe(salary)
   expect(await feePaidBy(client, member)).toBe(0n)
@@ -2667,13 +2716,14 @@ export async function salaryPayoutTest(
 }
 
 /**
- * `payout_other` pays a registered member's salary to another account on Asset Hub. The member's own balance does not
- * move.
+ * `payout_other` pays a registered member's salary to another account on Asset Hub, from the same paymaster sovereign
+ * as `payout`. The member's own balance does not move.
  *
  * 1. Register a rank 1 member for a fresh cycle, and fund the paymaster sovereign with one budget
  * 2. Open the payout window, and the member calls `payout_other` for a fresh beneficiary
  * 3. Verify `Paid` names the member as `who` and the other account as `beneficiary`, for the salary, and was free
- * 4. Build a block on Asset Hub, and verify the beneficiary gained exactly the salary while the member gained nothing
+ * 4. Build a block on Asset Hub, and verify `assets.Transferred` moved the salary from the sovereign to the beneficiary
+ * 5. Verify the beneficiary gained, and the sovereign lost, exactly the salary, while the member gained nothing
  */
 export async function salaryPayoutOtherTest(
   collectivesClient: AnyClient,
@@ -2686,8 +2736,9 @@ export async function salaryPayoutOtherTest(
 
   // 1. Registered member, funded paymaster
   const { salary } = await registerForNextCycle(collectivesClient, instance, member)
+  const budget = instanceBudget(collectivesClient, instance)
   const sovereign = await paymasterSovereign(collectivesClient, assetHubClient, instance)
-  await setUsdtBalance(assetHubClient, sovereign, instanceBudget(collectivesClient, instance))
+  await setUsdtBalance(assetHubClient, sovereign, budget)
   const memberBefore = await usdtBalance(assetHubClient, member.address)
   const beneficiaryBefore = await usdtBalance(assetHubClient, beneficiary.address)
 
@@ -2706,9 +2757,24 @@ export async function salaryPayoutOtherTest(
   expect(paid.amount.toBigInt()).toBe(salary)
   expect(await feePaidBy(collectivesClient, member)).toBe(0n)
 
-  // 4. Only the beneficiary is credited
+  // 4. Transfer on Asset Hub, from the paymaster sovereign
   await processPaymentOnAssetHub(assetHubClient)
+  await checkSystemEvents(assetHubClient, { section: 'assets', method: 'Transferred' }).toMatchSnapshot(
+    'payout_other: Asset Hub Transferred',
+  )
+  const assetHubEvents = await assetHubClient.api.query.system.events()
+  const transferred = assetHubEvents.find(({ event }) => assetHubClient.api.events.assets.Transferred.is(event))
+  assert(transferred)
+  assert(assetHubClient.api.events.assets.Transferred.is(transferred.event))
+  const { assetId, from, to, amount } = transferred.event.data
+  expect(assetId.toNumber()).toBe(USDT_ASSET_ID)
+  expect(from.toString()).toBe(sovereign)
+  expect(to.toString()).toBe(encodeAddress(beneficiary.address, assetHubClient.config.properties.addressEncoding))
+  expect(amount.toBigInt()).toBe(salary)
+
+  // 5. Only the beneficiary is credited, and only the sovereign is debited
   expect(await usdtBalance(assetHubClient, beneficiary.address)).toBe(beneficiaryBefore + salary)
+  expect(await usdtBalance(assetHubClient, sovereign)).toBe(budget - salary)
   expect(await usdtBalance(assetHubClient, member.address)).toBe(memberBefore)
 }
 
@@ -3069,16 +3135,13 @@ export async function salaryStaleRegistrationPayoutTest(
  * Build one block on Collectives, which takes in Asset Hub's answer to the payment's XCM query, and return the
  * `polkadotXcm.ResponseReady` for that query.
  */
-async function receivePaymentResponse(client: AnyClient, paymentId: bigint): Promise<any> {
+async function receivePaymentResponse(client: AnyClient, paymentId: bigint): Promise<ExecutionResultResponse> {
   await client.dev.newBlock()
   const events = await client.api.query.system.events()
-  // `polkadotXcm` is not in the bundled API types, so the event fields are read untyped.
-  const ready = events.find(
-    ({ event }) =>
-      client.api.events.polkadotXcm.ResponseReady.is(event) && (event.data as any).queryId.toBigInt() === paymentId,
-  )
-  assert(ready, `no ResponseReady for payment ${paymentId}`)
-  return (ready.event.data as any).response
+  const responseReady = responseReadyEvent(client)
+  const ready = events.find(({ event }) => responseReady.is(event) && event.data.queryId.toBigInt() === paymentId)
+  assert(ready && responseReady.is(ready.event), `no ResponseReady for payment ${paymentId}`)
+  return ready.event.data.response
 }
 
 /** Make `member` pay out once in the current payout window, and return the payment id recorded in its claim. */
@@ -3233,58 +3296,76 @@ export async function salaryCheckPaymentFailureRetryTest(
 }
 
 /**
- * When an unregistered payout fails on Asset Hub, `check_payment` gives the money back to the pot and moves the claim
- * back one cycle, so the member can be paid again from the pot in the same cycle.
+ * When an unregistered payout fails on Asset Hub, `check_payment` gives exactly that payout back to the pot and moves
+ * the claim back one cycle, so the member can be paid again from the pot in the same cycle. Another member's earlier
+ * unregistered payout, which succeeded, stays counted: the refund is the failed amount, not a reset of the total.
  *
- * 1. Make a rank 1 member, start the instance if needed, induct it, and start the next cycle without registering
- * 2. Leave the paymaster sovereign with only the USDT minimum balance, open the payout window and pay out from the pot
- * 3. Verify the payout counts as unregistered
- * 4. Build a block on Asset Hub, then one on Collectives; verify `ResponseReady` reports the error
- * 5. The member calls `check_payment`; verify the claim is `Nothing` one cycle back and the unregistered total is zero
+ * 1. Make two rank 1 members, start the instance if needed, induct both, and start the next cycle without registering
+ * 2. Open the payout window and pay the first member from the pot. Fund the paymaster sovereign with that amount plus
+ *    the USDT minimum balance, build a block on Asset Hub, and verify the transfer landed
+ * 3. Pay the second member from the pot, which the sovereign can no longer cover; verify both payouts count as
+ *    unregistered
+ * 4. Build a block on Asset Hub, then one on Collectives; verify `ResponseReady` reports the error for the second
+ *    payment
+ * 5. The second member calls `check_payment`; verify its claim is `Nothing` one cycle back, and the unregistered total
+ *    is back to the first member's payout
  */
 export async function salaryCheckPaymentUnregisteredFailureTest(
   collectivesClient: AnyClient,
   assetHubClient: AnyClient,
   instance: SalaryInstance,
 ) {
+  const paidMember = testAccounts.keyring.createFromUri(`//${instance.pallet}_check_unregistered_paid`)
   const member = testAccounts.keyring.createFromUri(`//${instance.pallet}_check_unregistered_member`)
 
-  // 1. Eligible but unregistered member
-  await setupMembers(collectivesClient, instance, [{ pair: member, rank: 1 }])
+  // 1. Two eligible but unregistered members
+  await setupMembers(collectivesClient, instance, [
+    { pair: paidMember, rank: 1 },
+    { pair: member, rank: 1 },
+  ])
   await ensureCycleStarted(collectivesClient, instance, member)
-  await inductMembers(collectivesClient, instance, [member])
+  await inductMembers(collectivesClient, instance, [paidMember, member])
   const cycle = await startNextCycle(collectivesClient, instance, member)
 
-  // 2. Underfunded paymaster, payout from the pot
+  // 2. A first unregistered payout that succeeds, leaving the sovereign at the minimum balance
+  await openPayoutWindow(collectivesClient, instance)
+  await payOut(collectivesClient, instance, paidMember)
+  const firstClaim = await readInstanceClaimant(collectivesClient, instance, paidMember.address)
+  assert(firstClaim && 'attempted' in firstClaim.status)
+  const firstAmount = firstClaim.status.attempted.amount
+  expect(firstAmount).toBeGreaterThan(0n)
+
   const sovereign = await paymasterSovereign(collectivesClient, assetHubClient, instance)
   const minBalance = ((await assetHubClient.api.query.assets.asset(USDT_ASSET_ID)) as any)
     .unwrap()
     .minBalance.toBigInt()
-  await setUsdtBalance(assetHubClient, sovereign, minBalance)
-  await openPayoutWindow(collectivesClient, instance)
-  const paymentId = await payOut(collectivesClient, instance, member)
+  await setUsdtBalance(assetHubClient, sovereign, firstAmount + minBalance)
+  await processPaymentOnAssetHub(assetHubClient)
+  expect(await usdtBalance(assetHubClient, paidMember.address)).toBe(firstAmount)
 
-  // 3. Unregistered payout recorded
+  // 3. A second unregistered payout, recorded alongside the first
+  const paymentId = await payOut(collectivesClient, instance, member)
   const attempted = await readInstanceClaimant(collectivesClient, instance, member.address)
   assert(attempted && 'attempted' in attempted.status)
   expect(attempted.status.attempted.registered).toBeNull()
   expect((await readInstanceStatus(collectivesClient, instance))!.totalUnregisteredPaid).toBe(
-    attempted.status.attempted.amount,
+    firstAmount + attempted.status.attempted.amount,
   )
 
-  // 4. Failure reported back
+  // 4. The second transfer fails, and the failure is reported back
   await assetHubClient.dev.newBlock()
+  expect(await usdtBalance(assetHubClient, member.address)).toBe(0n)
   const response = await receivePaymentResponse(collectivesClient, paymentId)
   expect(response.isExecutionResult && response.asExecutionResult.isSome).toBe(true)
 
-  // 5. Pot and cycle rolled back
+  // 5. Only the failed payout is refunded to the pot, and its claim moves back a cycle
   await sendTransaction(collectivesClient.api.tx[instance.pallet].checkPayment().signAsync(member))
   await collectivesClient.dev.newBlock()
   expect(await readInstanceClaimant(collectivesClient, instance, member.address)).toEqual({
     lastActive: cycle.cycleIndex - 1,
     status: { nothing: null },
   })
-  expect((await readInstanceStatus(collectivesClient, instance))!.totalUnregisteredPaid).toBe(0n)
+  expect((await readInstanceStatus(collectivesClient, instance))!.totalUnregisteredPaid).toBe(firstAmount)
 }
 
 /**
@@ -3380,9 +3461,10 @@ export async function salarySwapMovesClaimTest(client: AnyClient, instance: Sala
     'exchange member: Swapped',
   )
   const events = await client.api.query.system.events()
-  const swapped = events.find(({ event }) => client.api.events[instance.pallet].Swapped.is(event))
-  assert(swapped)
-  const data = swapped.event.data as any
+  const swappedEvent = salaryEvents(client, instance).Swapped
+  const swapped = events.find(({ event }) => swappedEvent.is(event))
+  assert(swapped && swappedEvent.is(swapped.event))
+  const data = swapped.event.data
   expect(data.who.toString()).toBe(encodeAddress(member.address, encoding))
   expect(data.newWho.toString()).toBe(encodeAddress(replacement.address, encoding))
 
@@ -3421,36 +3503,50 @@ export async function salarySwapWithoutClaimTest(client: AnyClient, instance: Sa
 
 /**
  * The salary swap handler never overwrites a claim. A removed member keeps its claim record, so exchanging another
- * member onto that account leaves both claims where they were, and emits no `Swapped`.
+ * member onto that account leaves both claims where they were, and emits no `Swapped`. The two claims differ, so a
+ * copy in either direction would show.
  *
- * 1. Make two rank 1 members, start the instance if needed, and induct both
- * 2. As Root, remove the first from the collective; verify its claim record remains
- * 3. As Root, exchange the second member for the first account
- * 4. Verify the collective exchanged the accounts, no `Swapped` was emitted, and each account kept its own claim
+ * 1. Make two rank 1 members and start the instance if needed. Induct the first, start the next cycle and register
+ *    it, then induct the second
+ * 2. Verify the claims differ: the first is `Registered`, the second holds nothing
+ * 3. As Root, remove the first from the collective; verify its claim record remains
+ * 4. As Root, exchange the second member for the first account
+ * 5. Verify the collective exchanged the accounts, no `Swapped` was emitted, and each account kept its own claim
  */
 export async function salarySwapOntoExistingClaimTest(client: AnyClient, instance: SalaryInstance) {
   const removed = testAccounts.keyring.createFromUri(`//${instance.pallet}_swap_removed`)
   const member = testAccounts.keyring.createFromUri(`//${instance.pallet}_swap_member`)
 
-  // 1. Two inducted members
+  // 1. A registered member, and a member inducted in the cycle after
   await setupMembers(client, instance, [
     { pair: removed, rank: 1 },
     { pair: member, rank: 1 },
   ])
   await ensureCycleStarted(client, instance, member)
-  await inductMembers(client, instance, [removed, member])
+  await inductMembers(client, instance, [removed])
+  const cycle = await startNextCycle(client, instance, member)
+  await sendTransaction(client.api.tx[instance.pallet].register().signAsync(removed))
+  await client.dev.newBlock()
+  await inductMembers(client, instance, [member])
   const removedClaim = await readInstanceClaimant(client, instance, removed.address)
   const memberClaim = await readInstanceClaimant(client, instance, member.address)
 
-  // 2. Removal leaves the claim behind
+  // 2. Two different claims
+  expect(removedClaim).toEqual({
+    lastActive: cycle.cycleIndex,
+    status: { registered: await instance.rank1Salary(client) },
+  })
+  expect(memberClaim).toEqual({ lastActive: cycle.cycleIndex, status: { nothing: null } })
+
+  // 3. Removal leaves the claim behind
   await dispatchAsRoot(client, [client.api.tx[instance.collective].removeMember(removed.address, 1)])
   expect(((await client.api.query[instance.collective].members(removed.address)) as any).isNone).toBe(true)
   expect(await readInstanceClaimant(client, instance, removed.address)).toEqual(removedClaim)
 
-  // 3. Exchange onto the removed account
+  // 4. Exchange onto the removed account
   await dispatchAsRoot(client, [client.api.tx[instance.collective].exchangeMember(member.address, removed.address)])
 
-  // 4. Accounts exchanged, claims untouched
+  // 5. Accounts exchanged, claims untouched
   const events = await client.api.query.system.events()
   expect(events.some(({ event }) => client.api.events[instance.collective].MemberExchanged.is(event))).toBe(true)
   expect(events.filter(({ event }) => client.api.events[instance.pallet].Swapped.is(event))).toHaveLength(0)
