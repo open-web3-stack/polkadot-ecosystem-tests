@@ -677,6 +677,20 @@ exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty awardin
 ]
 `;
 
+exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty claim with locked funds in the bounty account > bounty claimed events 1`] = `
+[
+  {
+    "data": {
+      "beneficiary": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+      "index": "(redacted)",
+      "payout": 90000000000000,
+    },
+    "method": "BountyClaimed",
+    "section": "bounties",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty extension > bounty approved events 1`] = `
 [
   {

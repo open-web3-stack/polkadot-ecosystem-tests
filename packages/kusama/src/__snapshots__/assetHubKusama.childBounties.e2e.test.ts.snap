@@ -895,3 +895,31 @@ exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > re
   },
 ]
 `;
+
+exports[`Kusama Asset Hub Child Bounties > Locked funds in a child bounty account > claim_child_bounty - pays out the spendable balance and leaves locked funds behind > child bounty claimed events 1`] = `
+[
+  {
+    "data": {
+      "beneficiary": "H7L1Xh1XZxbKktdoEG5rkWdUdydq9e3NpsjmcSHpUHM8Z6h",
+      "childIndex": "(redacted)",
+      "index": "(redacted)",
+      "payout": "(rounded 6000000000000)",
+    },
+    "method": "Claimed",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > Locked funds in a child bounty account > close_child_bounty - refunds the spendable balance and leaves locked funds behind > child bounty canceled events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": "(redacted)",
+      "index": "(redacted)",
+    },
+    "method": "Canceled",
+    "section": "childBounties",
+  },
+]
+`;

@@ -145,6 +145,7 @@ These include:
 - E2E test suite for bounties infrastructure:
   - Bounty creation, approval, and funding workflows
   - Curator assignment, acceptance, and management
+  - Claiming a bounty whose account holds locked funds, skipped on runtimes that size the payout from the free balance
   - Bounty extension, awarding, and claiming processes
   - Bounty closure in various states (proposed, funded, active)
   - Reclaiming funds left in a closed bounty's account with `reclaim_bounty_funds`, skipped on runtimes without the call
@@ -158,6 +159,7 @@ These include:
 - E2E test suite for child bounties infrastructure:
   - Child bounty creation, curator assignment, acceptance, awarding and claiming workflows
   - Child bounty closure and fund return to parent bounty
+  - Claiming and closing a child bounty whose account holds locked funds, skipped on runtimes that size the payout from the free balance
   - Child bounty rejection by curators and cancellation by parent curators
   - Curator unassignment scenarios with different deposit handling (refund vs. slash)
   - Storage verification for child bounty counters and cleanup

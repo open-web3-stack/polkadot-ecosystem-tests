@@ -977,6 +977,168 @@ export async function bountyAwardingAndClaimingTest<
 }
 
 /**
+ * First runtime spec version of the Polkadot and Kusama Asset Hubs in which a bounty's payout is
+ * sized from the balance its account can transfer.
+ */
+const SPENDABLE_PAYOUT_SPEC_VERSION = 2_006_000
+
+/**
+ * Run `body`, or skip the test when the runtime still sizes payouts from the whole free balance.
+ */
+function withSpendablePayouts(
+  getClient: () => Client<any, any>,
+  body: (client: Client<any, any>) => Promise<void>,
+): (ctx?: TestContext) => Promise<void> {
+  return async (ctx) => {
+    const client = getClient()
+    if (client.api.runtimeVersion.specVersion.toNumber() < SPENDABLE_PAYOUT_SPEC_VERSION) {
+      ctx?.skip(`payouts from the spendable balance need spec version ${SPENDABLE_PAYOUT_SPEC_VERSION} or later`)
+      return
+    }
+    await body(client)
+  }
+}
+
+/**
+ * Setup: a bounty in the `PendingPayout` state, built with real extrinsics.
+ *
+ * Alice proposes it, the `Treasurer` approves it, the treasury funds it at the end of its spend
+ * period, the `Treasurer` proposes Bob as curator, Bob accepts and awards it to `beneficiary`.
+ * Returns the bounty's index, its value and the curator's fee.
+ */
+async function createAwardedBounty(client: Client<any, any>, beneficiary: string) {
+  await setLastSpendPeriodBlockNumber(client)
+  await client.dev.newBlock()
+
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum.toBigInt()
+  const bountyValue = bountyValueMinimum * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum * CURATOR_FEE_MULTIPLIER
+
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, 'Bounty awarded to a beneficiary')
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(),
+    { Origins: 'Treasurer' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  expect(await getBountyApprovals(client)).toContain(bountyIndex)
+
+  // The spend period ends in this block, and the treasury funds the approved bounty.
+  await client.dev.newBlock()
+  expect((await getBounty(client, bountyIndex)).status.isFunded).toBe(true)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee).method.toHex(),
+    { Origins: 'Treasurer' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  expect((await getBounty(client, bountyIndex)).status.isCuratorProposed).toBe(true)
+
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+  expect((await getBounty(client, bountyIndex)).status.isActive).toBe(true)
+
+  await sendTransaction(client.api.tx.bounties.awardBounty(bountyIndex, beneficiary).signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+  expect((await getBounty(client, bountyIndex)).status.isPendingPayout).toBe(true)
+
+  return { bountyIndex, bountyValue, curatorFee }
+}
+
+/**
+ * Test: `claim_bounty` pays out what the bounty's account can transfer and leaves locked funds behind.
+ *
+ * Anyone can lock funds in a bounty's account with a vested transfer. A payout sized from the whole
+ * free balance would then ask for more than the account can move, and the beneficiary would get
+ * nothing while the bounty is removed. The payout must be the spendable balance less the curator's
+ * fee, so that the beneficiary is paid in full.
+ *
+ * 1. Alice proposes a bounty. It is approved and funded, Bob becomes its curator and awards it to Charlie.
+ * 2. Alice makes a vested transfer to the bounty's account, with a schedule that has not started.
+ * 3. Alice calls `claim_bounty`.
+ * 4. `BountyClaimed` reports the bounty's value less the curator's fee as the payout.
+ * 5. Charlie received exactly the payout, and Bob received his fee and his deposit back.
+ * 6. The bounty is gone, and the locked amount is still in its account, still frozen.
+ */
+async function claimBountyWithLockedFundsTest(client: Client<any, any>) {
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const minVestedTransfer = client.api.consts.vesting.minVestedTransfer.toBigInt()
+  const lockedAmount = (minVestedTransfer > existentialDeposit ? minVestedTransfer : existentialDeposit) * 10n
+
+  // 1. Alice proposes a bounty. It is approved and funded, Bob becomes its curator and awards it to Charlie.
+  const { bountyIndex, bountyValue, curatorFee } = await createAwardedBounty(client, testAccounts.charlie.address)
+  const account = bountyAccount(client, bountyIndex)
+  expect(await getFreeFunds(client, account)).toBe(bountyValue)
+
+  // 2. Alice makes a vested transfer to the bounty's account, with a schedule that has not started.
+  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const vestedTransferTx = client.api.tx.vesting.vestedTransfer(account, {
+    locked: lockedAmount,
+    perBlock: lockedAmount,
+    startingBlock: currentBlock + VESTING_START_DELAY,
+  })
+  await sendTransaction(vestedTransferTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  const accountBefore = await client.api.query.system.account(account)
+  expect(accountBefore.data.free.toBigInt()).toBe(bountyValue + lockedAmount)
+  expect(accountBefore.data.frozen.toBigInt()).toBe(lockedAmount)
+
+  // The payout is already unlocked, so the claim below is not rejected as premature.
+  const unlockAt = (await getBounty(client, bountyIndex)).status.asPendingPayout.unlockAt.toNumber()
+  expect(unlockAt).toBeLessThanOrEqual(
+    await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider),
+  )
+
+  const charlieBefore = await getFreeFunds(client, testAccounts.charlie.address)
+  const bobBefore = await client.api.query.system.account(testAccounts.bob.address)
+
+  // 3. Alice calls `claim_bounty`.
+  const claimEvents = await sendTransaction(
+    client.api.tx.bounties.claimBounty(bountyIndex).signAsync(testAccounts.alice),
+  )
+  await client.dev.newBlock()
+
+  // 4. `BountyClaimed` reports the bounty's value less the curator's fee as the payout.
+  await checkEvents(claimEvents, { section: 'bounties', method: 'BountyClaimed' })
+    .redact({ redactKeys: /^index$/ })
+    .toMatchSnapshot('bounty claimed events')
+
+  const payout = bountyValue - curatorFee
+  const records = await client.api.query.system.events()
+  const claimed = records.filter(({ event }) => client.api.events.bounties.BountyClaimed.is(event))
+  expect(claimed).toHaveLength(1)
+  assert(client.api.events.bounties.BountyClaimed.is(claimed[0].event))
+  expect(claimed[0].event.data.index.toNumber()).toBe(bountyIndex)
+  expect(claimed[0].event.data.payout.toBigInt()).toBe(payout)
+  expect(claimed[0].event.data.beneficiary.toString()).toBe(
+    encodeAddress(testAccounts.charlie.address, client.config.properties.addressEncoding),
+  )
+
+  // 5. Charlie received exactly the payout, and Bob received his fee and his deposit back.
+  expect((await getFreeFunds(client, testAccounts.charlie.address)) - charlieBefore).toBe(payout)
+  const bobAfter = await client.api.query.system.account(testAccounts.bob.address)
+  expect(bobAfter.data.reserved.toBigInt()).toBe(0n)
+  expect(bobAfter.data.free.toBigInt()).toBe(
+    bobBefore.data.free.toBigInt() + bobBefore.data.reserved.toBigInt() + curatorFee,
+  )
+
+  // 6. The bounty is gone, and the locked amount is still in its account, still frozen.
+  expect(await getBounty(client, bountyIndex)).toBeNull()
+  const accountAfter = await client.api.query.system.account(account)
+  expect(accountAfter.data.free.toBigInt()).toBe(lockedAmount)
+  expect(accountAfter.data.frozen.toBigInt()).toBe(lockedAmount)
+}
+
+/**
  * Test: Bounty Closure in `Proposed` State
  *
  * This test verifies that treasury administrators can close bounties that are
@@ -2154,6 +2316,11 @@ export function allBountySuccessTests<
         kind: 'test',
         label: 'Bounty awarding and claiming',
         testFn: async () => await bountyAwardingAndClaimingTest(getClient()),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty claim with locked funds in the bounty account',
+        testFn: withSpendablePayouts(getClient, claimBountyWithLockedFundsTest),
       },
       bountyFundingTests(getClient),
       bountyApprovalTests(getClient),

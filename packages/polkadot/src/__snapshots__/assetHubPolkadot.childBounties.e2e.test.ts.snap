@@ -853,3 +853,31 @@ exports[`Polkadot Asset Hub Child Bounties > All child bounties success tests > 
   },
 ]
 `;
+
+exports[`Polkadot Asset Hub Child Bounties > Locked funds in a child bounty account > claim_child_bounty - pays out the spendable balance and leaves locked funds behind > child bounty claimed events 1`] = `
+[
+  {
+    "data": {
+      "beneficiary": "15Y1VYcCkzD91e5hzAW36wynBfh3inNzzwmUYF9gtm6NZwzi",
+      "childIndex": "(redacted)",
+      "index": "(redacted)",
+      "payout": 9000000000000,
+    },
+    "method": "Claimed",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Child Bounties > Locked funds in a child bounty account > close_child_bounty - refunds the spendable balance and leaves locked funds behind > child bounty canceled events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": "(redacted)",
+      "index": "(redacted)",
+    },
+    "method": "Canceled",
+    "section": "childBounties",
+  },
+]
+`;
