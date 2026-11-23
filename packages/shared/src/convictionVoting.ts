@@ -558,17 +558,20 @@ async function voteOnTwoPollsLocksLargestTest(client: Client<any, any>) {
 }
 
 /**
- * A vote larger than the voter's total balance is rejected.
+ * A vote may use the voter's total balance, reserved funds included, and nothing more.
  *
- * The limit is the total balance, reserved funds included. Alice is the voter because her submission deposit is
- * reserved, which makes her total differ from her free balance.
+ * Alice is the voter because her submission deposit is reserved, which makes her total differ from her free
+ * balance. A vote above the total is rejected. A vote above her free balance but within the total is accepted,
+ * which shows the reserved deposit counts as voting power.
  *
  * 1. Submit a referendum, which reserves Alice's submission deposit
  * 2. Alice votes with one planck more than her total balance
  * 3. Verify the call failed with `InsufficientFunds`
  * 4. Verify nothing was recorded or locked, and the tally is unchanged
+ * 5. Alice votes her free balance plus half of her reserved deposit
+ * 6. Verify the vote is recorded and locks more than her free balance
  */
-async function voteAboveTotalBalanceFailsTest(client: Client<any, any>) {
+async function voteUpToTotalBalanceTest(client: Client<any, any>) {
   const { alice } = testAccounts
   await fundTestAccounts(client)
 
@@ -595,6 +598,27 @@ async function voteAboveTotalBalanceFailsTest(client: Client<any, any>) {
   expect(await readVotingState(client, alice.address, SMALL_TIPPER_CLASS)).toEqual(stateBefore)
   expect(await readVotingLock(client, alice.address)).toBeNull()
   expect(await readTally(client, poll)).toEqual({ ayes: 0n, nays: 0n, support: 0n })
+
+  // 5. Vote above the free balance but within the total. The fee is taken from the free balance before the vote
+  // is checked, and half of the deposit leaves room for it.
+  const accountBefore = await client.api.query.system.account(alice.address)
+  const reserved = accountBefore.data.reserved.toBigInt()
+  const amount = accountBefore.data.free.toBigInt() + reserved / 2n
+  const voteEvents = await sendTransaction(
+    client.api.tx.convictionVoting.vote(poll, standardVote(true, 'None', amount)).signAsync(alice),
+  )
+  await client.dev.newBlock()
+
+  // 6. The vote is recorded, and its lock is larger than what Alice has free
+  await checkEvents(voteEvents, 'convictionVoting')
+    .redact({ redactKeys: /^pollIndex$/ })
+    .toMatchSnapshot('vote between the free and the total balance')
+  await expectVotedEvent(client, alice, poll, { aye: true, conviction: 'None', balance: amount })
+  expect(await readTally(client, poll)).toEqual({ ayes: amount / 10n, nays: 0n, support: amount })
+  expect(await readVotingLock(client, alice.address)).toBe(amount)
+  const accountAfter = await client.api.query.system.account(alice.address)
+  expect(accountAfter.data.reserved.toBigInt()).toBe(reserved)
+  expect(accountAfter.data.free.toBigInt()).toBeLessThan(amount)
 }
 
 /**
@@ -1759,8 +1783,19 @@ async function removeVoteWhileDelegatingTest(client: Client<any, any>) {
   await sendTransaction(client.api.tx.convictionVoting.removeVote(SMALL_TIPPER_CLASS, poll).signAsync(bob))
   await client.dev.newBlock()
 
-  // 3. Success, with no event
-  await expectSuccessWithoutVotingEvents(client)
+  // 3. The call is in the block, it succeeded, and it emitted no conviction voting event. Unchanged state alone
+  // would not tell a no-op from a call that never ran, so the call's own events are checked.
+  const block = await client.api.rpc.chain.getBlock()
+  const bobAddress = encodeAddress(bob.address, client.config.properties.addressEncoding)
+  const callIndex = block.block.extrinsics.findIndex(
+    (ext) => ext.isSigned && ext.signer.toString() === bobAddress && client.api.tx.convictionVoting.removeVote.is(ext),
+  )
+  expect(callIndex, "Bob's remove_vote should be in the block").toBeGreaterThanOrEqual(0)
+  const callEvents = (await client.api.query.system.events()).filter(
+    ({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.toNumber() === callIndex,
+  )
+  expect(callEvents.filter(({ event }) => client.api.events.system.ExtrinsicSuccess.is(event))).toHaveLength(1)
+  expect(callEvents.filter(({ event }) => event.section === 'convictionVoting')).toHaveLength(0)
 
   // 4. The delegation is unchanged
   expect(await readVotingState(client, bob.address, SMALL_TIPPER_CLASS)).toEqual(stateBefore)
@@ -2016,14 +2051,15 @@ async function rootOriginRejectedTest(client: Client<any, any>) {
   await scheduleInlineCallListWithSameOrigin(client, calls, { system: 'Root' }, blockProvider)
   await client.dev.newBlock()
 
-  // 3. Six dispatches, each failing with BadOrigin
-  await checkSystemEvents(client, { section: 'scheduler', method: 'Dispatched' })
-    .redact({ redactKeys: /^task$/ })
-    .toMatchSnapshot('conviction voting calls dispatched as Root')
+  // 3. Six dispatches, each failing with BadOrigin. Only the injected tasks are selected, so a task from the
+  // fork's live agenda cannot change the result.
   const events = await client.api.query.system.events()
   const dispatched = events.filter(
     ({ event }) => client.api.events.scheduler.Dispatched.is(event) && event.data.task[0].toNumber() === scheduledAt,
   )
+  await checkEvents({ events: Promise.resolve(dispatched) }, 'scheduler')
+    .redact({ redactKeys: /^task$/ })
+    .toMatchSnapshot('conviction voting calls dispatched as Root')
   expect(dispatched).toHaveLength(calls.length)
   for (const { event } of dispatched) {
     assert(client.api.events.scheduler.Dispatched.is(event))
@@ -2090,8 +2126,8 @@ export function convictionVotingE2ETests<
           },
           {
             kind: 'test',
-            label: 'vote more than the total balance - InsufficientFunds',
-            testFn: () => voteAboveTotalBalanceFailsTest(client),
+            label: 'vote up to the total balance - reserved funds count, InsufficientFunds above',
+            testFn: () => voteUpToTotalBalanceTest(client),
           },
           {
             kind: 'test',

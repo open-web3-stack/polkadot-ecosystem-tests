@@ -817,31 +817,6 @@ exports[`Polkadot Asset Hub Conviction Voting > Voting > vote again on the same 
 ]
 `;
 
-exports[`Polkadot Asset Hub Conviction Voting > Voting > vote more than the total balance - InsufficientFunds > vote above the total balance 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x06000000",
-          "index": 61,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 700000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
 exports[`Polkadot Asset Hub Conviction Voting > Voting > vote on a cancelled poll - NotOngoing > vote on a cancelled poll 1`] = `
 [
   {
@@ -973,6 +948,53 @@ exports[`Polkadot Asset Hub Conviction Voting > Voting > vote up to MaxVotes - l
         },
       },
       "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote up to the total balance - reserved funds count, InsufficientFunds above > vote above the total balance 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote up to the total balance - reserved funds count, InsufficientFunds above > vote between the free and the total balance 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": "(rounded 100000000000000)",
+          "vote": {
+            "conviction": "None",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Voted",
     "section": "convictionVoting",
