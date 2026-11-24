@@ -147,6 +147,7 @@ These include:
   - Curator assignment, acceptance, and management
   - Bounty extension, awarding, and claiming processes
   - Bounty closure in various states (proposed, funded, active)
+  - Reclaiming funds left in a closed bounty's account with `reclaim_bounty_funds`, skipped on runtimes without the call
   - Curator unassignment scenarios (by curator themselves vs. treasurer)
   - Comprehensive failure mode testing:
     - Invalid bounty values and descriptions
