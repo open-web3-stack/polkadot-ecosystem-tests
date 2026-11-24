@@ -174,7 +174,8 @@ These include:
   - payment status: confirming payments, and retries of payments that cannot fail
   - curator: deposit formula and cap, acceptance, removal by the curator (deposit returned) or the
     reject origin (deposit burned), and re-proposal by a spender track within its limit
-  - award and close: payouts and refunds with exact balance changes, origin checks, open children
+  - award and close: payouts and refunds with exact balance changes, origin checks, open children,
+    and closing a parent after child payouts
   - child bounties: parent-curated and separately curated children, payout and refund accounting
     against the parent, the active child limit, and the parent curator's powers over children
   - increase value: deposit re-pricing, and the top-up an increase needs before it can be paid

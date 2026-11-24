@@ -533,6 +533,27 @@ async function childWithOwnCurator(
 }
 
 /**
+ * Fund a child bounty of `parent` worth `value` and pay it out to bob, as the parent's curator,
+ * alice, in one batch: fund the child with alice as its curator too, settle the funding, award the
+ * child, and settle the payout. The child is then removed, and its value has left the parent's
+ * account for good.
+ */
+async function paidOutChild(client: Client<any, any>, parent: number, value: bigint): Promise<void> {
+  const tx = bountiesTx(client)
+  const child = (await bountiesQuery(client).totalChildBountiesPerParent(parent)).toNumber()
+  const payOutChild = client.api.tx.utility.batchAll([
+    tx.fundChildBounty(parent, value, METADATA_HASH, null),
+    tx.checkStatus(parent, child),
+    tx.awardBounty(parent, child, localBeneficiary(bob)),
+    tx.checkStatus(parent, child),
+  ])
+  await sendTransaction(payOutChild.signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+  expect((await bountiesQuery(client).childBounties(parent, child)).isNone).toBe(true)
+}
+
+/**
  * The `balances` event `method` naming `who` in the latest block. The installed type augmentation
  * lacks the hold events, so they are looked up by name, and a missing one fails the test.
  */
@@ -1811,6 +1832,210 @@ async function closeParentAfterChildPayout(client: Client<any, any>, testConfig:
 }
 
 /**
+ * The curator of a parent bounty may close it after a child bounty was paid out, and the refund
+ * settles like any other: the treasury gets what the parent's account still holds, and the
+ * curator's deposit comes back in full.
+ *
+ * Removing the parent also clears what it recorded about its children. The value it set aside for
+ * children stays recorded after a child is paid out, so only the removal resets it.
+ *
+ * 1. Make alice the active curator of a bounty, and pay a child bounty out of it
+ * 2. Verify the parent's account holds the parent's value minus the child's
+ * 3. Close the parent as alice
+ * 4. Verify `BountyCanceled` and `Paid`, that the treasury got exactly the remainder, that the
+ *    parent's account is empty, and that the bounty is `RefundAttempted` with alice recorded
+ * 5. Confirm the refund as dave
+ * 6. Verify `BountyRefundProcessed`, that the bounty and its child counters are gone, and
+ *    `balances.Released` for alice's whole deposit, with nothing burned
+ */
+async function curatorClosesParentAfterChildPayout(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const cv = await childValue(client, asset)
+  const query = bountiesQuery(client)
+
+  // 1. Active parent with a paid-out child
+  const index = await activeBounty(client, asset, value, alice)
+  const deposit = (await query.curatorDeposit(index, null)).unwrap().toBigInt()
+  const holdBefore = await curatorHold(client, alice)
+  await paidOutChild(client, index, cv)
+
+  // 2. Parent account holds the remainder
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(value - cv)
+  const treasuryBefore = await balanceOf(client, asset, treasuryPot(client))
+
+  // 3. Close as alice
+  await sendTransaction(bountiesTx(client).closeBounty(index, null).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 4. BountyCanceled, Paid, remainder refunded
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('curator closes parent after child payout: events')
+  await expectNoExtrinsicFailure(client)
+  const canceled = await bountyEvent(client, 'BountyCanceled', index)
+  expect(canceled.data.childIndex.isNone).toBe(true)
+  expect((await bountyEvent(client, 'Paid', index)).data.paymentId.toBigInt()).toBe(LOCAL_PAY_ID)
+  expect(await balanceOf(client, asset, treasuryPot(client))).toBe(treasuryBefore + value - cv)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(0n)
+  const { status } = await getBounty(client, index)
+  assert(status.isRefundAttempted)
+  expect(status.asRefundAttempted.curator.unwrap().toString()).toBe(addressOf(client, alice))
+
+  // 5. Confirm as dave
+  await sendTransaction(bountiesTx(client).checkStatus(index, null).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 6. BountyRefundProcessed, bounty and child counters removed, deposit released
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(volatileKeysWithAmounts(asset))
+    .toMatchSnapshot('settle net refund of curator-closed parent: events')
+  await expectNoExtrinsicFailure(client)
+  const processed = await bountyEvent(client, 'BountyRefundProcessed', index)
+  expect(processed.data.childIndex.isNone).toBe(true)
+  expect((await query.bounties(index)).isNone).toBe(true)
+  expect((await query.childBountiesValuePerParent(index)).toBigInt()).toBe(0n)
+  expect((await query.childBountiesPerParent(index)).toNumber()).toBe(0)
+  expect((await query.totalChildBountiesPerParent(index)).toNumber()).toBe(0)
+  expect((await balancesEvent(client, 'Released', alice)).data.amount.toBigInt()).toBe(deposit)
+  const burned = (await client.api.query.system.events()).filter(({ event }) =>
+    (client.api.events as any).balances.BurnedHeld.is(event),
+  )
+  expect(burned).toHaveLength(0)
+  expect(await curatorHold(client, alice)).toBe(holdBefore - deposit)
+}
+
+/**
+ * A parent bounty counts the value it set aside for child bounties. A child that is paid out stays
+ * counted, because its value never comes back. A child that is closed stops being counted, because
+ * its value returns to the parent's account. Closing the parent therefore withholds only the
+ * paid-out child's value from the refund.
+ *
+ * The two children have different values, so a refund that withheld the wrong one, both or neither
+ * would move a different amount.
+ *
+ * 1. Make alice the active curator of a bounty, and pay a child bounty out of it
+ * 2. As alice, in one batch: fund a second child worth twice the first, settle it, close it, and
+ *    settle its refund
+ * 3. Verify both children are gone, the parent counts only the first child's value, and its
+ *    account holds the parent's value minus the first child's
+ * 4. Close the parent as `Treasurer`
+ * 5. Verify `BountyCanceled`, that the treasury got exactly what the account held, and that the
+ *    account is empty
+ */
+async function closeParentAfterChildPayoutAndChildRefund(
+  client: Client<any, any>,
+  testConfig: MultiAssetBountiesTestConfig,
+) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const cv = await childValue(client, asset)
+  const query = bountiesQuery(client)
+
+  // 1. Active parent with a paid-out child
+  const index = await activeBounty(client, asset, value, alice)
+  await paidOutChild(client, index, cv)
+
+  // 2. Fund and close a second child
+  const tx = bountiesTx(client)
+  const closed = (await query.totalChildBountiesPerParent(index)).toNumber()
+  const fundAndCloseChild = client.api.tx.utility.batchAll([
+    tx.fundChildBounty(index, 2n * cv, METADATA_HASH, null),
+    tx.checkStatus(index, closed),
+    tx.closeBounty(index, closed),
+    tx.checkStatus(index, closed),
+  ])
+  await sendTransaction(fundAndCloseChild.signAsync(alice))
+  await client.dev.newBlock()
+  await expectNoExtrinsicFailure(client)
+
+  // 3. Only the paid-out child still counts
+  expect((await query.childBounties(index, closed)).isNone).toBe(true)
+  expect((await query.totalChildBountiesPerParent(index)).toNumber()).toBe(closed + 1)
+  expect((await query.childBountiesPerParent(index)).toNumber()).toBe(0)
+  expect((await query.childBountiesValuePerParent(index)).toBigInt()).toBe(cv)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(value - cv)
+  const treasuryBefore = await balanceOf(client, asset, treasuryPot(client))
+
+  // 4. Close the parent
+  const result = await dispatchAs(client, tx.closeBounty(index, null), TREASURER)
+
+  // 5. BountyCanceled, the paid-out child's value withheld
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('close parent after child payout and child refund: events')
+  expectDispatchOk(result)
+  const canceled = await bountyEvent(client, 'BountyCanceled', index)
+  expect(canceled.data.childIndex.isNone).toBe(true)
+  expect(await balanceOf(client, asset, treasuryPot(client))).toBe(treasuryBefore + value - cv)
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(0n)
+}
+
+/**
+ * A child bounty may take the parent's whole value. Once it is paid out, the parent's account
+ * holds nothing. The parent can still be closed: the refund is a payment of zero, which succeeds,
+ * and it settles like any other refund. Closing removes the bounty and frees its curator's
+ * deposit.
+ *
+ * 1. Make alice the active curator of a bounty, and pay out a child bounty worth the parent's
+ *    whole value
+ * 2. Verify the parent's account is empty, and the parent counts its whole value as set aside
+ * 3. Close the parent as `Treasurer`
+ * 4. Verify the call dispatched, `BountyCanceled` and `Paid`, and that the treasury's balance did
+ *    not change
+ * 5. Confirm the refund as dave
+ * 6. Verify `BountyRefundProcessed`, that the bounty is gone, and `balances.Released` for alice's
+ *    whole deposit
+ */
+async function closeParentFullyPaidToChild(client: Client<any, any>, testConfig: MultiAssetBountiesTestConfig) {
+  const asset = testConfig.primaryAsset
+  const value = await parentValue(client, asset)
+  const query = bountiesQuery(client)
+
+  // 1. Active parent whose child took everything
+  const index = await activeBounty(client, asset, value, alice)
+  const deposit = (await query.curatorDeposit(index, null)).unwrap().toBigInt()
+  await paidOutChild(client, index, value)
+
+  // 2. Parent account empty
+  expect(await balanceOf(client, asset, bountyAccount(client, index))).toBe(0n)
+  expect((await query.childBountiesValuePerParent(index)).toBigInt()).toBe(value)
+  const treasuryBefore = await balanceOf(client, asset, treasuryPot(client))
+
+  // 3. Close the parent
+  const result = await dispatchAs(client, bountiesTx(client).closeBounty(index, null), TREASURER)
+
+  // 4. BountyCanceled, Paid, nothing moved
+  await checkSystemEvents(client, ...BOUNTY_EVENTS)
+    .map(redactBountyIndex)
+    .redact(VOLATILE_KEYS)
+    .toMatchSnapshot('close parent fully paid to child: events')
+  expectDispatchOk(result)
+  const canceled = await bountyEvent(client, 'BountyCanceled', index)
+  expect(canceled.data.childIndex.isNone).toBe(true)
+  expect((await bountyEvent(client, 'Paid', index)).data.paymentId.toBigInt()).toBe(LOCAL_PAY_ID)
+  expect(await balanceOf(client, asset, treasuryPot(client))).toBe(treasuryBefore)
+  expect((await getBounty(client, index)).status.isRefundAttempted).toBe(true)
+
+  // 5. Confirm as dave
+  await sendTransaction(bountiesTx(client).checkStatus(index, null).signAsync(dave))
+  await client.dev.newBlock()
+
+  // 6. BountyRefundProcessed, bounty removed, deposit released
+  await checkSystemEvents(client, ...DEPOSIT_EVENTS)
+    .map(redactBountyIndex)
+    .redact(volatileKeysWithAmounts(asset))
+    .toMatchSnapshot('settle zero refund of parent: events')
+  await expectNoExtrinsicFailure(client)
+  await bountyEvent(client, 'BountyRefundProcessed', index)
+  expect((await query.bounties(index)).isNone).toBe(true)
+  expect((await balancesEvent(client, 'Released', alice)).data.amount.toBigInt()).toBe(deposit)
+}
+
+/**
  * Once a bounty has no curator, only the reject origin may close it: its former curator no
  * longer can.
  *
@@ -2532,6 +2757,23 @@ function withSecondaryAsset(
   }
 }
 
+/**
+ * Run `body`, or skip the test on a runtime that asks a closed parent bounty for its full value.
+ * There, closing a parent after a child payout fails with `RefundError`, so no refund happens.
+ */
+function withNetParentRefund(
+  testConfig: MultiAssetBountiesTestConfig,
+  body: () => Promise<void>,
+): (ctx?: TestContext) => Promise<void> {
+  return async (ctx) => {
+    if (!testConfig.parentRefundNetOfChildren) {
+      ctx?.skip('this runtime asks a closed parent bounty for its full value, so the close fails with RefundError')
+      return
+    }
+    await body()
+  }
+}
+
 export function multiAssetBountiesE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -2764,6 +3006,23 @@ export function multiAssetBountiesE2ETests<
             kind: 'test',
             label: 'close parent after child payout - refund net of children, or RefundError',
             testFn: () => closeParentAfterChildPayout(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'curator closes parent after child payout - net refund settles, deposit released',
+            testFn: withNetParentRefund(testConfig, () => curatorClosesParentAfterChildPayout(client, testConfig)),
+          },
+          {
+            kind: 'test',
+            label: 'close parent after one child paid out and one closed - only the paid-out value withheld',
+            testFn: withNetParentRefund(testConfig, () =>
+              closeParentAfterChildPayoutAndChildRefund(client, testConfig),
+            ),
+          },
+          {
+            kind: 'test',
+            label: 'close parent whose child took its whole value - nothing left to refund',
+            testFn: withNetParentRefund(testConfig, () => closeParentFullyPaidToChild(client, testConfig)),
           },
           {
             kind: 'test',
