@@ -289,6 +289,18 @@ These include:
     - `Nonsense`, `BadClass`, `AlreadyVoting`, `NotDelegating`
     - `ClassNeeded`, `NotVoter`, `NoPermission`, `NoPermissionYet`
     - `BadOrigin` for every call when dispatched as Root
+- E2E test suite for how the `AllianceMotion` collective on Westend Collectives identifies a
+  motion. Runtimes whose proposal hash covers the call and the voting threshold are tested for:
+  - Proposal identity: the hash a client derives, the same call pending under two thresholds, and
+    `DuplicateProposal` for the same call and threshold
+  - Immediate execution with threshold 1: the hash in `Executed`, running beside a pending motion
+    for the same call, and `DuplicateProposal` against a threshold 1 motion opened through
+    `alliance.propose`
+  - Addressing a motion: `ProposalMissing` for the hash of the call alone, and the propose, vote
+    and close path through the `alliance` pallet
+  - `execute`, whose `MemberExecuted` event carries the hash of the call alone on every runtime
+
+  The tests of the threshold in the hash skip on runtimes that hash the call alone.
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.

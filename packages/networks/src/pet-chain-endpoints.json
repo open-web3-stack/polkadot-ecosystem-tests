@@ -9,6 +9,10 @@
     "wss://asset-hub-westend-rpc.n.dwellir.com",
     "wss://westend-asset-hub-rpc.polkadot.io"
   ],
+  "collectivesWestend": [
+    "wss://westend-collectives-rpc.polkadot.io",
+    "wss://collectives-westend-rpc.n.dwellir.com"
+  ],
   "assetHubPolkadot": [
     "wss://rpc-asset-hub-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io/assethub",

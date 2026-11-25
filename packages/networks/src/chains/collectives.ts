@@ -8,6 +8,9 @@ const custom = {
   collectivesPolkadot: {
     dot: { Concrete: { parents: 1, interior: 'Here' } },
   },
+  collectivesWestend: {
+    wnd: { Concrete: { parents: 1, interior: 'Here' } },
+  },
 }
 
 const getInitStorages = (_config: typeof custom.collectivesPolkadot) => ({
@@ -33,6 +36,24 @@ export const collectivesPolkadot = defineChain({
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
     relayBlocksPerParaBlock: 2,
+    feeExtractor: standardFeeExtractor,
+  },
+})
+
+// Collectives Westend (SS58: 42). Blocks are 6 seconds, one per relay chain block. Its proxy and
+// scheduler pallets count local block numbers. No accounts are seeded here: suites fund the
+// accounts they sign with.
+export const collectivesWestend = defineChain({
+  name: 'collectivesWestend',
+  endpoint: endpoints.collectivesWestend,
+  paraId: 1001,
+  networkGroup: 'westend',
+  custom: custom.collectivesWestend,
+  properties: {
+    addressEncoding: 42,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
+    relayBlocksPerParaBlock: 1,
     feeExtractor: standardFeeExtractor,
   },
 })

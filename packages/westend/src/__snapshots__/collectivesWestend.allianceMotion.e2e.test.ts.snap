@@ -1,0 +1,268 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Collectives AllianceMotion > Addressing a motion > alliance propose, vote and close - motion addressed by its hash > alliance close: collective and alliance events 1`] = `
+[
+  {
+    "data": {
+      "no": 0,
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "yes": 3,
+    },
+    "method": "Closed",
+    "section": "allianceMotion",
+  },
+  {
+    "data": {
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+    },
+    "method": "Approved",
+    "section": "allianceMotion",
+  },
+  {
+    "data": {
+      "rule": {
+        "codec": 85,
+        "hash_": {
+          "code": 18,
+          "digest": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        },
+        "version": "V1",
+      },
+    },
+    "method": "NewRuleSet",
+    "section": "alliance",
+  },
+  {
+    "data": {
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "result": "Ok",
+    },
+    "method": "Executed",
+    "section": "allianceMotion",
+  },
+]
+`;
+
+exports[`Westend Collectives AllianceMotion > Addressing a motion > alliance propose, vote and close - motion addressed by its hash > alliance propose with threshold 3: Proposed event 1`] = `
+[
+  {
+    "data": {
+      "account": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "proposalIndex": "(redacted)",
+      "threshold": 3,
+    },
+    "method": "Proposed",
+    "section": "allianceMotion",
+  },
+]
+`;
+
+exports[`Westend Collectives AllianceMotion > Addressing a motion > alliance propose, vote and close - motion addressed by its hash > alliance vote: Voted events 1`] = `
+[
+  {
+    "data": {
+      "account": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "no": 0,
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "voted": true,
+      "yes": 1,
+    },
+    "method": "Voted",
+    "section": "allianceMotion",
+  },
+  {
+    "data": {
+      "account": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+      "no": 0,
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "voted": true,
+      "yes": 2,
+    },
+    "method": "Voted",
+    "section": "allianceMotion",
+  },
+  {
+    "data": {
+      "account": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+      "no": 0,
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "voted": true,
+      "yes": 3,
+    },
+    "method": "Voted",
+    "section": "allianceMotion",
+  },
+]
+`;
+
+exports[`Westend Collectives AllianceMotion > Immediate execution > propose with threshold 1 - DuplicateProposal while a threshold 1 motion is pending > alliance propose with threshold 1: Proposed event 1`] = `
+[
+  {
+    "data": {
+      "account": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "proposalHash": "0x019ef88dc6c5febf5f4cc3f0dd589fdaaafda1a32ac966ccfb3be4ade477c482",
+      "proposalIndex": "(redacted)",
+      "threshold": 1,
+    },
+    "method": "Proposed",
+    "section": "allianceMotion",
+  },
+]
+`;
+
+exports[`Westend Collectives AllianceMotion > Immediate execution > propose with threshold 1 - Executed carries the hash of the call and the threshold > propose with threshold 1: Executed event 1`] = `
+[
+  {
+    "data": {
+      "proposalHash": "0x019ef88dc6c5febf5f4cc3f0dd589fdaaafda1a32ac966ccfb3be4ade477c482",
+      "result": {
+        "Err": "BadOrigin",
+      },
+    },
+    "method": "Executed",
+    "section": "allianceMotion",
+  },
+]
+`;
+
+exports[`Westend Collectives AllianceMotion > Immediate execution > propose with threshold 1 - runs beside a pending motion with another threshold > threshold 1 beside a pending threshold 2 motion: Executed event 1`] = `
+[
+  {
+    "data": {
+      "proposalHash": "0x019ef88dc6c5febf5f4cc3f0dd589fdaaafda1a32ac966ccfb3be4ade477c482",
+      "result": {
+        "Err": "BadOrigin",
+      },
+    },
+    "method": "Executed",
+    "section": "allianceMotion",
+  },
+]
+`;
+
+exports[`Westend Collectives AllianceMotion > Member execution > execute - MemberExecuted carries the hash of the call alone > execute: MemberExecuted event 1`] = `
+[
+  {
+    "data": {
+      "proposalHash": "0xa76d0855f45f27b84f605b3c9ca797a254152551bcdc2db250b96c36fcc59eaa",
+      "result": {
+        "Err": "BadOrigin",
+      },
+    },
+    "method": "MemberExecuted",
+    "section": "allianceMotion",
+  },
+]
+`;
+
+exports[`Westend Collectives AllianceMotion > Proposal identity > propose - proposal hash covers the call and the threshold > propose with threshold 2: Proposed event 1`] = `
+[
+  {
+    "data": {
+      "account": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "proposalHash": "0x38ddfdd5b832b3d44f7f677fe32b9cc02e88e50ac783b44f6df8f0ae23a69184",
+      "proposalIndex": "(redacted)",
+      "threshold": 2,
+    },
+    "method": "Proposed",
+    "section": "allianceMotion",
+  },
+]
+`;
+
+exports[`Westend Collectives AllianceMotion > Proposal identity > propose - same call with another threshold is a separate motion > same call with threshold 3: Proposed event 1`] = `
+[
+  {
+    "data": {
+      "account": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "proposalIndex": "(redacted)",
+      "threshold": 3,
+    },
+    "method": "Proposed",
+    "section": "allianceMotion",
+  },
+]
+`;
+
+exports[`Westend Collectives AllianceMotion > Proposal identity > propose - same call with another threshold is a separate motion > threshold 3 motion closed: collective and alliance events 1`] = `
+[
+  {
+    "data": {
+      "no": 0,
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "yes": 3,
+    },
+    "method": "Closed",
+    "section": "allianceMotion",
+  },
+  {
+    "data": {
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+    },
+    "method": "Approved",
+    "section": "allianceMotion",
+  },
+  {
+    "data": {
+      "rule": {
+        "codec": 85,
+        "hash_": {
+          "code": 18,
+          "digest": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        },
+        "version": "V1",
+      },
+    },
+    "method": "NewRuleSet",
+    "section": "alliance",
+  },
+  {
+    "data": {
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "result": "Ok",
+    },
+    "method": "Executed",
+    "section": "allianceMotion",
+  },
+]
+`;
+
+exports[`Westend Collectives AllianceMotion > Proposal identity > propose - same call with another threshold is a separate motion > threshold 3 motion: Voted events 1`] = `
+[
+  {
+    "data": {
+      "account": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "no": 0,
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "voted": true,
+      "yes": 1,
+    },
+    "method": "Voted",
+    "section": "allianceMotion",
+  },
+  {
+    "data": {
+      "account": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+      "no": 0,
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "voted": true,
+      "yes": 2,
+    },
+    "method": "Voted",
+    "section": "allianceMotion",
+  },
+  {
+    "data": {
+      "account": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+      "no": 0,
+      "proposalHash": "0x72331c0579d223b6107289736768ccc1abde5347de4084f53f4d7c3ecdb22fc8",
+      "voted": true,
+      "yes": 3,
+    },
+    "method": "Voted",
+    "section": "allianceMotion",
+  },
+]
+`;

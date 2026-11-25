@@ -1,4 +1,5 @@
 export * from './accounts.js'
+export * from './allianceMotion.js'
 export * from './assetRate.js'
 export * from './bounties.js'
 export * from './bridge.js'
