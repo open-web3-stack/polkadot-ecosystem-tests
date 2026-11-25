@@ -695,6 +695,92 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Close > close parent after chi
 ]
 `;
 
+exports[`Westend Asset Hub Multi-Asset Bounties > Close > close parent after one child paid out and one closed - only the paid-out value withheld > close parent after child payout and child refund: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyCanceled",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Multi-Asset Bounties > Close > close parent whose child took its whole value - nothing left to refund > close parent fully paid to child: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyCanceled",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Multi-Asset Bounties > Close > close parent whose child took its whole value - nothing left to refund > settle zero refund of parent: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyRefundProcessed",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "amount": "(redacted)",
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Released",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Westend Asset Hub Multi-Asset Bounties > Close > close parent with active child - HasActiveChildBounty > close parent with active child: events 1`] = `
 [
   {
@@ -739,6 +825,52 @@ exports[`Westend Asset Hub Multi-Asset Bounties > Close > curator closes own Act
 `;
 
 exports[`Westend Asset Hub Multi-Asset Bounties > Close > curator closes own Active bounty - refund, deposit released > settle refund of curator-closed bounty: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyRefundProcessed",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "amount": "(redacted)",
+      "reason": {
+        "MultiAssetBounties": "CuratorDeposit",
+      },
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Released",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Multi-Asset Bounties > Close > curator closes parent after child payout - net refund settles, deposit released > curator closes parent after child payout: events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+      "paymentId": "(rounded 18000000000000000000)",
+    },
+    "method": "Paid",
+    "section": "multiAssetBounties",
+  },
+  {
+    "data": {
+      "childIndex": null,
+      "index": "(bounty index)",
+    },
+    "method": "BountyCanceled",
+    "section": "multiAssetBounties",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Multi-Asset Bounties > Close > curator closes parent after child payout - net refund settles, deposit released > settle net refund of curator-closed parent: events 1`] = `
 [
   {
     "data": {

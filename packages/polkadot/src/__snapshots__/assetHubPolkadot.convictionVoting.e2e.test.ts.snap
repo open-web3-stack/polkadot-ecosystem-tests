@@ -1,0 +1,1050 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > delegate - Delegated, delegations added to the target's open vote > delegation with 2x conviction 1`] = `
+[
+  {
+    "data": [
+      "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+      30,
+    ],
+    "method": "Delegated",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > delegate more than the total balance - InsufficientFunds > delegation above the total balance 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 30000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > delegate on a class that is not a track - BadClass > delegation of an unknown class 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 30000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > delegate to a split voter - delegations not counted in the tally > delegation to a split voter 1`] = `
+[
+  {
+    "data": [
+      "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+      30,
+    ],
+    "method": "Delegated",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > delegate to a split voter - delegations not counted in the tally > split vote 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Split": {
+          "aye": 100000000000,
+          "nay": 100000000000,
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > delegate to self - Nonsense > delegation to self 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x08000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 30000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > delegate twice in one class - AlreadyDelegating > second delegation of the same class 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 30000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > delegate while voting in the class - AlreadyVoting > delegation of a class with a vote 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 30000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > undelegate - Undelegated, tally restored, conviction lock kept > undelegation 1`] = `
+[
+  {
+    "data": [
+      "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      30,
+    ],
+    "method": "Undelegated",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > undelegate - Undelegated, tally restored, conviction lock kept > unlock during the conviction lock 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > undelegate without a delegation - NotDelegating > undelegation without a delegation 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x07000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 30000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > undelegate without conviction - unlock frees the balance at once > delegation with no conviction 1`] = `
+[
+  {
+    "data": [
+      "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+      30,
+    ],
+    "method": "Delegated",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > undelegate without conviction - unlock frees the balance at once > undelegation with no conviction 1`] = `
+[
+  {
+    "data": [
+      "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      30,
+    ],
+    "method": "Undelegated",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Delegation > undelegate without conviction - unlock frees the balance at once > unlock after undelegation 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Origins > calls from a Root origin - BadOrigin > conviction voting calls dispatched as Root 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove a vote that does not exist - NotVoter > third party removes a vote that does not exist 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove a vote that does not exist - NotVoter > voter removes a vote that does not exist 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove other vote during the poll - NoPermission > third party removes a vote during the poll 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove other vote on a losing vote - removed by anyone after the poll > third party unlocks a losing vote 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "13Dp7rQ6JVtKgUdHpw8hBzx8fcrfvb4Vb9gkwifzMznKmvUu",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove other vote on a winning vote - NoPermissionYet until the lock ends > third party removes a winning vote one block before its lock ends 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x03000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove other vote on a winning vote - NoPermissionYet until the lock ends > third party removes a winning vote right after the poll 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x03000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove other vote on a winning vote - NoPermissionYet until the lock ends > third party unlocks an expired vote 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove other vote on oneself - same as remove vote > own vote removed through remove_other_vote 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 100000000000,
+          "vote": {
+            "conviction": "Locked1x",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteRemoved",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove vote after cancellation - ClassNeeded without a class, removed silently with one > unlock after cancellation 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove vote after cancellation - ClassNeeded without a class, removed silently with one > vote removal without a class after cancellation 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove vote during the poll - VoteRemoved, tally restored, lock kept until unlock > unlock after removing the vote 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove vote during the poll - VoteRemoved, tally restored, lock kept until unlock > vote removed during the poll 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 100000000000,
+          "vote": {
+            "conviction": "Locked2x",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteRemoved",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove votes after rejection - winning votes locked by conviction, the rest freed > unlock of a losing vote with conviction 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "13Dp7rQ6JVtKgUdHpw8hBzx8fcrfvb4Vb9gkwifzMznKmvUu",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove votes after rejection - winning votes locked by conviction, the rest freed > unlock of a winning vote with conviction 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Unlocking and class locks > class locks - account lock follows the largest class, released per class > unlock of the main class 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Unlocking and class locks > class locks - account lock follows the largest class, released per class > unlock of the second class 1`] = `
+[
+  {
+    "data": {
+      "class": 31,
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Unlocking and class locks > class locks - account lock follows the largest class, released per class > vote removed in the main class 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 100000000000,
+          "vote": {
+            "conviction": "Locked1x",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteRemoved",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Unlocking and class locks > class locks - account lock follows the largest class, released per class > vote removed in the second class 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 200000000000,
+          "vote": {
+            "conviction": "Locked1x",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteRemoved",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Unlocking and class locks > locked balance cannot be transferred until unlocked > transfer after unlocking 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 95000000000000)",
+      "from": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+      "to": "15Y1VYcCkzD91e5hzAW36wynBfh3inNzzwmUYF9gtm6NZwzi",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Unlocking and class locks > locked balance cannot be transferred until unlocked > transfer of a locked balance 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Token": "Frozen",
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Unlocking and class locks > unlock with nothing to release - VoteUnlocked, lock unchanged > unlock of a class that is not a track 1`] = `
+[
+  {
+    "data": {
+      "class": 99,
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Unlocking and class locks > unlock with nothing to release - VoteUnlocked, lock unchanged > unlock of a class with an open vote 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote - conviction weights the tally and locks the balance > aye vote with 3x conviction 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 100000000000,
+          "vote": {
+            "conviction": "Locked3x",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote - conviction weights the tally and locks the balance > nay vote with no conviction 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 100000000000,
+          "vote": {
+            "conviction": "None",
+            "vote": "Nay",
+          },
+        },
+      },
+      "who": "15Y1VYcCkzD91e5hzAW36wynBfh3inNzzwmUYF9gtm6NZwzi",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote again on the same poll - vote replaced, lock kept until unlock > second vote on the same poll 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 100000000000,
+          "vote": {
+            "conviction": "None",
+            "vote": "Nay",
+          },
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote again on the same poll - vote replaced, lock kept until unlock > unlock after lowering the vote 1`] = `
+[
+  {
+    "data": {
+      "class": 30,
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "VoteUnlocked",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote on a cancelled poll - NotOngoing > vote on a cancelled poll 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote on two polls in one class - lock is the largest vote > vote on the first poll 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 100000000000,
+          "vote": {
+            "conviction": "Locked1x",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote on two polls in one class - lock is the largest vote > vote on the second poll 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 200000000000,
+          "vote": {
+            "conviction": "Locked1x",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote up to MaxVotes - last vote accepted, next one MaxVotesReached, change allowed > changed vote with a full list 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 100000000000,
+          "vote": {
+            "conviction": "None",
+            "vote": "Nay",
+          },
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote up to MaxVotes - last vote accepted, next one MaxVotesReached, change allowed > vote beyond the limit 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x09000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote up to MaxVotes - last vote accepted, next one MaxVotesReached, change allowed > vote that fills the list 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 100000000000,
+          "vote": {
+            "conviction": "None",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote up to the total balance - reserved funds count, InsufficientFunds above > vote above the total balance 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote up to the total balance - reserved funds count, InsufficientFunds above > vote between the free and the total balance 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": "(rounded 100000000000000)",
+          "vote": {
+            "conviction": "None",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote while delegating - AlreadyDelegating, other classes still open > vote in a class that is not delegated 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(redacted)",
+      "vote": {
+        "Standard": {
+          "balance": 100000000000,
+          "vote": {
+            "conviction": "Locked1x",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Conviction Voting > Voting > vote while delegating - AlreadyDelegating, other classes still open > vote in a delegated class 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;

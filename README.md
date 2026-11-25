@@ -145,8 +145,10 @@ These include:
 - E2E test suite for bounties infrastructure:
   - Bounty creation, approval, and funding workflows
   - Curator assignment, acceptance, and management
+  - Claiming a bounty whose account holds locked funds, skipped on runtimes that size the payout from the free balance
   - Bounty extension, awarding, and claiming processes
   - Bounty closure in various states (proposed, funded, active)
+  - Reclaiming funds left in a closed bounty's account with `reclaim_bounty_funds`, skipped on runtimes without the call
   - Curator unassignment scenarios (by curator themselves vs. treasurer)
   - Comprehensive failure mode testing:
     - Invalid bounty values and descriptions
@@ -157,6 +159,7 @@ These include:
 - E2E test suite for child bounties infrastructure:
   - Child bounty creation, curator assignment, acceptance, awarding and claiming workflows
   - Child bounty closure and fund return to parent bounty
+  - Claiming and closing a child bounty whose account holds locked funds, skipped on runtimes that size the payout from the free balance
   - Child bounty rejection by curators and cancellation by parent curators
   - Curator unassignment scenarios with different deposit handling (refund vs. slash)
   - Storage verification for child bounty counters and cleanup
@@ -174,7 +177,8 @@ These include:
   - payment status: confirming payments, and retries of payments that cannot fail
   - curator: deposit formula and cap, acceptance, removal by the curator (deposit returned) or the
     reject origin (deposit burned), and re-proposal by a spender track within its limit
-  - award and close: payouts and refunds with exact balance changes, origin checks, open children
+  - award and close: payouts and refunds with exact balance changes, origin checks, open children,
+    and closing a parent after child payouts
   - child bounties: parent-curated and separately curated children, payout and refund accounting
     against the parent, the active child limit, and the parent curator's powers over children
   - increase value: deposit re-pricing, and the top-up an increase needs before it can be paid
@@ -269,6 +273,22 @@ These include:
     clearing after the referendum ends
   - Rejected origins for every call (signed, Root, and admin origins outside their gate), and
     calls on an unknown referendum index
+- E2E test suite for the conviction voting pallet on the Asset Hubs:
+  - Voting: conviction-weighted tallies of real referenda, vote replacement, one lock
+    shared by several votes of a class, and the `MaxVotes` limit
+  - Delegation: delegated votes added to and removed from the target's open vote, the
+    conviction lock kept after `undelegate`, and split votes not carrying delegations
+  - Removing votes: during a poll, after cancellation, and after rejection, where only
+    winning votes with conviction stay locked, for `VoteLockingPeriod` times 1, 4 or 32
+  - `remove_other_vote`: refused while the poll runs and until the exact block the
+    vote's lock ends, then open to anyone
+  - Locks: one lock per class, the `pyconvot` balance lock equal to the largest, released
+    class by class with `unlock`, and enforced by the balances pallet on transfers
+  - Comprehensive failure mode testing:
+    - `InsufficientFunds`, `NotOngoing`, `AlreadyDelegating`, `MaxVotesReached`
+    - `Nonsense`, `BadClass`, `AlreadyVoting`, `NotDelegating`
+    - `ClassNeeded`, `NotVoter`, `NoPermission`, `NoPermissionYet`
+    - `BadOrigin` for every call when dispatched as Root
 - E2E test suite for how the `AllianceMotion` collective on Westend Collectives identifies a
   motion. Runtimes whose proposal hash covers the call and the voting threshold are tested for:
   - Proposal identity: the hash a client derives, the same call pending under two thresholds, and
