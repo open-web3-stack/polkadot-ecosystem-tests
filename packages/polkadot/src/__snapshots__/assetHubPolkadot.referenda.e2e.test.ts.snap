@@ -946,6 +946,252 @@ exports[`Polkadot Asset Hub Referenda > Submission > submit without the submissi
 ]
 `;
 
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > reject a referendum, slash its submission deposit, refund its decision deposit - each deposit settled once > decision period over: Rejected event 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Rejected",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > reject a referendum, slash its submission deposit, refund its decision deposit - each deposit settled once > decision refund after the slash: DecisionDepositRefunded event 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "index": "(redacted)",
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > reject a referendum, slash its submission deposit, refund its decision deposit - each deposit settled once > submission refund after rejection: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > reject a referendum, slash its submission deposit, refund its decision deposit - each deposit settled once > submitter slash: DepositSlashed event 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "DepositSlashed",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > reject a referendum, slash its submission deposit, refund its decision deposit - each deposit settled once > submitter slash: deposit slashed and credited to the slash destination 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "13UVJyLkAxdQn6zM3Gz49SmCLi8SZW3bdtm7DTY29ScavqW2",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > slash submission deposit from an admin origin - BadOrigin > admin origin slash: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > slash submission deposit of a rejected referendum from Root - DepositSlashed > Root slash: Dispatched and DepositSlashed events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "DepositSlashed",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > slash submission deposit of a rejected referendum from Root - DepositSlashed > Root slash: deposit slashed and credited to the slash destination 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "13UVJyLkAxdQn6zM3Gz49SmCLi8SZW3bdtm7DTY29ScavqW2",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > slash submission deposit of a timed-out referendum from a third party - slashed once, then NoDeposit > repeated slash: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > slash submission deposit of a timed-out referendum from a third party - slashed once, then NoDeposit > third party slash: DepositSlashed event 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "DepositSlashed",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > slash submission deposit of a timed-out referendum from a third party - slashed once, then NoDeposit > third party slash: deposit slashed and credited to the slash destination 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 100000000000,
+      "who": "13UVJyLkAxdQn6zM3Gz49SmCLi8SZW3bdtm7DTY29ScavqW2",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > slash submission deposit of an ongoing, cancelled or killed referendum - BadStatus > slash while ongoing: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Referenda > Submission deposit slash > slash submission deposit of an unknown referendum - BadReferendum > slash on an unknown referendum: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 62,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Referenda > Time-driven transitions > nudge from Root just before the undeciding timeout - alarm re-armed, then TimedOut > undeciding timeout: alarm Dispatched and TimedOut events 1`] = `
 [
   {

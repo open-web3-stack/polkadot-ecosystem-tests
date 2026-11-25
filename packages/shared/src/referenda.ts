@@ -21,13 +21,13 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
-import type { Client, RootTestTree } from '@e2e-test/shared'
+import type { Client, DescribeNode, RootTestTree } from '@e2e-test/shared'
 
 import type { KeyringPair } from '@polkadot/keyring/types'
 import { compactAddLength, stringToHex, stringToU8a, u8aConcat } from '@polkadot/util'
 import { blake2AsHex, encodeAddress } from '@polkadot/util-crypto'
 
-import { assert, expect } from 'vitest'
+import { assert, expect, type TestContext } from 'vitest'
 
 import {
   blockProviderOffset,
@@ -86,15 +86,17 @@ const DECISION_PERIOD_LEFT = 400
 /// -------
 
 /**
- * Where the runtime's `pallet_referenda::Config::Slash` handler sends deposits slashed by `kill`.
+ * Where the runtime's `pallet_referenda::Config::Slash` handler sends deposits slashed by `kill` and
+ * `slash_submission_deposit`.
  *
- * - `dapStaging`: `pallet_dap::DapLegacyAdapter`, which credits the DAP staging account.
+ * - `dapStaging`: `pallet_dap::DapLegacyAdapter`, which credits the DAP staging account. The
+ *   runtimes that slash to it also pay transaction fees into it.
  * - `treasury`: `pallet_treasury`, which credits the treasury pot and emits `treasury.Deposit`.
  */
 export type ReferendaSlashDestination = 'dapStaging' | 'treasury'
 
 export interface ReferendaTestConfig extends TestConfig {
-  /** Where `kill` sends slashed deposits on this chain. */
+  /** Where slashed deposits go on this chain. */
   slashDestination: ReferendaSlashDestination
 }
 
@@ -126,7 +128,7 @@ function addressOf(client: Client<any, any>, account: KeyringPair): string {
 }
 
 /**
- * Address of the account that `kill` credits with slashed deposits, in the chain's SS58 format.
+ * Address of the account credited with slashed deposits, in the chain's SS58 format.
  *
  * - `dapStaging`: the sub-account `staging` of `sp_dap::DAP_PALLET_ID` (`dap/buff`), as
  *   `pallet_dap::Pallet::staging_account` derives it.
@@ -1715,6 +1717,657 @@ async function refundKilledDepositsFails(client: Client<any, any>) {
 }
 
 /// -------
+/// Tests: submission deposit slash
+/// -------
+
+/**
+ * The `referenda.slash_submission_deposit` call for referendum `index`.
+ *
+ * Read through `any` because the API augmentation describes a generic runtime, whose `referenda`
+ * pallet does not list this call.
+ */
+function slashSubmissionDeposit(client: Client<any, any>, index: number) {
+  return (client.api.tx.referenda as any).slashSubmissionDeposit(index)
+}
+
+/**
+ * Setup: replace referendum `index`'s ongoing record with that of a referendum that has timed out
+ * or been rejected, still holds its submission deposit, and has no decision deposit. The relay
+ * block recorded as the referendum's end is returned.
+ *
+ * The pallet writes `TimedOut(end, submission deposit, decision deposit)` when the undeciding
+ * timeout passes, and `Rejected` with the same fields when the decision period ends while the
+ * referendum is failing. A rejected referendum has no decision deposit once that deposit has been
+ * refunded. The record written here is therefore one the pallet produces, and the submission
+ * deposit on it is the one `submit` reserved from the submitter.
+ *
+ * The transitions themselves are covered where a referendum times out through its alarm and where
+ * one is rejected through a nudge. Writing the record lets a test of the slash start from the
+ * finished state without the blocks those transitions take.
+ */
+async function finishWithSubmissionDeposit(
+  client: Client<any, any>,
+  index: number,
+  outcome: 'TimedOut' | 'Rejected',
+): Promise<number> {
+  const status = await ongoingStatus(client, index)
+  expect(status.decisionDeposit.isNone, 'setup: the referendum has a decision deposit').toBe(true)
+  const end = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  await client.dev.setStorage({
+    Referenda: {
+      ReferendumInfoFor: [[[index], { [outcome]: [end, status.submissionDeposit, null] }]],
+    },
+  })
+
+  const info = await client.api.query.referenda.referendumInfoFor(index)
+  assert(info.isSome)
+  expect(info.unwrap().type, 'setup: the finished record was not written').toBe(outcome)
+  return end
+}
+
+/**
+ * The head block's `referenda.DepositSlashed` events for deposits placed by `who`.
+ *
+ * The event carries no referendum index, and a live referendum can be killed in the same block, so
+ * the depositor identifies the slash under test.
+ */
+async function depositSlashedEvents(client: Client<any, any>, who: string) {
+  const events = await client.api.query.system.events()
+  return events.filter(
+    ({ event }) => client.api.events.referenda.DepositSlashed.is(event) && event.data.who.toString() === who,
+  )
+}
+
+/**
+ * The head block's events that move a slashed deposit: `balances.Slashed` from `who`,
+ * `balances.Deposit` into the slash destination, and `treasury.Deposit`, which the treasury emits
+ * where it is the destination.
+ */
+async function slashTransferEvents(client: Client<any, any>, who: string, destination: string) {
+  const events = await client.api.query.system.events()
+  return events.filter(
+    ({ event }) =>
+      (client.api.events.balances.Slashed.is(event) && event.data.who.toString() === who) ||
+      (client.api.events.balances.Deposit.is(event) && event.data.who.toString() === destination) ||
+      client.api.events.treasury.Deposit.is(event),
+  )
+}
+
+/**
+ * Snapshot the head block's `system.ExtrinsicFailed` events under `name`, without the weight.
+ *
+ * The weight comes from the runtime's benchmarks and changes whenever they are rerun. The error is
+ * what the snapshot is for.
+ */
+async function snapshotExtrinsicFailed(client: Client<any, any>, name: string) {
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' })
+    .redact({ redactKeys: /^weight$/ })
+    .toMatchSnapshot(name)
+}
+
+/**
+ * The fee the head block charged `who`, from its `transactionPayment.TransactionFeePaid` event.
+ *
+ * Asserts there is exactly one such event, so the fee belongs to the one extrinsic the test sent.
+ */
+async function feePaidBy(client: Client<any, any>, who: string): Promise<bigint> {
+  const events = await client.api.query.system.events()
+  const feesPaid = events.filter(
+    ({ event }) =>
+      client.api.events.transactionPayment.TransactionFeePaid.is(event) && event.data.who.toString() === who,
+  )
+  expect(feesPaid, 'expected exactly one TransactionFeePaid event for the caller').toHaveLength(1)
+  const { event } = feesPaid[0]
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(event))
+  return event.data.actualFee.toBigInt()
+}
+
+/**
+ * Assert that the transfer events of a slash move exactly `amount`: slashed once from the
+ * depositor, credited once to the slash destination, and recorded once by the treasury where it is
+ * the destination.
+ *
+ * `fee` is what the slashing extrinsic paid, or zero when the scheduler dispatched the call. Where
+ * the destination is the DAP staging account, the runtime pays transaction fees into that account
+ * as well, so a signed slash is followed by a second credit of exactly the fee.
+ */
+function expectOneDepositMoved(
+  client: Client<any, any>,
+  testConfig: ReferendaTestConfig,
+  transferRecords: { event: any }[],
+  amount: bigint,
+  fee: bigint,
+) {
+  const amountsOf = (is: (event: any) => boolean, field: string) =>
+    transferRecords.filter(({ event }) => is(event)).map(({ event }) => event.data[field].toBigInt())
+
+  expect(
+    amountsOf((event) => client.api.events.balances.Slashed.is(event), 'amount'),
+    'the deposit is slashed from the depositor',
+  ).toEqual([amount])
+  expect(
+    amountsOf((event) => client.api.events.balances.Deposit.is(event), 'amount'),
+    'the deposit is credited to the slash destination',
+  ).toEqual(testConfig.slashDestination === 'dapStaging' && fee > 0n ? [amount, fee] : [amount])
+  if (testConfig.slashDestination === 'treasury') {
+    expect(
+      amountsOf((event) => client.api.events.treasury.Deposit.is(event), 'value'),
+      'the treasury records the deposit',
+    ).toEqual([amount])
+  }
+}
+
+/** `records` without any `balances.Deposit` of exactly `amount`. */
+function withoutCreditOf(client: Client<any, any>, records: { event: any }[], amount: bigint) {
+  return records.filter(
+    ({ event }) => !(client.api.events.balances.Deposit.is(event) && event.data.amount.toBigInt() === amount),
+  )
+}
+
+/**
+ * Whether the runtime can take a referendum to the end of its decision period.
+ *
+ * Two calls must fit a block for that. `place_decision_deposit` is a signed extrinsic, which the
+ * transaction pool refuses when its weight exceeds the largest normal extrinsic. `nudge_referendum`
+ * is the alarm the pallet schedules on itself, which the scheduler never dispatches when its weight
+ * exceeds the scheduler's budget for a block. Both weights are read from the runtime, since they
+ * come from its benchmarks and differ by chain.
+ */
+async function decisionCallsFitABlock(client: Client<any, any>): Promise<boolean> {
+  const { maxExtrinsic } = client.api.consts.system.blockWeights.perClass.normal
+  const schedulerBudget = client.api.consts.scheduler.maximumWeight
+  const fits = (weight: any, limit: any) =>
+    weight.refTime.toBigInt() <= limit.refTime.toBigInt() && weight.proofSize.toBigInt() <= limit.proofSize.toBigInt()
+
+  const deposit = client.api.tx.referenda.placeDecisionDeposit(0).method
+  const nudge = client.api.tx.referenda.nudgeReferendum(0).method
+  const depositInfo = await client.api.call.transactionPaymentCallApi.queryCallInfo(deposit, deposit.encodedLength)
+  const nudgeInfo = await client.api.call.transactionPaymentCallApi.queryCallInfo(nudge, nudge.encodedLength)
+
+  return (
+    (maxExtrinsic.isNone || fits(depositInfo.weight, maxExtrinsic.unwrap())) && fits(nudgeInfo.weight, schedulerBudget)
+  )
+}
+
+/**
+ * Any signed account can slash the submission deposit of a timed-out referendum, and only once.
+ *
+ * A referendum that times out keeps its submission deposit reserved, and no refund call accepts
+ * that state. `slash_submission_deposit` admits any signed caller, takes the deposit from the
+ * submitter's reserved balance and hands it to the runtime's `Slash` handler, whose destination
+ * differs by chain (`ReferendaTestConfig.slashDestination`). The caller gains nothing. The record
+ * then holds no submission deposit, so a second slash fails with `NoDeposit`.
+ *
+ * 1. Fund the accounts, submit a referendum, and write its timed-out record
+ * 2. Slash the submission deposit from a third account
+ * 3. Verify `DepositSlashed` names the submitter and the submission deposit
+ * 4. Verify the deposit was slashed from the submitter and credited to the slash destination, next to
+ *    the caller's fee where fees go to the same account
+ * 5. Verify the submitter's reserved balance lost the deposit and its free balance did not change
+ * 6. Verify the stored `TimedOut` record no longer holds the deposit
+ * 7. Slash again, and verify the call failed with `NoDeposit` and slashed nothing
+ */
+async function thirdPartySlashesTimedOutDeposit(client: Client<any, any>, testConfig: ReferendaTestConfig) {
+  const { alice, charlie } = testAccounts
+  const submissionDeposit = client.api.consts.referenda.submissionDeposit.toBigInt()
+  const submitter = addressOf(client, alice)
+  const destination = slashDestinationAddress(client, testConfig.slashDestination)
+
+  // 1. A timed-out referendum holding its submission deposit
+  await fundAccounts(client, alice, charlie)
+  const index = await submitReferendum(client, alice)
+  const end = await finishWithSubmissionDeposit(client, index, 'TimedOut')
+  const aliceFree = await getFreeFunds(client, alice.address)
+  expect(await getReservedFunds(client, alice.address), 'the deposit is reserved before the slash').toBe(
+    submissionDeposit,
+  )
+
+  // 2. Slash from a third account
+  await sendTransaction(slashSubmissionDeposit(client, index).signAsync(charlie))
+  await client.dev.newBlock()
+
+  // 3. `DepositSlashed` for the submitter
+  const slashRecords = await depositSlashedEvents(client, submitter)
+  expect(slashRecords).toHaveLength(1)
+  await check(slashRecords).filterEvents().redact().toMatchSnapshot('third party slash: DepositSlashed event')
+  const slash = slashRecords[0].event
+  assert(client.api.events.referenda.DepositSlashed.is(slash))
+  expect(slash.data.amount.toBigInt()).toBe(submissionDeposit)
+
+  // 4. Slashed from the submitter, credited to the slash destination, next to the caller's fee
+  const transferRecords = await slashTransferEvents(client, submitter, destination)
+  const fee = await feePaidBy(client, addressOf(client, charlie))
+  expectOneDepositMoved(client, testConfig, transferRecords, submissionDeposit, fee)
+  // The fee credit is asserted above and left out of the snapshot: a fee changes with the block
+  // forked from and with the runtime's weights.
+  await check(withoutCreditOf(client, transferRecords, fee))
+    .filterEvents()
+    .redact()
+    .toMatchSnapshot('third party slash: deposit slashed and credited to the slash destination')
+
+  // 5. Gone from the submitter's reserved balance, free balance untouched, nothing reserved from the caller
+  expect(await getReservedFunds(client, alice.address)).toBe(0n)
+  expect(await getFreeFunds(client, alice.address)).toBe(aliceFree)
+  expect(await getReservedFunds(client, charlie.address)).toBe(0n)
+
+  // 6. `TimedOut(end, no submission deposit, no decision deposit)`
+  const info = await client.api.query.referenda.referendumInfoFor(index)
+  assert(info.isSome)
+  assert(info.unwrap().isTimedOut)
+  const [storedEnd, submission, decision] = info.unwrap().asTimedOut
+  expect(storedEnd.toNumber()).toBe(end)
+  expect(submission.isNone).toBe(true)
+  expect(decision.isNone).toBe(true)
+
+  // 7. A second slash finds no deposit
+  await sendTransaction(slashSubmissionDeposit(client, index).signAsync(charlie))
+  await client.dev.newBlock()
+  await snapshotExtrinsicFailed(client, 'repeated slash: ExtrinsicFailed')
+  await expectExtrinsicError(client, 'referenda', 'NoDeposit')
+  expect(await depositSlashedEvents(client, submitter)).toHaveLength(0)
+  expect(await getFreeFunds(client, alice.address)).toBe(aliceFree)
+}
+
+/**
+ * Root can slash the submission deposit of a rejected referendum.
+ *
+ * `slash_submission_deposit` admits Root as well as signed accounts, and a rejected referendum is
+ * the other state it accepts besides a timed-out one. The referendum here is one whose decision
+ * deposit has already been refunded, so the submission deposit is all its record holds.
+ *
+ * 1. Fund the submitter, submit a referendum, and write its rejected record
+ * 2. Dispatch `slash_submission_deposit` as Root
+ * 3. Verify the dispatch succeeded and `DepositSlashed` names the submitter and the submission deposit
+ * 4. Verify the deposit was slashed from the submitter and credited to the slash destination
+ * 5. Verify the submitter's reserved balance lost the deposit and its free balance did not change
+ * 6. Verify the stored `Rejected` record no longer holds the deposit
+ */
+async function rootSlashesRejectedDeposit(client: Client<any, any>, testConfig: ReferendaTestConfig) {
+  const { alice } = testAccounts
+  const submissionDeposit = client.api.consts.referenda.submissionDeposit.toBigInt()
+  const { schedulerBlockProvider } = client.config.properties
+  const submitter = addressOf(client, alice)
+  const destination = slashDestinationAddress(client, testConfig.slashDestination)
+
+  // 1. A rejected referendum holding its submission deposit
+  await fundAccounts(client, alice)
+  const index = await submitReferendum(client, alice)
+  const end = await finishWithSubmissionDeposit(client, index, 'Rejected')
+  const aliceFree = await getFreeFunds(client, alice.address)
+  expect(await getReservedFunds(client, alice.address), 'the deposit is reserved before the slash').toBe(
+    submissionDeposit,
+  )
+
+  // 2. Slash as Root
+  const agendaBlock = await nextSchedulableBlockNum(client.api, schedulerBlockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    slashSubmissionDeposit(client, index).method.toHex(),
+    { system: 'Root' },
+    schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 3. Dispatched without error; `DepositSlashed` for the submitter
+  const dispatched = await dispatchedFromAgenda(client, agendaBlock)
+  expect(dispatched).toHaveLength(1)
+  assert(client.api.events.scheduler.Dispatched.is(dispatched[0].event))
+  expect(dispatched[0].event.data.result.isOk).toBe(true)
+
+  const slashRecords = await depositSlashedEvents(client, submitter)
+  expect(slashRecords).toHaveLength(1)
+  await check([...dispatched, ...slashRecords])
+    .filterEvents()
+    .redact()
+    .redact({ redactKeys: /^task$/ })
+    .toMatchSnapshot('Root slash: Dispatched and DepositSlashed events')
+  const slash = slashRecords[0].event
+  assert(client.api.events.referenda.DepositSlashed.is(slash))
+  expect(slash.data.amount.toBigInt()).toBe(submissionDeposit)
+
+  // 4. Slashed from the submitter, credited to the slash destination
+  const transferRecords = await slashTransferEvents(client, submitter, destination)
+  await check(transferRecords)
+    .filterEvents()
+    .redact()
+    .toMatchSnapshot('Root slash: deposit slashed and credited to the slash destination')
+  expectOneDepositMoved(client, testConfig, transferRecords, submissionDeposit, 0n)
+
+  // 5. Gone from the submitter's reserved balance, free balance untouched
+  expect(await getReservedFunds(client, alice.address)).toBe(0n)
+  expect(await getFreeFunds(client, alice.address)).toBe(aliceFree)
+
+  // 6. `Rejected(end, no submission deposit, no decision deposit)`
+  const info = await client.api.query.referenda.referendumInfoFor(index)
+  assert(info.isSome)
+  assert(info.unwrap().isRejected)
+  const [storedEnd, submission, decision] = info.unwrap().asRejected
+  expect(storedEnd.toNumber()).toBe(end)
+  expect(submission.isNone).toBe(true)
+  expect(decision.isNone).toBe(true)
+}
+
+/**
+ * A submission deposit cannot be slashed while its referendum is ongoing, or once the referendum
+ * was cancelled or killed.
+ *
+ * Only a rejected or timed-out referendum accepts the slash. An ongoing referendum still needs its
+ * deposit, a cancelled one has it refunded instead, and a killed one had it slashed by `kill`.
+ * Each of these states fails with `BadStatus`.
+ *
+ * 1. Fund the accounts and submit two referenda, from different submitters
+ * 2. Slash the first one's deposit while it is ongoing, and verify the call failed with `BadStatus`
+ * 3. Cancel the first as Root, slash again, and verify the call failed with `BadStatus`
+ * 4. Verify the first referendum's deposit is still reserved and still on its record
+ * 5. Kill the second as Root, slash its deposit, and verify the call failed with `BadStatus`
+ * 6. Verify the failed call slashed nothing more from the second submitter
+ */
+async function slashInOtherStatesFails(client: Client<any, any>) {
+  const { alice, bob, charlie } = testAccounts
+  const submissionDeposit = client.api.consts.referenda.submissionDeposit.toBigInt()
+
+  // 1. Two ongoing referenda
+  await fundAccounts(client, alice, bob, charlie)
+  const cancelledIndex = await submitReferendum(client, alice)
+  const killedIndex = await submitReferendum(client, bob)
+
+  // 2. Ongoing
+  await sendTransaction(slashSubmissionDeposit(client, cancelledIndex).signAsync(charlie))
+  await client.dev.newBlock()
+  await snapshotExtrinsicFailed(client, 'slash while ongoing: ExtrinsicFailed')
+  await expectExtrinsicError(client, 'referenda', 'BadStatus')
+  expect((await ongoingStatus(client, cancelledIndex)).submissionDeposit.amount.toBigInt()).toBe(submissionDeposit)
+
+  // 3. Cancelled
+  await dispatchAsRoot(client, client.api.tx.referenda.cancel(cancelledIndex))
+  const cancelled = await client.api.query.referenda.referendumInfoFor(cancelledIndex)
+  assert(cancelled.isSome)
+  expect(cancelled.unwrap().isCancelled, 'setup: the referendum was not cancelled').toBe(true)
+
+  await sendTransaction(slashSubmissionDeposit(client, cancelledIndex).signAsync(charlie))
+  await client.dev.newBlock()
+  await expectExtrinsicError(client, 'referenda', 'BadStatus')
+  expect(await depositSlashedEvents(client, addressOf(client, alice))).toHaveLength(0)
+
+  // 4. The deposit is still reserved, and still on the record for a refund
+  expect(await getReservedFunds(client, alice.address)).toBe(submissionDeposit)
+  const stillCancelled = await client.api.query.referenda.referendumInfoFor(cancelledIndex)
+  assert(stillCancelled.isSome)
+  assert(stillCancelled.unwrap().isCancelled)
+  const [, submission] = stillCancelled.unwrap().asCancelled
+  assert(submission.isSome)
+  expect(submission.unwrap().amount.toBigInt()).toBe(submissionDeposit)
+
+  // 5. Killed
+  await dispatchAsRoot(client, client.api.tx.referenda.kill(killedIndex))
+  const killed = await client.api.query.referenda.referendumInfoFor(killedIndex)
+  assert(killed.isSome)
+  expect(killed.unwrap().isKilled, 'setup: the referendum was not killed').toBe(true)
+  expect(await getReservedFunds(client, bob.address), 'setup: `kill` did not slash the deposit').toBe(0n)
+  const bobFree = await getFreeFunds(client, bob.address)
+
+  await sendTransaction(slashSubmissionDeposit(client, killedIndex).signAsync(charlie))
+  await client.dev.newBlock()
+  await expectExtrinsicError(client, 'referenda', 'BadStatus')
+
+  // 6. Nothing more was slashed
+  expect(await depositSlashedEvents(client, addressOf(client, bob))).toHaveLength(0)
+  expect(await getFreeFunds(client, bob.address)).toBe(bobFree)
+  expect(await getReservedFunds(client, bob.address)).toBe(0n)
+}
+
+/**
+ * An admin origin cannot slash a submission deposit.
+ *
+ * `slash_submission_deposit` admits signed accounts and Root. `ReferendumKiller` may kill an
+ * ongoing referendum, which slashes its deposits, but it is neither of those, so it does not pass
+ * this call. The referendum is a timed-out one, which a signed account or Root could slash, so the
+ * origin is all that stands in the way.
+ *
+ * 1. Fund the submitter, submit a referendum, and write its timed-out record
+ * 2. Dispatch `slash_submission_deposit` as `ReferendumKiller`
+ * 3. Verify the dispatch failed with `BadOrigin`
+ * 4. Verify the deposit is still reserved and still on the record
+ */
+async function adminOriginSlashRejected(client: Client<any, any>) {
+  const { alice } = testAccounts
+  const submissionDeposit = client.api.consts.referenda.submissionDeposit.toBigInt()
+  const { schedulerBlockProvider } = client.config.properties
+
+  // 1. A timed-out referendum holding its submission deposit
+  await fundAccounts(client, alice)
+  const index = await submitReferendum(client, alice)
+  await finishWithSubmissionDeposit(client, index, 'TimedOut')
+
+  // 2. Slash as `ReferendumKiller`
+  const agendaBlock = await nextSchedulableBlockNum(client.api, schedulerBlockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    slashSubmissionDeposit(client, index).method.toHex(),
+    { Origins: 'ReferendumKiller' },
+    schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 3. `BadOrigin`
+  const dispatched = await dispatchedFromAgenda(client, agendaBlock)
+  expect(dispatched).toHaveLength(1)
+  await check(dispatched)
+    .filterEvents()
+    .redact()
+    .redact({ redactKeys: /^task$/ })
+    .toMatchSnapshot('admin origin slash: Dispatched event')
+  const { event } = dispatched[0]
+  assert(client.api.events.scheduler.Dispatched.is(event))
+  assert(event.data.result.isErr, 'expected the dispatch to fail')
+  expect(event.data.result.asErr.isBadOrigin, `expected BadOrigin, got ${event.data.result.asErr.type}`).toBe(true)
+
+  // 4. Still reserved, still on the record
+  expect(await depositSlashedEvents(client, addressOf(client, alice))).toHaveLength(0)
+  expect(await getReservedFunds(client, alice.address)).toBe(submissionDeposit)
+  const info = await client.api.query.referenda.referendumInfoFor(index)
+  assert(info.isSome)
+  assert(info.unwrap().isTimedOut)
+  const [, submission] = info.unwrap().asTimedOut
+  assert(submission.isSome)
+  expect(submission.unwrap().amount.toBigInt()).toBe(submissionDeposit)
+}
+
+/**
+ * Slashing the submission deposit of a referendum index that was never used fails.
+ *
+ * The call looks the referendum up before anything else, and reports `BadReferendum` when there
+ * is none.
+ *
+ * 1. Fund an account and take the next unused referendum index
+ * 2. Slash the submission deposit for that index
+ * 3. Verify the call failed with `BadReferendum`
+ * 4. Verify nothing was reserved and no referendum was created
+ */
+async function slashUnknownReferendumFails(client: Client<any, any>) {
+  const { bob } = testAccounts
+
+  // 1. The next unused index
+  await fundAccounts(client, bob)
+  const unknownIndex = (await client.api.query.referenda.referendumCount()).toNumber()
+  expect((await client.api.query.referenda.referendumInfoFor(unknownIndex)).isNone).toBe(true)
+
+  // 2. Slash on the unused index
+  await sendTransaction(slashSubmissionDeposit(client, unknownIndex).signAsync(bob))
+  await client.dev.newBlock()
+
+  // 3. `BadReferendum`
+  await snapshotExtrinsicFailed(client, 'slash on an unknown referendum: ExtrinsicFailed')
+  await expectExtrinsicError(client, 'referenda', 'BadReferendum')
+
+  // 4. Nothing reserved, no referendum created
+  expect(await getReservedFunds(client, bob.address)).toBe(0n)
+  expect((await client.api.query.referenda.referendumCount()).toNumber()).toBe(unknownIndex)
+}
+
+/**
+ * A rejected referendum's two deposits are settled separately: the submission deposit is slashed,
+ * and the decision deposit is refunded.
+ *
+ * The referendum goes through the pallet's own transitions. It starts deciding once its decision
+ * deposit is placed and the prepare period has passed. The test then moves `deciding.since` back
+ * so the decision period runs out at the scheduler's clock in the next block, and nudges the
+ * referendum as Root in that block. Nobody voted, so it is rejected, and its record keeps both
+ * deposits. The submission deposit cannot be refunded from that state, only slashed. Here the
+ * submitter slashes it, paying the fee and gaining nothing. The slash leaves the decision deposit
+ * alone, and any account can still refund it to its depositor.
+ *
+ * The test is skipped on a runtime where `place_decision_deposit` or `nudge_referendum` does not
+ * fit a block (`decisionCallsFitABlock`), since no referendum can be rejected there.
+ *
+ * 1. Fund the accounts, submit a referendum, place its decision deposit, and let it start deciding
+ * 2. Move `deciding.since` back so the decision period ends at the next block's scheduler clock
+ * 3. Nudge the referendum as Root, and verify `Rejected` and that the record holds both deposits
+ * 4. Refund the submission deposit, and verify the call failed with `BadStatus`
+ * 5. Slash the submission deposit from the submitter's own account
+ * 6. Verify `DepositSlashed`, the deposit credited to the slash destination, and that the submitter
+ *    lost the deposit from its reserved balance and only the fee from its free balance
+ * 7. Verify the record still holds the decision deposit, which is still reserved
+ * 8. Refund the decision deposit from a third account, and verify it went back to its depositor
+ * 9. Verify the stored `Rejected` record holds neither deposit
+ */
+async function rejectedReferendumSlashedThenRefunded(
+  client: Client<any, any>,
+  testConfig: ReferendaTestConfig,
+  ctx?: TestContext,
+) {
+  if (!(await decisionCallsFitABlock(client))) {
+    ctx?.skip('place_decision_deposit and nudge_referendum do not fit a block on this runtime')
+    return
+  }
+
+  const { alice, bob, charlie } = testAccounts
+  const submissionDeposit = client.api.consts.referenda.submissionDeposit.toBigInt()
+  const track = trackInfo(client, SMALL_TIPPER_TRACK)
+  const decisionDeposit = track.decisionDeposit.toBigInt()
+  const { schedulerBlockProvider } = client.config.properties
+  const submitter = addressOf(client, alice)
+  const destination = slashDestinationAddress(client, testConfig.slashDestination)
+
+  // 1. Submit, place the deposit, and wait for deciding to start
+  await fundAccounts(client, alice, bob, charlie)
+  const index = await submitReferendum(client, alice)
+  await placeDecisionDeposit(client, bob, index)
+  const preparing = await ongoingStatus(client, index)
+  assert(preparing.alarm.isSome)
+  await buildBlocksUntilScheduled(client, preparing.alarm.unwrap()[0].toNumber())
+  expect(await referendumEvents(client, index, 'DecisionStarted'), 'setup: deciding did not start').toHaveLength(1)
+
+  // 2. Move `deciding.since` back, and `submitted` with it so the prepare period still precedes it
+  const agendaBlock = await nextSchedulableBlockNum(client.api, schedulerBlockProvider)
+  const decidingSince = agendaBlock - track.decisionPeriod.toNumber()
+  await rewriteOngoing(client, index, {
+    submitted: decidingSince - track.preparePeriod.toNumber(),
+    deciding: { since: decidingSince, confirming: null },
+  })
+  const backdated = await ongoingStatus(client, index)
+  assert(backdated.deciding.isSome)
+  expect(backdated.deciding.unwrap().since.toNumber()).toBe(decidingSince)
+
+  // 3. The nudge finds the decision period over and the referendum failing
+  await dispatchAsRoot(client, client.api.tx.referenda.nudgeReferendum(index))
+
+  const rejectedRecords = await referendumEvents(client, index, 'Rejected')
+  expect(rejectedRecords).toHaveLength(1)
+  await check(rejectedRecords)
+    .filterEvents()
+    .redact()
+    .redact({ redactKeys: /^index$/ })
+    .toMatchSnapshot('decision period over: Rejected event')
+  const rejected = rejectedRecords[0].event
+  assert(client.api.events.referenda.Rejected.is(rejected))
+  expect(rejected.data.tally.ayes.toBigInt()).toBe(0n)
+  expect(rejected.data.tally.support.toBigInt()).toBe(0n)
+
+  const rejectedInfo = await client.api.query.referenda.referendumInfoFor(index)
+  assert(rejectedInfo.isSome)
+  assert(rejectedInfo.unwrap().isRejected)
+  const [end, heldSubmission, heldDecision] = rejectedInfo.unwrap().asRejected
+  expect(end.toNumber(), 'the end is the relay number the scheduler saw').toBe(agendaBlock)
+  assert(heldSubmission.isSome)
+  expect(heldSubmission.unwrap().who.toString()).toBe(submitter)
+  expect(heldSubmission.unwrap().amount.toBigInt()).toBe(submissionDeposit)
+  assert(heldDecision.isSome)
+  expect(heldDecision.unwrap().amount.toBigInt()).toBe(decisionDeposit)
+
+  // 4. A rejected referendum allows no submission deposit refund
+  await sendTransaction(client.api.tx.referenda.refundSubmissionDeposit(index).signAsync(charlie))
+  await client.dev.newBlock()
+  await snapshotExtrinsicFailed(client, 'submission refund after rejection: ExtrinsicFailed')
+  await expectExtrinsicError(client, 'referenda', 'BadStatus')
+  expect(await getReservedFunds(client, alice.address)).toBe(submissionDeposit)
+
+  // 5. The submitter slashes its own deposit
+  const aliceFree = await getFreeFunds(client, alice.address)
+  const bobFree = await getFreeFunds(client, bob.address)
+  await sendTransaction(slashSubmissionDeposit(client, index).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 6. `DepositSlashed`, credited to the slash destination; the submitter paid the fee and gained nothing
+  const slashRecords = await depositSlashedEvents(client, submitter)
+  expect(slashRecords).toHaveLength(1)
+  await check(slashRecords).filterEvents().redact().toMatchSnapshot('submitter slash: DepositSlashed event')
+  const slash = slashRecords[0].event
+  assert(client.api.events.referenda.DepositSlashed.is(slash))
+  expect(slash.data.amount.toBigInt()).toBe(submissionDeposit)
+
+  const transferRecords = await slashTransferEvents(client, submitter, destination)
+  const fee = await feePaidBy(client, submitter)
+  expectOneDepositMoved(client, testConfig, transferRecords, submissionDeposit, fee)
+  // The fee credit is asserted above and left out of the snapshot, as a fee is not a stable value.
+  await check(withoutCreditOf(client, transferRecords, fee))
+    .filterEvents()
+    .redact()
+    .toMatchSnapshot('submitter slash: deposit slashed and credited to the slash destination')
+
+  expect(await getReservedFunds(client, alice.address)).toBe(0n)
+  expect(await getFreeFunds(client, alice.address)).toBe(aliceFree - fee)
+
+  // 7. The decision deposit is untouched
+  const slashedInfo = await client.api.query.referenda.referendumInfoFor(index)
+  assert(slashedInfo.isSome)
+  assert(slashedInfo.unwrap().isRejected)
+  const [, submissionAfterSlash, decisionAfterSlash] = slashedInfo.unwrap().asRejected
+  expect(submissionAfterSlash.isNone).toBe(true)
+  assert(decisionAfterSlash.isSome)
+  expect(decisionAfterSlash.unwrap().who.toString()).toBe(addressOf(client, bob))
+  expect(decisionAfterSlash.unwrap().amount.toBigInt()).toBe(decisionDeposit)
+  expect(await getReservedFunds(client, bob.address)).toBe(decisionDeposit)
+  expect(await getFreeFunds(client, bob.address)).toBe(bobFree)
+
+  // 8. Refund the decision deposit from a third account
+  await sendTransaction(client.api.tx.referenda.refundDecisionDeposit(index).signAsync(charlie))
+  await client.dev.newBlock()
+
+  const refundRecords = await referendumEvents(client, index, 'DecisionDepositRefunded')
+  expect(refundRecords).toHaveLength(1)
+  await check(refundRecords)
+    .filterEvents()
+    .redact()
+    .redact({ redactKeys: /^index$/ })
+    .toMatchSnapshot('decision refund after the slash: DecisionDepositRefunded event')
+  const refund = refundRecords[0].event
+  assert(client.api.events.referenda.DecisionDepositRefunded.is(refund))
+  expect(refund.data.who.toString(), 'the refund goes to the depositor').toBe(addressOf(client, bob))
+  expect(refund.data.amount.toBigInt()).toBe(decisionDeposit)
+  expect(await getReservedFunds(client, bob.address)).toBe(0n)
+  expect(await getFreeFunds(client, bob.address)).toBe(bobFree + decisionDeposit)
+
+  // 9. `Rejected(end, no submission deposit, no decision deposit)`
+  const settledInfo = await client.api.query.referenda.referendumInfoFor(index)
+  assert(settledInfo.isSome)
+  assert(settledInfo.unwrap().isRejected)
+  const [, submissionSettled, decisionSettled] = settledInfo.unwrap().asRejected
+  expect(submissionSettled.isNone).toBe(true)
+  expect(decisionSettled.isNone).toBe(true)
+}
+
+/// -------
 /// Tests: metadata
 /// -------
 
@@ -2157,6 +2810,68 @@ async function callsOnUnknownReferendumFail(client: Client<any, any>) {
 /// Test tree
 /// -------
 
+/** Run `body`, or skip the test when the runtime has no `referenda.slash_submission_deposit` call. */
+function withSlashCall(
+  getClient: () => Client<any, any>,
+  body: (client: Client<any, any>, ctx?: TestContext) => Promise<void>,
+): (ctx?: TestContext) => Promise<void> {
+  return async (ctx) => {
+    const client = getClient()
+    if ((client.api.tx.referenda as any).slashSubmissionDeposit === undefined) {
+      ctx?.skip('referenda.slash_submission_deposit is not in this runtime')
+      return
+    }
+    await body(client, ctx)
+  }
+}
+
+/**
+ * The tests of `slash_submission_deposit`, as a group shared by the suite's test trees.
+ *
+ * Every test is skipped on a runtime that does not have the call.
+ */
+function submissionDepositSlashTests(getClient: () => Client<any, any>, testConfig: ReferendaTestConfig): DescribeNode {
+  return {
+    kind: 'describe',
+    label: 'Submission deposit slash',
+    children: [
+      {
+        kind: 'test',
+        label: 'slash submission deposit of a timed-out referendum from a third party - slashed once, then NoDeposit',
+        testFn: withSlashCall(getClient, (client) => thirdPartySlashesTimedOutDeposit(client, testConfig)),
+      },
+      {
+        kind: 'test',
+        label: 'slash submission deposit of a rejected referendum from Root - DepositSlashed',
+        testFn: withSlashCall(getClient, (client) => rootSlashesRejectedDeposit(client, testConfig)),
+      },
+      {
+        kind: 'test',
+        label: 'slash submission deposit of an ongoing, cancelled or killed referendum - BadStatus',
+        testFn: withSlashCall(getClient, (client) => slashInOtherStatesFails(client)),
+      },
+      {
+        kind: 'test',
+        label: 'slash submission deposit from an admin origin - BadOrigin',
+        testFn: withSlashCall(getClient, (client) => adminOriginSlashRejected(client)),
+      },
+      {
+        kind: 'test',
+        label: 'slash submission deposit of an unknown referendum - BadReferendum',
+        testFn: withSlashCall(getClient, (client) => slashUnknownReferendumFails(client)),
+      },
+      {
+        kind: 'test',
+        label:
+          'reject a referendum, slash its submission deposit, refund its decision deposit - each deposit settled once',
+        testFn: withSlashCall(getClient, (client, ctx) =>
+          rejectedReferendumSlashedThenRefunded(client, testConfig, ctx),
+        ),
+      },
+    ],
+  }
+}
+
 export function referendaE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -2308,6 +3023,7 @@ export function referendaE2ETests<
           },
         ],
       },
+      submissionDepositSlashTests(() => client, testConfig),
       {
         kind: 'describe',
         label: 'Metadata',
@@ -2361,5 +3077,38 @@ export function referendaE2ETests<
         ],
       },
     ],
+  }
+}
+
+/**
+ * A test tree with the submission deposit slash tests alone.
+ *
+ * For a chain whose runtime has `slash_submission_deposit` but cannot take a referendum through
+ * its decision (`decisionCallsFitABlock`), where most tests of `referendaE2ETests` cannot run.
+ */
+export function referendaSubmissionDepositSlashE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: ReferendaTestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
+
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
+    children: [submissionDepositSlashTests(() => client, testConfig)],
   }
 }

@@ -269,6 +269,12 @@ These include:
     account on Polkadot, the treasury on Kusama)
   - Refunds from third parties and from Root, and the `NoDeposit`, `Unfinished` and `BadStatus`
     cases
+  - Submission deposit slash, skipped on runtimes without `slash_submission_deposit`: the deposit
+    of a timed-out or rejected referendum slashed by a third party and by Root and credited to the
+    chain's slash destination; `NoDeposit` on a repeat, `BadStatus` for ongoing, cancelled and
+    killed referenda, `BadOrigin` and `BadReferendum`; and a rejected referendum whose submission
+    deposit is slashed while its decision deposit is refunded. Westend Asset Hub registers this
+    group alone
   - Metadata: setting and clearing by the submitter, `NoPermission`, `PreimageNotExist`, and
     clearing after the referendum ends
   - Rejected origins for every call (signed, Root, and admin origins outside their gate), and
