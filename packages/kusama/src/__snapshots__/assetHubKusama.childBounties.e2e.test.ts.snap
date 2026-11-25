@@ -1,5 +1,55 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Asset Hub Child Bounties > All child bounties failure tests > calls on a child of an inactive parent bounty - ParentBountyNotActive unless RejectOrigin unassigns > treasurer close under inactive parent: scheduler dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 96,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties failure tests > calls on a child of an inactive parent bounty - ParentBountyNotActive unless RejectOrigin unassigns > treasurer unassign under inactive parent: dispatched and slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 170000000000)",
+      "who": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "value": "(rounded 170000000000)",
+    },
+    "method": "Deposit",
+    "section": "treasury",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Child Bounties > All child bounties failure tests > child bounty description larger than MaximumReasonLength throws ReasonTooBig error > bounty approved events 1`] = `
 [
   {
@@ -225,7 +275,10 @@ exports[`Kusama Asset Hub Child Bounties > All child bounties failure tests > pr
 exports[`Kusama Asset Hub Child Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws InvalidIndex error > child bounty added events 1`] = `
 [
   {
-    "data": "(redacted)",
+    "data": {
+      "childIndex": 0,
+      "index": "(redacted)",
+    },
     "method": "Added",
     "section": "childBounties",
   },
@@ -258,12 +311,324 @@ exports[`Kusama Asset Hub Child Bounties > All child bounties failure tests > pr
 ]
 `;
 
-exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > All unassign child bounty curator tests > parent curator unassign slashes child curator deposit > balances slash events 1`] = `
+exports[`Kusama Asset Hub Child Bounties > All child bounties origin tests > curator-gated calls from an account with no role - RequireCurator or BadOrigin > no role: utility batch events 1`] = `
 [
   {
-    "data": "(redacted)",
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 95,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 95,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 95,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompletedWithErrors",
+    "section": "utility",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties origin tests > parent-curator calls from the child curator - RequireCurator or BadOrigin > child curator: utility batch events 1`] = `
+[
+  {
+    "data": {
+      "error": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 95,
+        },
+      },
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "error": "BadOrigin",
+    },
+    "method": "ItemFailed",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompletedWithErrors",
+    "section": "utility",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties origin tests > signed-only calls from Root - BadOrigin > root on signed calls: scheduler dispatched events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties origin tests > unassign and close from a Spender track - BadOrigin > spender track: scheduler dispatched events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > All unassign child bounty curator tests > parent curator unassign in CuratorProposed and PendingPayout - back to Added, PendingPayout slashed > parent curator unassign of awarded child bounty: slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 170000000000)",
+      "who": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+    },
     "method": "Slashed",
     "section": "balances",
+  },
+  {
+    "data": {
+      "value": "(rounded 170000000000)",
+    },
+    "method": "Deposit",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > All unassign child bounty curator tests > parent curator unassign slashes child curator deposit > parent curator unassign: slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 170000000000)",
+      "who": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "value": "(rounded 170000000000)",
+    },
+    "method": "Deposit",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > All unassign child bounty curator tests > public unassign after parent update_due - child curator deposit slashed > public unassign: slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 170000000000)",
+      "who": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "value": "(rounded 170000000000)",
+    },
+    "method": "Deposit",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > All unassign child bounty curator tests > unassign by RejectOrigin in every curator state - deposit slashed where held > root unassign of awarded curator: dispatched and slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 170000000000)",
+      "who": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "value": "(rounded 170000000000)",
+    },
+    "method": "Deposit",
+    "section": "treasury",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > All unassign child bounty curator tests > unassign by RejectOrigin in every curator state - deposit slashed where held > root unassign of proposed curator: scheduler dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > All unassign child bounty curator tests > unassign by RejectOrigin in every curator state - deposit slashed where held > treasurer unassign of active curator: dispatched and slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 170000000000)",
+      "who": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "value": "(rounded 170000000000)",
+    },
+    "method": "Deposit",
+    "section": "treasury",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
   },
 ]
 `;
@@ -307,7 +672,10 @@ exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > as
 exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > child bounty added events 1`] = `
 [
   {
-    "data": "(redacted)",
+    "data": {
+      "childIndex": 0,
+      "index": "(redacted)",
+    },
     "method": "Added",
     "section": "childBounties",
   },
@@ -340,10 +708,28 @@ exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > as
 ]
 `;
 
+exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > award by parent curator - Awarded, PendingPayout > award by parent curator: awarded event 1`] = `
+[
+  {
+    "data": {
+      "beneficiary": "H7L1Xh1XZxbKktdoEG5rkWdUdydq9e3NpsjmcSHpUHM8Z6h",
+      "childIndex": 0,
+      "index": "(redacted)",
+    },
+    "method": "Awarded",
+    "section": "childBounties",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty awarded events 1`] = `
 [
   {
-    "data": "(redacted)",
+    "data": {
+      "beneficiary": "H7L1Xh1XZxbKktdoEG5rkWdUdydq9e3NpsjmcSHpUHM8Z6h",
+      "childIndex": 0,
+      "index": "(redacted)",
+    },
     "method": "Awarded",
     "section": "childBounties",
   },
@@ -353,7 +739,12 @@ exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > aw
 exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty claimed events 1`] = `
 [
   {
-    "data": "(redacted)",
+    "data": {
+      "beneficiary": "H7L1Xh1XZxbKktdoEG5rkWdUdydq9e3NpsjmcSHpUHM8Z6h",
+      "childIndex": 0,
+      "index": "(redacted)",
+      "payout": "(rounded 6000000000000)",
+    },
     "method": "Claimed",
     "section": "childBounties",
   },
@@ -399,7 +790,10 @@ exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > ch
 exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > child bounty creation > child bounty added events 1`] = `
 [
   {
-    "data": "(redacted)",
+    "data": {
+      "childIndex": 0,
+      "index": "(redacted)",
+    },
     "method": "Added",
     "section": "childBounties",
   },
@@ -432,27 +826,59 @@ exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > ch
 ]
 `;
 
-exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > closure and payout of a child bounty > child bounty canceled events 1`] = `
+exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > close by RejectOrigin - value back to parent, deposit unreserved > root close of child bounty without curator: dispatched and canceled events 1`] = `
 [
   {
-    "data": "(redacted)",
+    "data": {
+      "childIndex": 0,
+      "index": "(redacted)",
+    },
     "method": "Canceled",
     "section": "childBounties",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
   },
 ]
 `;
 
-exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > closure and payout of a child bounty > child bounty value transferred to parent bounty 1`] = `
+exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > close by RejectOrigin - value back to parent, deposit unreserved > treasurer close of active child bounty: dispatched and canceled events 1`] = `
 [
   {
-    "data": "(redacted)",
-    "method": "Transfer",
-    "section": "balances",
+    "data": {
+      "childIndex": 2,
+      "index": "(redacted)",
+    },
+    "method": "Canceled",
+    "section": "childBounties",
   },
   {
-    "data": "(redacted)",
-    "method": "Transfer",
-    "section": "balances",
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > closure and payout of a child bounty > child bounty canceled events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": 0,
+      "index": "(redacted)",
+    },
+    "method": "Canceled",
+    "section": "childBounties",
   },
 ]
 `;
@@ -460,7 +886,38 @@ exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > cl
 exports[`Kusama Asset Hub Child Bounties > All child bounties success tests > rejection by child curator and closure by parent curator of a child bounty > child bounty canceled events 1`] = `
 [
   {
-    "data": "(redacted)",
+    "data": {
+      "childIndex": 0,
+      "index": "(redacted)",
+    },
+    "method": "Canceled",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > Locked funds in a child bounty account > claim_child_bounty - pays out the spendable balance and leaves locked funds behind > child bounty claimed events 1`] = `
+[
+  {
+    "data": {
+      "beneficiary": "H7L1Xh1XZxbKktdoEG5rkWdUdydq9e3NpsjmcSHpUHM8Z6h",
+      "childIndex": "(redacted)",
+      "index": "(redacted)",
+      "payout": "(rounded 6000000000000)",
+    },
+    "method": "Claimed",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Child Bounties > Locked funds in a child bounty account > close_child_bounty - refunds the spendable balance and leaves locked funds behind > child bounty canceled events 1`] = `
+[
+  {
+    "data": {
+      "childIndex": "(redacted)",
+      "index": "(redacted)",
+    },
     "method": "Canceled",
     "section": "childBounties",
   },

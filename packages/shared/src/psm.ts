@@ -112,13 +112,26 @@ function psmReserveAccount(client: Client<any, any>, internalLocation: Record<st
 }
 
 /**
- * Let a PSM instance's reserve account receive the given externals.
+ * Create the asset account rows that let a PSM instance's reserve receive the given externals.
  *
- * Since pallet-psm 0.7.0, `add_external_asset` requires the reserve to be able to receive the
- * asset, and refuses with `ReserveCannotReceive` otherwise. A sufficient asset creates its own
- * account on deposit; a non-sufficient one needs its asset account to exist first. The rows are
- * written directly, with the owning asset's account counter kept consistent, as `injectAssets`
- * does for alice's foreign holding.
+ * Since pallet-psm 0.7.0, `add_external_asset` calls `can_deposit` on the reserve account and
+ * refuses with `ReserveCannotReceive` when it fails. The check exists because an approved
+ * external the reserve cannot hold would make every mint fail: a mint deposits the external
+ * into the reserve. `can_deposit` passes when the reserve's asset account already exists, or
+ * when the asset can create one on deposit.
+ *
+ * A sufficient asset creates its own account, so the suite's local externals pass untouched.
+ * A non-sufficient asset cannot: a new asset account takes a consumer reference, a consumer
+ * reference needs an existing System account, and the reserve is a derived address with no
+ * System account on a fresh fork. This affects the suite's `ForeignAssets` externals, bridged
+ * DAI and the ERC-20 cap fillers.
+ *
+ * On the live chain, the asset's admin clears this with `assets.touch_other`: it creates the
+ * reserve's empty asset account and pays the storage deposit. For a bridged asset that admin
+ * is the Ethereum bridge sovereign, which cannot sign on the fork. This helper writes the end
+ * state of that call directly: a System account row for the reserve, a balance-0 asset account
+ * row per external, and an incremented account counter on the owning asset. It skips only the
+ * journey; the resulting state is one the live chain can reach.
  */
 async function allowReserveToReceive(
   client: Client<any, any>,
