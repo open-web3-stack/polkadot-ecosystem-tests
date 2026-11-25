@@ -693,6 +693,20 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty awarding 
 ]
 `;
 
+exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty claim with locked funds in the bounty account > bounty claimed events 1`] = `
+[
+  {
+    "data": {
+      "beneficiary": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+      "index": "(redacted)",
+      "payout": "(rounded 60000000000000)",
+    },
+    "method": "BountyClaimed",
+    "section": "bounties",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty extension > bounty approved events 1`] = `
 [
   {

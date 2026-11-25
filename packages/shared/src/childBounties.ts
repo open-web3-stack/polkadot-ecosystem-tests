@@ -6,8 +6,9 @@ import type { Client } from '@e2e-test/shared'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import { compactAddLength, stringToU8a, u8aConcat } from '@polkadot/util'
 import type { HexString } from '@polkadot/util/types'
+import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert, expect } from 'vitest'
+import { assert, expect, type TestContext } from 'vitest'
 
 import { match } from 'ts-pattern'
 import {
@@ -15,6 +16,7 @@ import {
   checkEvents,
   checkSystemEvents,
   getBlockNumber,
+  getFreeFunds,
   scheduleInlineCallListWithSameOrigin,
   scheduleInlineCallWithOrigin,
   type TestConfig,
@@ -3890,6 +3892,265 @@ export function allChildBountiesOriginTests<
   } as RootTestTree
 }
 
+/// -------
+/// Locked funds in a child bounty's account
+/// -------
+
+/**
+ * First runtime spec version of the Polkadot and Kusama Asset Hubs in which a child bounty's payout
+ * and refund are sized from the balance its account can transfer.
+ */
+const SPENDABLE_PAYOUT_SPEC_VERSION = 2_006_000
+
+/** How far in the future, in block provider blocks, a vesting schedule starts so that none of it unlocks during a test. */
+const VESTING_START_DELAY = 10_000_000
+
+/**
+ * Run `body`, or skip the test when the runtime still sizes payouts from the whole free balance.
+ */
+function withSpendablePayouts(
+  getClient: () => Client<any, any>,
+  body: (client: Client<any, any>) => Promise<void>,
+): (ctx?: TestContext) => Promise<void> {
+  return async (ctx) => {
+    const client = getClient()
+    if (client.api.runtimeVersion.specVersion.toNumber() < SPENDABLE_PAYOUT_SPEC_VERSION) {
+      ctx?.skip(`payouts from the spendable balance need spec version ${SPENDABLE_PAYOUT_SPEC_VERSION} or later`)
+      return
+    }
+    await body(client)
+  }
+}
+
+/**
+ * Test: `claim_child_bounty` pays out what the child bounty's account can transfer and leaves
+ * locked funds behind.
+ *
+ * Anyone can lock funds in a child bounty's account with a vested transfer. A payout sized from the
+ * whole free balance would then ask for more than the account can move, and the beneficiary would
+ * get nothing while the child bounty is removed. The payout must be the spendable balance less the
+ * child curator's fee.
+ *
+ * 1. A parent bounty becomes active with Bob as curator.
+ * 2. Bob adds a child bounty, Charlie becomes its curator and awards it to Dave.
+ * 3. Alice makes a vested transfer to the child bounty's account, with a schedule that has not started.
+ * 4. Alice calls `claim_child_bounty`.
+ * 5. `Claimed` reports the child bounty's value less the child curator's fee as the payout.
+ * 6. Dave received exactly the payout, and Charlie received his fee and his deposit back.
+ * 7. The child bounty is gone, and the locked amount is still in its account, still frozen.
+ */
+async function claimChildBountyWithLockedFundsTest(client: Client<any, any>) {
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const minVestedTransfer = client.api.consts.vesting.minVestedTransfer.toBigInt()
+  const lockedAmount = (minVestedTransfer > existentialDeposit ? minVestedTransfer : existentialDeposit) * 10n
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum.toBigInt()
+  const childBountyValue = bountyValueMinimum * CHILD_BOUNTY_MULTIPLIER
+  const childCuratorFee = bountyValueMinimum * CHILD_CURATOR_FEE_MULTIPLIER
+
+  await setLastSpendPeriodBlockNumber(client)
+  await client.dev.newBlock()
+
+  // 1. A parent bounty becomes active with Bob as curator.
+  const bountyIndex = await createActiveParentBountyWithCurator(
+    client,
+    'Parent of a child bounty with locked funds',
+    testAccounts.bob,
+  )
+
+  // 2. Bob adds a child bounty, Charlie becomes its curator and awards it to Dave.
+  const { parentIndex, childIndex } = await createActiveChildBountyWithCurator(
+    client,
+    bountyIndex,
+    testAccounts.bob,
+    'Child bounty with locked funds',
+    testAccounts.charlie,
+  )
+  const awardChildBountyTx = client.api.tx.childBounties.awardChildBounty(
+    parentIndex,
+    childIndex,
+    testAccounts.dave.address,
+  )
+  await sendTransaction(awardChildBountyTx.signAsync(testAccounts.charlie))
+  await client.dev.newBlock()
+  expect((await getChildBounty(client, parentIndex, childIndex)).status.isPendingPayout).toBe(true)
+
+  const account = childBountyAccount(client, parentIndex, childIndex)
+  expect(await getFreeFunds(client, account)).toBe(childBountyValue)
+
+  // 3. Alice makes a vested transfer to the child bounty's account, with a schedule that has not started.
+  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const vestedTransferTx = client.api.tx.vesting.vestedTransfer(account, {
+    locked: lockedAmount,
+    perBlock: lockedAmount,
+    startingBlock: currentBlock + VESTING_START_DELAY,
+  })
+  await sendTransaction(vestedTransferTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  const accountBefore = await client.api.query.system.account(account)
+  expect(accountBefore.data.free.toBigInt()).toBe(childBountyValue + lockedAmount)
+  expect(accountBefore.data.frozen.toBigInt()).toBe(lockedAmount)
+
+  // The payout is already unlocked, so the claim below is not rejected as premature.
+  const unlockAt = (await getChildBounty(client, parentIndex, childIndex)).status.asPendingPayout.unlockAt.toNumber()
+  expect(unlockAt).toBeLessThanOrEqual(
+    await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider),
+  )
+
+  const daveBefore = await getFreeFunds(client, testAccounts.dave.address)
+  const charlieBefore = await client.api.query.system.account(testAccounts.charlie.address)
+
+  // 4. Alice calls `claim_child_bounty`.
+  const claimEvents = await sendTransaction(
+    client.api.tx.childBounties.claimChildBounty(parentIndex, childIndex).signAsync(testAccounts.alice),
+  )
+  await client.dev.newBlock()
+
+  // 5. `Claimed` reports the child bounty's value less the child curator's fee as the payout.
+  await checkEvents(claimEvents, { section: 'childBounties', method: 'Claimed' })
+    .redact({ redactKeys: /^(index|childIndex)$/ })
+    .toMatchSnapshot('child bounty claimed events')
+
+  const payout = childBountyValue - childCuratorFee
+  const records = await client.api.query.system.events()
+  const claimed = records.filter(({ event }) => client.api.events.childBounties.Claimed.is(event))
+  expect(claimed).toHaveLength(1)
+  assert(client.api.events.childBounties.Claimed.is(claimed[0].event))
+  expect(claimed[0].event.data.index.toNumber()).toBe(parentIndex)
+  expect(claimed[0].event.data.childIndex.toNumber()).toBe(childIndex)
+  expect(claimed[0].event.data.payout.toBigInt()).toBe(payout)
+  expect(claimed[0].event.data.beneficiary.toString()).toBe(
+    encodeAddress(testAccounts.dave.address, client.config.properties.addressEncoding),
+  )
+
+  // 6. Dave received exactly the payout, and Charlie received his fee and his deposit back.
+  expect((await getFreeFunds(client, testAccounts.dave.address)) - daveBefore).toBe(payout)
+  const charlieAfter = await client.api.query.system.account(testAccounts.charlie.address)
+  expect(charlieAfter.data.reserved.toBigInt()).toBe(0n)
+  expect(charlieAfter.data.free.toBigInt()).toBe(
+    charlieBefore.data.free.toBigInt() + charlieBefore.data.reserved.toBigInt() + childCuratorFee,
+  )
+
+  // 7. The child bounty is gone, and the locked amount is still in its account, still frozen.
+  expect(await getChildBounty(client, parentIndex, childIndex)).toBeNull()
+  const accountAfter = await client.api.query.system.account(account)
+  expect(accountAfter.data.free.toBigInt()).toBe(lockedAmount)
+  expect(accountAfter.data.frozen.toBigInt()).toBe(lockedAmount)
+}
+
+/**
+ * Test: `close_child_bounty` returns what the child bounty's account can transfer to the parent
+ * bounty and leaves locked funds behind.
+ *
+ * Closing a child bounty refunds its parent. A refund sized from the whole free balance would ask
+ * for more than an account with locked funds can move, and the parent would get nothing back while
+ * the child bounty is removed. The refund must be the spendable balance.
+ *
+ * 1. A parent bounty becomes active with Bob as curator.
+ * 2. Bob adds a child bounty, which moves its value out of the parent bounty's account.
+ * 3. Alice makes a vested transfer to the child bounty's account, with a schedule that has not started.
+ * 4. Bob calls `close_child_bounty`.
+ * 5. `Canceled` is emitted and the parent bounty's account gets the child bounty's value back.
+ * 6. The child bounty is gone, and the locked amount is still in its account, still frozen.
+ */
+async function closeChildBountyWithLockedFundsTest(client: Client<any, any>) {
+  await setupTestAccounts(client, ['alice', 'bob'])
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const minVestedTransfer = client.api.consts.vesting.minVestedTransfer.toBigInt()
+  const lockedAmount = (minVestedTransfer > existentialDeposit ? minVestedTransfer : existentialDeposit) * 10n
+  const childBountyValue = client.api.consts.bounties.bountyValueMinimum.toBigInt() * CHILD_BOUNTY_MULTIPLIER
+
+  await setLastSpendPeriodBlockNumber(client)
+  await client.dev.newBlock()
+
+  // 1. A parent bounty becomes active with Bob as curator.
+  const bountyIndex = await createActiveParentBountyWithCurator(
+    client,
+    'Parent of a closed child bounty with locked funds',
+    testAccounts.bob,
+  )
+
+  // 2. Bob adds a child bounty, which moves its value out of the parent bounty's account.
+  const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
+    bountyIndex,
+    childBountyValue,
+    'Child bounty closed with locked funds',
+  )
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+  const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
+  expect((await getChildBounty(client, parentIndex, childIndex)).status.isAdded).toBe(true)
+
+  const account = childBountyAccount(client, parentIndex, childIndex)
+  const parentAccount = bountyAccount(client, parentIndex)
+  expect(await getFreeFunds(client, account)).toBe(childBountyValue)
+
+  // 3. Alice makes a vested transfer to the child bounty's account, with a schedule that has not started.
+  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const vestedTransferTx = client.api.tx.vesting.vestedTransfer(account, {
+    locked: lockedAmount,
+    perBlock: lockedAmount,
+    startingBlock: currentBlock + VESTING_START_DELAY,
+  })
+  await sendTransaction(vestedTransferTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  const accountBefore = await client.api.query.system.account(account)
+  expect(accountBefore.data.free.toBigInt()).toBe(childBountyValue + lockedAmount)
+  expect(accountBefore.data.frozen.toBigInt()).toBe(lockedAmount)
+  const parentBefore = await getFreeFunds(client, parentAccount)
+
+  // 4. Bob calls `close_child_bounty`.
+  const closeEvents = await sendTransaction(
+    client.api.tx.childBounties.closeChildBounty(parentIndex, childIndex).signAsync(testAccounts.bob),
+  )
+  await client.dev.newBlock()
+
+  // 5. `Canceled` is emitted and the parent bounty's account gets the child bounty's value back.
+  await checkEvents(closeEvents, { section: 'childBounties', method: 'Canceled' })
+    .redact({ redactKeys: /^(index|childIndex)$/ })
+    .toMatchSnapshot('child bounty canceled events')
+
+  const records = await client.api.query.system.events()
+  const canceled = records.filter(({ event }) => client.api.events.childBounties.Canceled.is(event))
+  expect(canceled).toHaveLength(1)
+  assert(client.api.events.childBounties.Canceled.is(canceled[0].event))
+  expect(canceled[0].event.data.index.toNumber()).toBe(parentIndex)
+  expect(canceled[0].event.data.childIndex.toNumber()).toBe(childIndex)
+  expect((await getFreeFunds(client, parentAccount)) - parentBefore).toBe(childBountyValue)
+
+  // 6. The child bounty is gone, and the locked amount is still in its account, still frozen.
+  expect(await getChildBounty(client, parentIndex, childIndex)).toBeNull()
+  expect(await getParentChildBountiesCount(client, parentIndex)).toBe(0)
+  const accountAfter = await client.api.query.system.account(account)
+  expect(accountAfter.data.free.toBigInt()).toBe(lockedAmount)
+  expect(accountAfter.data.frozen.toBigInt()).toBe(lockedAmount)
+}
+
+/**
+ * Tests of payouts and refunds from a child bounty's account that holds locked funds. Each one is
+ * skipped on a runtime that sizes them from the whole free balance.
+ */
+export function childBountyLockedFundsTests(getClient: () => Client<any, any>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'Locked funds in a child bounty account',
+    children: [
+      {
+        kind: 'test',
+        label: 'claim_child_bounty - pays out the spendable balance and leaves locked funds behind',
+        testFn: withSpendablePayouts(getClient, claimChildBountyWithLockedFundsTest),
+      },
+      {
+        kind: 'test',
+        label: 'close_child_bounty - refunds the spendable balance and leaves locked funds behind',
+        testFn: withSpendablePayouts(getClient, closeChildBountyWithLockedFundsTest),
+      },
+    ],
+  } as RootTestTree
+}
+
 /**
  * Base set of childBounties end-to-end tests.
  *
@@ -3920,6 +4181,7 @@ export function baseChildBountiesE2ETests<
       allChildBountiesSuccessTests(() => client, testConfig),
       allChildBountiesFailureTests(() => client, testConfig),
       allChildBountiesOriginTests(() => client),
+      childBountyLockedFundsTests(() => client),
     ],
   }
 }
