@@ -111,6 +111,58 @@ function psmReserveAccount(client: Client<any, any>, internalLocation: Record<st
   return encodeAddress(entropy, client.config.properties.addressEncoding)
 }
 
+/**
+ * Create the asset account rows that let a PSM instance's reserve receive the given externals.
+ *
+ * Since pallet-psm 0.7.0, `add_external_asset` calls `can_deposit` on the reserve account and
+ * refuses with `ReserveCannotReceive` when it fails. The check exists because an approved
+ * external the reserve cannot hold would make every mint fail: a mint deposits the external
+ * into the reserve. `can_deposit` passes when the reserve's asset account already exists, or
+ * when the asset can create one on deposit.
+ *
+ * A sufficient asset creates its own account, so the suite's local externals pass untouched.
+ * A non-sufficient asset cannot: a new asset account takes a consumer reference, a consumer
+ * reference needs an existing System account, and the reserve is a derived address with no
+ * System account on a fresh fork. This affects the suite's `ForeignAssets` externals, bridged
+ * DAI and the ERC-20 cap fillers.
+ *
+ * On the live chain, the asset's admin clears this with `assets.touch_other`: it creates the
+ * reserve's empty asset account and pays the storage deposit. For a bridged asset that admin
+ * is the Ethereum bridge sovereign, which cannot sign on the fork. This helper writes the end
+ * state of that call directly: a System account row for the reserve, a balance-0 asset account
+ * row per external, and an incremented account counter on the owning asset. It skips only the
+ * journey; the resulting state is one the live chain can reach.
+ */
+async function allowReserveToReceive(
+  client: Client<any, any>,
+  internalLocation: Record<string, any>,
+  externals: (number | Record<string, any>)[],
+): Promise<void> {
+  const reserve = psmReserveAccount(client, internalLocation)
+  await client.dev.setStorage({
+    System: { account: [[[reserve], { providers: 1, consumers: 1, data: { free: 0 } }]] },
+  })
+  for (const external of externals) {
+    if (typeof external === 'number') {
+      const details = (await client.api.query.assets.asset(external)).unwrap()
+      await client.dev.setStorage({
+        Assets: {
+          asset: [[[external], { ...details.toJSON(), accounts: details.accounts.toNumber() + 1 }]],
+          account: [[[external, reserve], { balance: 0, status: 'Liquid', reason: 'Consumer' }]],
+        },
+      })
+    } else {
+      const details = (await (client.api.query.foreignAssets.asset(external) as any)).unwrap()
+      await client.dev.setStorage({
+        ForeignAssets: {
+          asset: [[[external], { ...details.toJSON(), accounts: details.accounts.toNumber() + 1 }]],
+          account: [[[external, reserve], { balance: 0, status: 'Liquid', reason: 'Consumer' }]],
+        },
+      })
+    }
+  }
+}
+
 /** Balance of a local `Assets` asset, returning `0n` when the account holds no entry. */
 async function assetBalance(client: Client<any, any>, assetId: number, address: string): Promise<bigint> {
   const entry = await client.api.query.assets.account(assetId, address)
@@ -1216,6 +1268,7 @@ async function higherDecimalExternalScales(client: Client<any, any>, testConfig:
 
   // 1. Approve the foreign external and give it weight
   await createPsmInstance(client, testConfig)
+  await allowReserveToReceive(client, internal, [external])
   const approve = client.api.tx.utility.batchAll([
     psm.addExternalAsset(internal, external),
     psm.setAssetCeilingWeight(internal, external, HALF_WEIGHT),
@@ -1274,6 +1327,7 @@ async function dustSwapIsRejected(client: Client<any, any>, testConfig: PsmTestC
 
   // 1. Approve the foreign external
   await createPsmInstance(client, testConfig)
+  await allowReserveToReceive(client, internal, [external])
   const approve = client.api.tx.utility.batchAll([
     psm.addExternalAsset(internal, external),
     psm.setAssetCeilingWeight(internal, external, HALF_WEIGHT),
@@ -1939,6 +1993,7 @@ async function externalApprovalsAreCapped(client: Client<any, any>, testConfig: 
 
   // 2. Fill up to the cap
   const queue = [foreignExternal.location, ...capFillerExternals]
+  await allowReserveToReceive(client, internal, queue)
   const toFill = queue.slice(0, cap - 2)
   const fill = client.api.tx.utility.batchAll(toFill.map((loc) => psm.addExternalAsset(internal, loc)))
   await sendTransaction(fill.signAsync(alice))
@@ -2005,15 +2060,17 @@ async function removingExternalWipesConfiguration(client: Client<any, any>, test
 }
 
 /**
- * Swaps stop if an external's decimals diverge from the snapshot taken when it was approved,
- * rather than silently converting at the wrong scale.
+ * Decimals are fixed at approval: the snapshot taken when the external was approved governs
+ * conversion, and a later change to the asset's metadata has no effect on swaps.
+ *
+ * pallet-psm 0.7.0 retired the live-decimals check and its `DecimalsMismatch` error; the
+ * variant stays in the metadata only to preserve error indices.
  *
  * 1. Create the PSM, which snapshots the primary external's decimals on approval
  * 2. Rewrite that asset's metadata to declare different decimals
- * 3. Attempt a mint, and verify DecimalsMismatch
- * 4. Verify no debt was recorded
+ * 3. Mint, and verify it succeeds, converting at the snapshot scale
  */
-async function divergentDecimalsBlockSwaps(client: Client<any, any>, testConfig: PsmTestConfig) {
+async function divergentDecimalsFollowSnapshot(client: Client<any, any>, testConfig: PsmTestConfig) {
   const { internalAssetId, primaryExternalId } = testConfig
   const { alice } = devAccounts
   const internal = assetLocation(internalAssetId)
@@ -2035,13 +2092,14 @@ async function divergentDecimalsBlockSwaps(client: Client<any, any>, testConfig:
     },
   })
 
-  // 3. Mint is refused
+  // 3. The mint succeeds, converting at the snapshot scale: six decimals on both sides, so the
+  // recorded debt equals the minted amount.
   await sendTransaction((client.api.tx as any).psm.mint(internal, external, 100n * UNIT, ANY_FEE).signAsync(alice))
   await client.dev.newBlock()
-  await expectPsmError(client, 'DecimalsMismatch')
-
-  // 4. No debt recorded
-  expect(await psmDebt(client, internal, external)).toBe(0n)
+  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
+    'divergent decimals: Minted event',
+  )
+  expect(await psmDebt(client, internal, external)).toBe(100n * UNIT)
 }
 
 /// -------
@@ -2528,8 +2586,8 @@ export function psmE2ETests<
           },
           {
             kind: 'test',
-            label: 'external decimals diverge from snapshot — DecimalsMismatch',
-            testFn: () => divergentDecimalsBlockSwaps(client, testConfig),
+            label: 'external decimals diverge from snapshot — the snapshot governs',
+            testFn: () => divergentDecimalsFollowSnapshot(client, testConfig),
           },
         ],
       },

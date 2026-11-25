@@ -715,6 +715,20 @@ exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty awardin
 ]
 `;
 
+exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty claim with locked funds in the bounty account > bounty claimed events 1`] = `
+[
+  {
+    "data": {
+      "beneficiary": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+      "index": "(redacted)",
+      "payout": 90000000000000,
+    },
+    "method": "BountyClaimed",
+    "section": "bounties",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty extension > bounty approved events 1`] = `
 [
   {
@@ -1467,6 +1481,83 @@ exports[`Polkadot Asset Hub Bounties > Origins and spend limits > propose curato
     },
     "method": "Dispatched",
     "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Bounties > Reclaim bounty funds > reclaim_bounty_funds - BadOrigin for Root > scheduler events when Root reclaims 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Bounties > Reclaim bounty funds > reclaim_bounty_funds - BountyStillActive while the bounty exists > reclaim failed events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0c000000",
+          "index": 65,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 2000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Bounties > Reclaim bounty funds > reclaim_bounty_funds - leaves locked funds in the account > funds reclaimed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "BountyFundsReclaimed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Bounties > Reclaim bounty funds > reclaim_bounty_funds - moves funds sent to a closed bounty to the treasury for free > funds reclaimed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "BountyFundsReclaimed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Bounties > Reclaim bounty funds > reclaim_bounty_funds - sweeps a configured asset together with the native token > funds reclaimed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "BountyFundsReclaimed",
+    "section": "bounties",
   },
 ]
 `;

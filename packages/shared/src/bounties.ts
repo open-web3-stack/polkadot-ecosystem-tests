@@ -6,11 +6,11 @@ import type { Client } from '@e2e-test/shared'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { EventRecord } from '@polkadot/types/interfaces'
-import { compactAddLength, stringToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
+import { bnToU8a, compactAddLength, stringToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
 import type { HexString } from '@polkadot/util/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert, expect } from 'vitest'
+import { assert, expect, type TestContext } from 'vitest'
 
 import { match } from 'ts-pattern'
 import {
@@ -18,6 +18,7 @@ import {
   checkEvents,
   checkSystemEvents,
   getBlockNumber,
+  getFreeFunds,
   scheduleInlineCallListWithSameOrigin,
   scheduleInlineCallWithOrigin,
   type TestConfig,
@@ -176,6 +177,22 @@ async function extractExtrinsicFailedEvent(client: Client<any, any>): Promise<an
   return ev
 }
 
+/** How far in the future, in block provider blocks, a vesting schedule starts so that none of it unlocks during a test. */
+const VESTING_START_DELAY = 10_000_000
+
+/**
+ * Account holding a bounty's funds.
+ *
+ * Mirrors the runtime's derivation: the treasury's pallet id as a sub-account whose seed is the
+ * SCALE-encoded tuple of the string `bt` and the bounty index, padded with zeroes to 32 bytes.
+ */
+function bountyAccount(client: Client<any, any>, bountyIndex: number): string {
+  const palletId = client.api.consts.treasury.palletId.toU8a()
+  const seed = u8aConcat(compactAddLength(stringToU8a('bt')), bnToU8a(bountyIndex, { bitLength: 32 }))
+  const raw = u8aConcat(stringToU8a('modl'), palletId, seed, new Uint8Array(32)).slice(0, 32)
+  return encodeAddress(raw, client.config.properties.addressEncoding)
+}
+
 /**
  * Account id of a `PalletId` sub-account, built the way `into_sub_account_truncating` builds it: the bytes `modl`,
  * the 8-byte pallet id, the SCALE encoding of the seed, then zero padding up to 32 bytes.
@@ -194,14 +211,6 @@ function palletSubAccount(palletId: Uint8Array, encodedSeed: Uint8Array): HexStr
  */
 function dapStagingAccount(): HexString {
   return palletSubAccount(stringToU8a('dap/buff'), compactAddLength(stringToU8a('staging')))
-}
-
-/**
- * The account that holds a bounty's funds: the treasury pallet id with the seed `("bt", bountyIndex)`.
- */
-function bountyAccount(client: Client<any, any>, bountyIndex: number): HexString {
-  const seed = u8aConcat(compactAddLength(stringToU8a('bt')), client.api.createType('u32', bountyIndex).toU8a())
-  return palletSubAccount(client.api.consts.treasury.palletId.toU8a(), seed)
 }
 
 /**
@@ -1280,6 +1289,168 @@ export async function bountyAwardingAndClaimingTest<
   expect(bountyDescriptionFromStorageAfterClaiming).toBeNull()
 
   await checkBountiesTryState(client)
+}
+
+/**
+ * First runtime spec version of the Polkadot and Kusama Asset Hubs in which a bounty's payout is
+ * sized from the balance its account can transfer.
+ */
+const SPENDABLE_PAYOUT_SPEC_VERSION = 2_006_000
+
+/**
+ * Run `body`, or skip the test when the runtime still sizes payouts from the whole free balance.
+ */
+function withSpendablePayouts(
+  getClient: () => Client<any, any>,
+  body: (client: Client<any, any>) => Promise<void>,
+): (ctx?: TestContext) => Promise<void> {
+  return async (ctx) => {
+    const client = getClient()
+    if (client.api.runtimeVersion.specVersion.toNumber() < SPENDABLE_PAYOUT_SPEC_VERSION) {
+      ctx?.skip(`payouts from the spendable balance need spec version ${SPENDABLE_PAYOUT_SPEC_VERSION} or later`)
+      return
+    }
+    await body(client)
+  }
+}
+
+/**
+ * Setup: a bounty in the `PendingPayout` state, built with real extrinsics.
+ *
+ * Alice proposes it, the `Treasurer` approves it, the treasury funds it at the end of its spend
+ * period, the `Treasurer` proposes Bob as curator, Bob accepts and awards it to `beneficiary`.
+ * Returns the bounty's index, its value and the curator's fee.
+ */
+async function createAwardedBounty(client: Client<any, any>, beneficiary: string) {
+  await setLastSpendPeriodBlockNumber(client)
+  await client.dev.newBlock()
+
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum.toBigInt()
+  const bountyValue = bountyValueMinimum * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum * CURATOR_FEE_MULTIPLIER
+
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, 'Bounty awarded to a beneficiary')
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(),
+    { Origins: 'Treasurer' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  expect(await getBountyApprovals(client)).toContain(bountyIndex)
+
+  // The spend period ends in this block, and the treasury funds the approved bounty.
+  await client.dev.newBlock()
+  expect((await getBounty(client, bountyIndex)).status.isFunded).toBe(true)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee).method.toHex(),
+    { Origins: 'Treasurer' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  expect((await getBounty(client, bountyIndex)).status.isCuratorProposed).toBe(true)
+
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+  expect((await getBounty(client, bountyIndex)).status.isActive).toBe(true)
+
+  await sendTransaction(client.api.tx.bounties.awardBounty(bountyIndex, beneficiary).signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+  expect((await getBounty(client, bountyIndex)).status.isPendingPayout).toBe(true)
+
+  return { bountyIndex, bountyValue, curatorFee }
+}
+
+/**
+ * Test: `claim_bounty` pays out what the bounty's account can transfer and leaves locked funds behind.
+ *
+ * Anyone can lock funds in a bounty's account with a vested transfer. A payout sized from the whole
+ * free balance would then ask for more than the account can move, and the beneficiary would get
+ * nothing while the bounty is removed. The payout must be the spendable balance less the curator's
+ * fee, so that the beneficiary is paid in full.
+ *
+ * 1. Alice proposes a bounty. It is approved and funded, Bob becomes its curator and awards it to Charlie.
+ * 2. Alice makes a vested transfer to the bounty's account, with a schedule that has not started.
+ * 3. Alice calls `claim_bounty`.
+ * 4. `BountyClaimed` reports the bounty's value less the curator's fee as the payout.
+ * 5. Charlie received exactly the payout, and Bob received his fee and his deposit back.
+ * 6. The bounty is gone, and the locked amount is still in its account, still frozen.
+ */
+async function claimBountyWithLockedFundsTest(client: Client<any, any>) {
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const minVestedTransfer = client.api.consts.vesting.minVestedTransfer.toBigInt()
+  const lockedAmount = (minVestedTransfer > existentialDeposit ? minVestedTransfer : existentialDeposit) * 10n
+
+  // 1. Alice proposes a bounty. It is approved and funded, Bob becomes its curator and awards it to Charlie.
+  const { bountyIndex, bountyValue, curatorFee } = await createAwardedBounty(client, testAccounts.charlie.address)
+  const account = bountyAccount(client, bountyIndex)
+  expect(await getFreeFunds(client, account)).toBe(bountyValue)
+
+  // 2. Alice makes a vested transfer to the bounty's account, with a schedule that has not started.
+  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const vestedTransferTx = client.api.tx.vesting.vestedTransfer(account, {
+    locked: lockedAmount,
+    perBlock: lockedAmount,
+    startingBlock: currentBlock + VESTING_START_DELAY,
+  })
+  await sendTransaction(vestedTransferTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  const accountBefore = await client.api.query.system.account(account)
+  expect(accountBefore.data.free.toBigInt()).toBe(bountyValue + lockedAmount)
+  expect(accountBefore.data.frozen.toBigInt()).toBe(lockedAmount)
+
+  // The payout is already unlocked, so the claim below is not rejected as premature.
+  const unlockAt = (await getBounty(client, bountyIndex)).status.asPendingPayout.unlockAt.toNumber()
+  expect(unlockAt).toBeLessThanOrEqual(
+    await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider),
+  )
+
+  const charlieBefore = await getFreeFunds(client, testAccounts.charlie.address)
+  const bobBefore = await client.api.query.system.account(testAccounts.bob.address)
+
+  // 3. Alice calls `claim_bounty`.
+  const claimEvents = await sendTransaction(
+    client.api.tx.bounties.claimBounty(bountyIndex).signAsync(testAccounts.alice),
+  )
+  await client.dev.newBlock()
+
+  // 4. `BountyClaimed` reports the bounty's value less the curator's fee as the payout.
+  await checkEvents(claimEvents, { section: 'bounties', method: 'BountyClaimed' })
+    .redact({ redactKeys: /^index$/ })
+    .toMatchSnapshot('bounty claimed events')
+
+  const payout = bountyValue - curatorFee
+  const records = await client.api.query.system.events()
+  const claimed = records.filter(({ event }) => client.api.events.bounties.BountyClaimed.is(event))
+  expect(claimed).toHaveLength(1)
+  assert(client.api.events.bounties.BountyClaimed.is(claimed[0].event))
+  expect(claimed[0].event.data.index.toNumber()).toBe(bountyIndex)
+  expect(claimed[0].event.data.payout.toBigInt()).toBe(payout)
+  expect(claimed[0].event.data.beneficiary.toString()).toBe(
+    encodeAddress(testAccounts.charlie.address, client.config.properties.addressEncoding),
+  )
+
+  // 5. Charlie received exactly the payout, and Bob received his fee and his deposit back.
+  expect((await getFreeFunds(client, testAccounts.charlie.address)) - charlieBefore).toBe(payout)
+  const bobAfter = await client.api.query.system.account(testAccounts.bob.address)
+  expect(bobAfter.data.reserved.toBigInt()).toBe(0n)
+  expect(bobAfter.data.free.toBigInt()).toBe(
+    bobBefore.data.free.toBigInt() + bobBefore.data.reserved.toBigInt() + curatorFee,
+  )
+
+  // 6. The bounty is gone, and the locked amount is still in its account, still frozen.
+  expect(await getBounty(client, bountyIndex)).toBeNull()
+  const accountAfter = await client.api.query.system.account(account)
+  expect(accountAfter.data.free.toBigInt()).toBe(lockedAmount)
+  expect(accountAfter.data.frozen.toBigInt()).toBe(lockedAmount)
 }
 
 /**
@@ -2518,6 +2689,11 @@ export function allBountySuccessTests<
         label: 'Bounty awarding and claiming',
         testFn: async () => await bountyAwardingAndClaimingTest(getClient()),
       },
+      {
+        kind: 'test',
+        label: 'Bounty claim with locked funds in the bounty account',
+        testFn: withSpendablePayouts(getClient, claimBountyWithLockedFundsTest),
+      },
       bountyFundingTests(getClient),
       bountyApprovalTests(getClient),
       bountyClosureTests(getClient, testConfig),
@@ -3425,6 +3601,519 @@ export function allBountyFailureTests<
         kind: 'test',
         label: 'Bounty cannot be claimed in active state',
         testFn: async () => await bountyAwardingAndClaimingInActiveStateTest(getClient()),
+      },
+    ],
+  } as RootTestTree
+}
+
+/// -------
+/// Reclaiming funds from closed bounties
+/// -------
+
+/**
+ * Id of USDT in the `Assets` pallet. The Polkadot and Kusama Asset Hub runtimes both list it among
+ * the assets that are swept out of a bounty's account.
+ */
+const SWEPT_ASSET_ID = 1984
+
+/**
+ * Run `body`, or skip the test when the runtime has no `bounties.reclaim_bounty_funds` call.
+ */
+function withReclaimBountyFunds(
+  getClient: () => Client<any, any>,
+  body: (client: Client<any, any>) => Promise<void>,
+): (ctx?: TestContext) => Promise<void> {
+  return async (ctx) => {
+    const client = getClient()
+    if ((client.api.tx.bounties as any).reclaimBountyFunds === undefined) {
+      ctx?.skip('bounties.reclaim_bounty_funds is not in this runtime')
+      return
+    }
+    await body(client)
+  }
+}
+
+/**
+ * Build a `reclaim_bounty_funds` call. The API's static types come from a runtime without this
+ * call, so it is reached untyped.
+ */
+function reclaimBountyFundsTx(client: Client<any, any>, bountyIndex: number) {
+  return (client.api.tx.bounties as any).reclaimBountyFunds(bountyIndex)
+}
+
+/** The treasury pot, which receives everything reclaimed from a bounty's account. */
+function treasuryPot(client: Client<any, any>): string {
+  return encodeAddress(client.api.consts.treasury.potAccount.toHex(), client.config.properties.addressEncoding)
+}
+
+/** `who`'s balance of the asset `assetId` in the `Assets` pallet, zero when they hold none. */
+async function assetBalance(client: Client<any, any>, assetId: number, who: string): Promise<bigint> {
+  const account = await client.api.query.assets.account(assetId, who)
+  return account.isSome ? account.unwrap().balance.toBigInt() : 0n
+}
+
+/**
+ * Events of the `reclaim_bounty_funds` extrinsic in the head block.
+ *
+ * The extrinsic is located by its call, so the result holds for a call that emits no bounty event.
+ */
+async function reclaimExtrinsicEvents(client: Client<any, any>) {
+  const { block } = await client.api.rpc.chain.getBlock()
+  const index = block.extrinsics.findIndex(
+    ({ method }) => method.section === 'bounties' && method.method === 'reclaimBountyFunds',
+  )
+  expect(index, 'the head block holds the reclaim extrinsic').toBeGreaterThanOrEqual(0)
+
+  const records = await client.api.query.system.events()
+  return records
+    .filter(({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eqn(index))
+    .map(({ event }) => event)
+}
+
+/**
+ * Setup: a bounty that was proposed and then closed, so nothing is stored under its index any more.
+ *
+ * Alice proposes it and the `Treasurer` origin closes it while it is still `Proposed`. Its account
+ * never received funds. Returns the bounty's index.
+ */
+async function createClosedBounty(client: Client<any, any>): Promise<number> {
+  const bountyValue = client.api.consts.bounties.bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, 'Bounty closed before funding')
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.closeBounty(bountyIndex).method.toHex(),
+    { Origins: 'Treasurer' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // The scheduled close reports its outcome only through `Dispatched`.
+  const dispatched = (await client.api.query.system.events()).find(({ event }) =>
+    client.api.events.scheduler.Dispatched.is(event),
+  )
+  assert(dispatched && client.api.events.scheduler.Dispatched.is(dispatched.event))
+  expect(dispatched.event.data.result.isOk).toBe(true)
+  expect(await getBounty(client, bountyIndex)).toBeNull()
+
+  return bountyIndex
+}
+
+/**
+ * Test: funds sent to a closed bounty's account are reclaimed for the treasury, free of charge.
+ *
+ * Nothing in the bounty lifecycle touches a bounty's account once the bounty is gone, so tokens
+ * that arrive later would stay there for good. `reclaim_bounty_funds` moves them to the treasury
+ * pot. Anyone may call it, and a call that moves funds costs the caller nothing.
+ *
+ * 1. Alice proposes a bounty and the `Treasurer` closes it.
+ * 2. Alice sends native tokens to the closed bounty's account.
+ * 3. Charlie, who has no role in the bounty, calls `reclaim_bounty_funds`.
+ * 4. The call emits `BountyFundsReclaimed` and moves the exact amount to the treasury pot.
+ * 5. The bounty's account is empty, and Charlie's balance is unchanged.
+ */
+async function reclaimAfterClosureTest(client: Client<any, any>) {
+  await setupTestAccounts(client, ['alice', 'charlie'])
+  const strandedAmount = client.api.consts.balances.existentialDeposit.toBigInt() * 100n
+
+  // 1. Alice proposes a bounty and the `Treasurer` closes it.
+  const bountyIndex = await createClosedBounty(client)
+  const account = bountyAccount(client, bountyIndex)
+  expect(await getFreeFunds(client, account)).toBe(0n)
+
+  // 2. Alice sends native tokens to the closed bounty's account.
+  const strandTx = client.api.tx.balances.transferKeepAlive(account, strandedAmount)
+  await sendTransaction(strandTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  expect(await getFreeFunds(client, account)).toBe(strandedAmount)
+
+  const treasuryBefore = await getFreeFunds(client, treasuryPot(client))
+  const charlieBefore = await getFreeFunds(client, testAccounts.charlie.address)
+
+  // 3. Charlie, who has no role in the bounty, calls `reclaim_bounty_funds`.
+  const reclaimEvents = await sendTransaction(reclaimBountyFundsTx(client, bountyIndex).signAsync(testAccounts.charlie))
+  await client.dev.newBlock()
+
+  // 4. The call emits `BountyFundsReclaimed` and moves the exact amount to the treasury pot.
+  await checkEvents(reclaimEvents, { section: 'bounties', method: 'BountyFundsReclaimed' })
+    .redact({ redactKeys: /^bountyId$/ })
+    .toMatchSnapshot('funds reclaimed events')
+
+  const events = await reclaimExtrinsicEvents(client)
+  const reclaimed = events.filter((event) => event.section === 'bounties' && event.method === 'BountyFundsReclaimed')
+  expect(reclaimed).toHaveLength(1)
+  expect((reclaimed[0].data as any).bountyId.toNumber()).toBe(bountyIndex)
+
+  const transfers = events.filter((event) => client.api.events.balances.Transfer.is(event))
+  expect(transfers).toHaveLength(1)
+  assert(client.api.events.balances.Transfer.is(transfers[0]))
+  expect(transfers[0].data.from.toString()).toBe(account)
+  expect(transfers[0].data.to.toString()).toBe(treasuryPot(client))
+  expect(transfers[0].data.amount.toBigInt()).toBe(strandedAmount)
+
+  expect((await getFreeFunds(client, treasuryPot(client))) - treasuryBefore).toBe(strandedAmount)
+
+  // 5. The bounty's account is empty, and Charlie's balance is unchanged.
+  expect(await getFreeFunds(client, account)).toBe(0n)
+
+  const success = events.find((event) => client.api.events.system.ExtrinsicSuccess.is(event))
+  assert(success && client.api.events.system.ExtrinsicSuccess.is(success))
+  expect(success.data.dispatchInfo.paysFee.isNo).toBe(true)
+  expect(await getFreeFunds(client, testAccounts.charlie.address)).toBe(charlieBefore)
+}
+
+/**
+ * Test: one `reclaim_bounty_funds` call sweeps a configured asset together with the native token.
+ *
+ * Which assets leave a bounty's account is decided by the runtime's `TransferAllAssets` setting,
+ * which only a real runtime carries. USDT is on the list of both Asset Hubs.
+ *
+ * No test account can mint USDT, so Alice's holding is written to storage as a precondition, with
+ * the asset's supply and account count raised to match. This is done before Alice sends anything,
+ * because the write replaces her whole account record. Every transfer after that is a real
+ * extrinsic.
+ *
+ * 1. Alice is given USDT.
+ * 2. Alice proposes a bounty and the `Treasurer` closes it.
+ * 3. Alice sends native tokens and USDT to the closed bounty's account.
+ * 4. Charlie calls `reclaim_bounty_funds` once.
+ * 5. Both the native tokens and the USDT arrive in the treasury pot, and the bounty's account holds neither.
+ */
+async function reclaimSweepsConfiguredAssetTest(client: Client<any, any>) {
+  await setupTestAccounts(client, ['alice', 'charlie'])
+  const nativeAmount = client.api.consts.balances.existentialDeposit.toBigInt() * 100n
+
+  // 1. Alice is given USDT.
+  const maybeAsset = await client.api.query.assets.asset(SWEPT_ASSET_ID)
+  assert(maybeAsset.isSome, 'USDT exists on this chain')
+  const asset = maybeAsset.unwrap()
+  const assetAmount = asset.minBalance.toBigInt() * 100n
+  const aliceAccount = await client.api.query.system.account(testAccounts.alice.address)
+  await client.dev.setStorage({
+    Assets: {
+      asset: [
+        [
+          [SWEPT_ASSET_ID],
+          {
+            ...asset.toJSON(),
+            supply: (asset.supply.toBigInt() + assetAmount).toString(),
+            accounts: asset.accounts.toNumber() + 1,
+          },
+        ],
+      ],
+      account: [
+        [[SWEPT_ASSET_ID, testAccounts.alice.address], { balance: assetAmount, status: 'Liquid', reason: 'Consumer' }],
+      ],
+    },
+    // An asset account held for the reason `Consumer` keeps one consumer reference on its owner.
+    System: {
+      account: [
+        [[testAccounts.alice.address], { ...aliceAccount.toJSON(), consumers: aliceAccount.consumers.toNumber() + 1 }],
+      ],
+    },
+  })
+  expect(await assetBalance(client, SWEPT_ASSET_ID, testAccounts.alice.address)).toBe(assetAmount)
+  expect((await client.api.query.system.account(testAccounts.alice.address)).data.free.toBigInt()).toBe(
+    aliceAccount.data.free.toBigInt(),
+  )
+
+  // 2. Alice proposes a bounty and the `Treasurer` closes it.
+  const bountyIndex = await createClosedBounty(client)
+  const account = bountyAccount(client, bountyIndex)
+
+  // 3. Alice sends native tokens and USDT to the closed bounty's account.
+  const strandNativeTx = client.api.tx.balances.transferKeepAlive(account, nativeAmount)
+  await sendTransaction(strandNativeTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  const strandAssetTx = client.api.tx.assets.transfer(SWEPT_ASSET_ID, account, assetAmount)
+  await sendTransaction(strandAssetTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  expect(await getFreeFunds(client, account)).toBe(nativeAmount)
+  expect(await assetBalance(client, SWEPT_ASSET_ID, account)).toBe(assetAmount)
+
+  const treasuryNativeBefore = await getFreeFunds(client, treasuryPot(client))
+  const treasuryAssetBefore = await assetBalance(client, SWEPT_ASSET_ID, treasuryPot(client))
+
+  // 4. Charlie calls `reclaim_bounty_funds` once.
+  const reclaimEvents = await sendTransaction(reclaimBountyFundsTx(client, bountyIndex).signAsync(testAccounts.charlie))
+  await client.dev.newBlock()
+
+  await checkEvents(reclaimEvents, { section: 'bounties', method: 'BountyFundsReclaimed' })
+    .redact({ redactKeys: /^bountyId$/ })
+    .toMatchSnapshot('funds reclaimed events')
+
+  // 5. Both the native tokens and the USDT arrive in the treasury pot, and the bounty's account holds neither.
+  const events = await reclaimExtrinsicEvents(client)
+  const assetTransfers = events.filter((event) => client.api.events.assets.Transferred.is(event))
+  expect(assetTransfers).toHaveLength(1)
+  assert(client.api.events.assets.Transferred.is(assetTransfers[0]))
+  expect(assetTransfers[0].data.assetId.toNumber()).toBe(SWEPT_ASSET_ID)
+  expect(assetTransfers[0].data.from.toString()).toBe(account)
+  expect(assetTransfers[0].data.to.toString()).toBe(treasuryPot(client))
+  expect(assetTransfers[0].data.amount.toBigInt()).toBe(assetAmount)
+
+  expect((await assetBalance(client, SWEPT_ASSET_ID, treasuryPot(client))) - treasuryAssetBefore).toBe(assetAmount)
+  expect((await getFreeFunds(client, treasuryPot(client))) - treasuryNativeBefore).toBe(nativeAmount)
+  expect(await assetBalance(client, SWEPT_ASSET_ID, account)).toBe(0n)
+  expect(await getFreeFunds(client, account)).toBe(0n)
+}
+
+/**
+ * Test: `reclaim_bounty_funds` takes only what can be transferred and leaves locked funds in place.
+ *
+ * Anyone can lock funds in a bounty's account with a vested transfer. The sweep must take the
+ * liquid part and still succeed, without touching the locked part.
+ *
+ * 1. Alice proposes a bounty and the `Treasurer` closes it.
+ * 2. Alice makes a vested transfer to the closed bounty's account, with a schedule that has not started.
+ * 3. Alice also sends liquid native tokens to it.
+ * 4. Charlie calls `reclaim_bounty_funds`.
+ * 5. Only the liquid amount reaches the treasury pot, and the call is free.
+ * 6. The locked amount is still in the bounty's account, still frozen.
+ */
+async function reclaimLeavesLockedFundsTest(client: Client<any, any>) {
+  await setupTestAccounts(client, ['alice', 'charlie'])
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const minVestedTransfer = client.api.consts.vesting.minVestedTransfer.toBigInt()
+  const lockedAmount = (minVestedTransfer > existentialDeposit ? minVestedTransfer : existentialDeposit) * 10n
+  const liquidAmount = existentialDeposit * 100n
+
+  // 1. Alice proposes a bounty and the `Treasurer` closes it.
+  const bountyIndex = await createClosedBounty(client)
+  const account = bountyAccount(client, bountyIndex)
+
+  // 2. Alice makes a vested transfer to the closed bounty's account, with a schedule that has not started.
+  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const vestedTransferTx = client.api.tx.vesting.vestedTransfer(account, {
+    locked: lockedAmount,
+    perBlock: lockedAmount,
+    startingBlock: currentBlock + VESTING_START_DELAY,
+  })
+  await sendTransaction(vestedTransferTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  // 3. Alice also sends liquid native tokens to it.
+  const strandTx = client.api.tx.balances.transferKeepAlive(account, liquidAmount)
+  await sendTransaction(strandTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  const accountBefore = await client.api.query.system.account(account)
+  expect(accountBefore.data.free.toBigInt()).toBe(lockedAmount + liquidAmount)
+  expect(accountBefore.data.frozen.toBigInt()).toBe(lockedAmount)
+  const treasuryBefore = await getFreeFunds(client, treasuryPot(client))
+
+  // 4. Charlie calls `reclaim_bounty_funds`.
+  const reclaimEvents = await sendTransaction(reclaimBountyFundsTx(client, bountyIndex).signAsync(testAccounts.charlie))
+  await client.dev.newBlock()
+
+  await checkEvents(reclaimEvents, { section: 'bounties', method: 'BountyFundsReclaimed' })
+    .redact({ redactKeys: /^bountyId$/ })
+    .toMatchSnapshot('funds reclaimed events')
+
+  // 5. Only the liquid amount reaches the treasury pot, and the call is free.
+  const events = await reclaimExtrinsicEvents(client)
+  const transfers = events.filter((event) => client.api.events.balances.Transfer.is(event))
+  expect(transfers).toHaveLength(1)
+  assert(client.api.events.balances.Transfer.is(transfers[0]))
+  expect(transfers[0].data.from.toString()).toBe(account)
+  expect(transfers[0].data.to.toString()).toBe(treasuryPot(client))
+  expect(transfers[0].data.amount.toBigInt()).toBe(liquidAmount)
+  expect((await getFreeFunds(client, treasuryPot(client))) - treasuryBefore).toBe(liquidAmount)
+
+  const success = events.find((event) => client.api.events.system.ExtrinsicSuccess.is(event))
+  assert(success && client.api.events.system.ExtrinsicSuccess.is(success))
+  expect(success.data.dispatchInfo.paysFee.isNo).toBe(true)
+
+  // 6. The locked amount is still in the bounty's account, still frozen.
+  const accountAfter = await client.api.query.system.account(account)
+  expect(accountAfter.data.free.toBigInt()).toBe(lockedAmount)
+  expect(accountAfter.data.frozen.toBigInt()).toBe(lockedAmount)
+}
+
+/**
+ * Test: `reclaim_bounty_funds` with nothing to move succeeds, emits no event, and charges the caller.
+ *
+ * A free call that does nothing could be repeated at no cost to fill blocks. The fee is waived only
+ * when funds actually move.
+ *
+ * 1. Alice proposes a bounty and the `Treasurer` closes it. Its account stays empty.
+ * 2. Charlie calls `reclaim_bounty_funds`.
+ * 3. The extrinsic succeeds without any bounty event or transfer.
+ * 4. Charlie paid the fee.
+ */
+async function reclaimNothingIsPaidTest(client: Client<any, any>) {
+  await setupTestAccounts(client, ['alice', 'charlie'])
+
+  // 1. Alice proposes a bounty and the `Treasurer` closes it. Its account stays empty.
+  const bountyIndex = await createClosedBounty(client)
+  const account = bountyAccount(client, bountyIndex)
+  expect(await getFreeFunds(client, account)).toBe(0n)
+  const charlieBefore = await getFreeFunds(client, testAccounts.charlie.address)
+
+  // 2. Charlie calls `reclaim_bounty_funds`.
+  await sendTransaction(reclaimBountyFundsTx(client, bountyIndex).signAsync(testAccounts.charlie))
+  await client.dev.newBlock()
+
+  // 3. The extrinsic succeeds without any bounty event or transfer.
+  const events = await reclaimExtrinsicEvents(client)
+  const success = events.find((event) => client.api.events.system.ExtrinsicSuccess.is(event))
+  assert(success && client.api.events.system.ExtrinsicSuccess.is(success))
+  expect(events.filter((event) => event.section === 'bounties')).toHaveLength(0)
+  expect(events.filter((event) => client.api.events.balances.Transfer.is(event))).toHaveLength(0)
+  expect(await getFreeFunds(client, account)).toBe(0n)
+
+  // 4. Charlie paid the fee.
+  expect(success.data.dispatchInfo.paysFee.isYes).toBe(true)
+  expect(await getFreeFunds(client, testAccounts.charlie.address)).toBeLessThan(charlieBefore)
+}
+
+/**
+ * Test: `reclaim_bounty_funds` fails with `BountyStillActive` while the bounty exists.
+ *
+ * A bounty that is still stored manages its own account: its funds are owed to a beneficiary, a
+ * curator or the treasury through the normal lifecycle. Sweeping it early would break that.
+ *
+ * 1. Alice proposes a bounty, which stays in the `Proposed` state.
+ * 2. Alice sends native tokens to the bounty's account.
+ * 3. Charlie calls `reclaim_bounty_funds`.
+ * 4. The extrinsic fails with `BountyStillActive`.
+ * 5. The bounty is still `Proposed` and its account still holds the tokens.
+ */
+async function reclaimWhileBountyExistsTest(client: Client<any, any>) {
+  await setupTestAccounts(client, ['alice', 'charlie'])
+  const strandedAmount = client.api.consts.balances.existentialDeposit.toBigInt() * 100n
+
+  // 1. Alice proposes a bounty, which stays in the `Proposed` state.
+  const bountyValue = client.api.consts.bounties.bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, 'Bounty that is still proposed')
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+  const account = bountyAccount(client, bountyIndex)
+
+  // 2. Alice sends native tokens to the bounty's account.
+  const strandTx = client.api.tx.balances.transferKeepAlive(account, strandedAmount)
+  await sendTransaction(strandTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  expect((await getBounty(client, bountyIndex)).status.isProposed).toBe(true)
+  expect(await getFreeFunds(client, account)).toBe(strandedAmount)
+
+  // 3. Charlie calls `reclaim_bounty_funds`.
+  const reclaimEvents = await sendTransaction(reclaimBountyFundsTx(client, bountyIndex).signAsync(testAccounts.charlie))
+  await client.dev.newBlock()
+
+  // 4. The extrinsic fails with `BountyStillActive`.
+  await checkEvents(reclaimEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'reclaim failed events',
+  )
+
+  const events = await reclaimExtrinsicEvents(client)
+  const failed = events.find((event) => client.api.events.system.ExtrinsicFailed.is(event))
+  assert(failed && client.api.events.system.ExtrinsicFailed.is(failed))
+  const dispatchError = failed.data.dispatchError
+  assert(dispatchError.isModule)
+  const stillActive = (client.api.errors.bounties as any).BountyStillActive
+  expect(stillActive, 'the runtime declares `BountyStillActive`').toBeDefined()
+  expect(stillActive.is(dispatchError.asModule)).toBe(true)
+
+  // 5. The bounty is still `Proposed` and its account still holds the tokens.
+  expect((await getBounty(client, bountyIndex)).status.isProposed).toBe(true)
+  expect(await getFreeFunds(client, account)).toBe(strandedAmount)
+}
+
+/**
+ * Test: `reclaim_bounty_funds` rejects the `Root` origin.
+ *
+ * The call is open to every signed account and to nothing else. `Root` is not a signed origin, so
+ * even the most privileged origin gets `BadOrigin`.
+ *
+ * 1. Alice proposes a bounty and the `Treasurer` closes it.
+ * 2. Alice sends native tokens to the closed bounty's account.
+ * 3. `reclaim_bounty_funds` is dispatched with the `Root` origin through the scheduler.
+ * 4. The dispatch fails with `BadOrigin`.
+ * 5. The tokens are still in the bounty's account.
+ */
+async function reclaimWithRootOriginTest(client: Client<any, any>) {
+  await setupTestAccounts(client, ['alice'])
+  const strandedAmount = client.api.consts.balances.existentialDeposit.toBigInt() * 100n
+
+  // 1. Alice proposes a bounty and the `Treasurer` closes it.
+  const bountyIndex = await createClosedBounty(client)
+  const account = bountyAccount(client, bountyIndex)
+
+  // 2. Alice sends native tokens to the closed bounty's account.
+  const strandTx = client.api.tx.balances.transferKeepAlive(account, strandedAmount)
+  await sendTransaction(strandTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  expect(await getFreeFunds(client, account)).toBe(strandedAmount)
+
+  // 3. `reclaim_bounty_funds` is dispatched with the `Root` origin through the scheduler.
+  await scheduleInlineCallWithOrigin(
+    client,
+    reclaimBountyFundsTx(client, bountyIndex).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 4. The dispatch fails with `BadOrigin`.
+  await checkSystemEvents(client, { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /^task$/ })
+    .toMatchSnapshot('scheduler events when Root reclaims')
+
+  const records = await client.api.query.system.events()
+  const dispatched = records.filter(({ event }) => client.api.events.scheduler.Dispatched.is(event))
+  expect(dispatched).toHaveLength(1)
+  assert(client.api.events.scheduler.Dispatched.is(dispatched[0].event))
+  const result = dispatched[0].event.data.result
+  assert(result.isErr)
+  expect(result.asErr.isBadOrigin).toBe(true)
+  expect(records.filter(({ event }) => event.section === 'bounties')).toHaveLength(0)
+
+  // 5. The tokens are still in the bounty's account.
+  expect(await getFreeFunds(client, account)).toBe(strandedAmount)
+}
+
+/**
+ * Tests of `reclaim_bounty_funds`. Each one is skipped on a runtime without the call.
+ */
+export function reclaimBountyFundsTests(getClient: () => Client<any, any>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'Reclaim bounty funds',
+    children: [
+      {
+        kind: 'test',
+        label: 'reclaim_bounty_funds - moves funds sent to a closed bounty to the treasury for free',
+        testFn: withReclaimBountyFunds(getClient, reclaimAfterClosureTest),
+      },
+      {
+        kind: 'test',
+        label: 'reclaim_bounty_funds - sweeps a configured asset together with the native token',
+        testFn: withReclaimBountyFunds(getClient, reclaimSweepsConfiguredAssetTest),
+      },
+      {
+        kind: 'test',
+        label: 'reclaim_bounty_funds - leaves locked funds in the account',
+        testFn: withReclaimBountyFunds(getClient, reclaimLeavesLockedFundsTest),
+      },
+      {
+        kind: 'test',
+        label: 'reclaim_bounty_funds - charges the caller when nothing is moved',
+        testFn: withReclaimBountyFunds(getClient, reclaimNothingIsPaidTest),
+      },
+      {
+        kind: 'test',
+        label: 'reclaim_bounty_funds - BountyStillActive while the bounty exists',
+        testFn: withReclaimBountyFunds(getClient, reclaimWhileBountyExistsTest),
+      },
+      {
+        kind: 'test',
+        label: 'reclaim_bounty_funds - BadOrigin for Root',
+        testFn: withReclaimBountyFunds(getClient, reclaimWithRootOriginTest),
       },
     ],
   } as RootTestTree
@@ -4507,7 +5196,7 @@ async function rootClosesFundedBountyTest(client: Client<any, any>) {
   const pot = client.api.consts.treasury.potAccount.toHex()
   const account = bountyAccount(client, bountyIndex)
   const transfers = events.filter(
-    ({ event }) => client.api.events.balances.Transfer.is(event) && event.data.from.toHex() === account,
+    ({ event }) => client.api.events.balances.Transfer.is(event) && event.data.from.toString() === account,
   )
   expect(transfers).toHaveLength(1)
   assert(client.api.events.balances.Transfer.is(transfers[0].event))
@@ -4988,7 +5677,7 @@ async function closeBountyHoldingUsdtTest(client: Client<any, any>, testConfig: 
   // On some runtimes the collator pot pays the block author in every block, so the bounty's transfer is found by
   // its sender, and plain transfers are left out of the snapshot.
   const nativeTransfers = events.filter(
-    ({ event }) => client.api.events.balances.Transfer.is(event) && event.data.from.toHex() === account,
+    ({ event }) => client.api.events.balances.Transfer.is(event) && event.data.from.toString() === account,
   )
   expect(nativeTransfers).toHaveLength(1)
   assert(client.api.events.balances.Transfer.is(nativeTransfers[0].event))
@@ -4999,7 +5688,7 @@ async function closeBountyHoldingUsdtTest(client: Client<any, any>, testConfig: 
   expect(usdtTransfers).toHaveLength(1)
   assert(client.api.events.assets.Transferred.is(usdtTransfers[0].event))
   expect(usdtTransfers[0].event.data.assetId.toNumber()).toBe(usdt)
-  expect(usdtTransfers[0].event.data.from.toHex()).toBe(account)
+  expect(usdtTransfers[0].event.data.from.toString()).toBe(account)
   expect(usdtTransfers[0].event.data.to.toHex()).toBe(pot)
   expect(usdtTransfers[0].event.data.amount.toBigInt()).toBe(sentUsdt)
 
@@ -5069,7 +5758,7 @@ async function closeCuratorProposedBountyTest(client: Client<any, any>) {
   // its sender, and plain transfers are left out of the snapshot.
   const account = bountyAccount(client, bountyIndex)
   const transfers = events.filter(
-    ({ event }) => client.api.events.balances.Transfer.is(event) && event.data.from.toHex() === account,
+    ({ event }) => client.api.events.balances.Transfer.is(event) && event.data.from.toString() === account,
   )
   expect(transfers).toHaveLength(1)
   assert(client.api.events.balances.Transfer.is(transfers[0].event))
@@ -5578,6 +6267,7 @@ export function baseBountiesE2ETests<
     children: [
       allBountySuccessTests(() => client, testConfig),
       allBountyFailureTests(() => client),
+      reclaimBountyFundsTests(() => client),
       curatorSlashingTests(() => client, testConfig),
       depositPokeTests(() => client),
       originAndSpendLimitTests(() => client, testConfig),

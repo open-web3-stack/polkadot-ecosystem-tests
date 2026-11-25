@@ -145,8 +145,10 @@ These include:
 - E2E test suite for bounties infrastructure:
   - Bounty creation, approval, and funding workflows
   - Curator assignment, acceptance, and management
+  - Claiming a bounty whose account holds locked funds, skipped on runtimes that size the payout from the free balance
   - Bounty extension, awarding, and claiming processes
   - Bounty closure in various states (proposed, funded, active)
+  - Reclaiming funds left in a closed bounty's account with `reclaim_bounty_funds`, skipped on runtimes without the call
   - Curator unassignment scenarios (by curator themselves vs. treasurer)
   - Comprehensive failure mode testing:
     - Invalid bounty values and descriptions
@@ -165,6 +167,7 @@ These include:
 - E2E test suite for child bounties infrastructure:
   - Child bounty creation, curator assignment, acceptance, awarding and claiming workflows
   - Child bounty closure and fund return to parent bounty
+  - Claiming and closing a child bounty whose account holds locked funds, skipped on runtimes that size the payout from the free balance
   - Child bounty rejection by curators and cancellation by parent curators
   - Curator unassignment scenarios with different deposit handling (refund vs. slash)
   - Storage verification for child bounty counters and cleanup
@@ -174,6 +177,19 @@ These include:
     - Accepting curators in wrong child bounty states
     - Closing child bounties in pending payout status
     - Non-curator attempting to create child bounties
+- E2E test suite for multi-asset bounties on Polkadot, Kusama and Westend Asset Hub. Bounties are
+  funded from the treasury in the native token or any asset `AssetRate` can price, and paid through
+  `LocalPay`, so each payment is confirmed with `check_status`. Tests are grouped into:
+  - funding: spend limits after asset conversion (including across a batch), minimum value,
+    metadata preimage, unpriced assets, treasury shortfall
+  - payment status: confirming payments, and retries of payments that cannot fail
+  - curator: deposit formula and cap, acceptance, removal by the curator (deposit returned) or the
+    reject origin (deposit burned), and re-proposal by a spender track within its limit
+  - award and close: payouts and refunds with exact balance changes, origin checks, open children,
+    and closing a parent after child payouts
+  - child bounties: parent-curated and separately curated children, payout and refund accounting
+    against the parent, the active child limit, and the parent curator's powers over children
+  - increase value: deposit re-pricing, and the top-up an increase needs before it can be paid
 - E2E test suite for the PSM (Peg Stability Module), covering mint/redeem
   swaps between pUSD and three external stablecoins: USDT (1984, 6 dec), USDX (1338, 2 dec), DAI
   (1339, 18 dec). PSM storage and extrinsics are keyed by XCM V5 location rather than asset ID.
@@ -246,6 +262,41 @@ These include:
   - Merge-based seeding preserves the real electorate: new members are appended at
     the live `memberCount` per tier, keeping the ranked-collective index invariants
     intact so live members and their (rank, index) slots are untouched
+- E2E test suite for the `referenda` pallet on Polkadot and Kusama Asset Hub, next to the
+  governance suite's lifecycle tests:
+  - Submission: `Submitted` with the deposit reserved and the timeout alarm set in relay blocks;
+    `NoTrack`, `PreimageStoredWithDifferentLength` and an unfunded submitter
+  - Decision deposit: the real prepare-period alarm starting the deciding phase; `HasDeposit`
+    and per-track deposit shortfalls
+  - Deciding slots: a full track queueing a prepared referendum, `one_fewer_deciding` from Root
+    starting it, and `BadTrack`
+  - Time-driven transitions: a Root nudge just before the undeciding timeout re-arming the alarm
+    that then times the referendum out; `ConfirmStarted` and `ConfirmAborted` through a real vote
+  - Cancel and kill through the `ReferendumCanceller` and `ReferendumKiller` origins, including
+    the deciding slot released a block later and each chain's slash destination (the DAP staging
+    account on Polkadot, the treasury on Kusama)
+  - Refunds from third parties and from Root, and the `NoDeposit`, `Unfinished` and `BadStatus`
+    cases
+  - Metadata: setting and clearing by the submitter, `NoPermission`, `PreimageNotExist`, and
+    clearing after the referendum ends
+  - Rejected origins for every call (signed, Root, and admin origins outside their gate), and
+    calls on an unknown referendum index
+- E2E test suite for the conviction voting pallet on the Asset Hubs:
+  - Voting: conviction-weighted tallies of real referenda, vote replacement, one lock
+    shared by several votes of a class, and the `MaxVotes` limit
+  - Delegation: delegated votes added to and removed from the target's open vote, the
+    conviction lock kept after `undelegate`, and split votes not carrying delegations
+  - Removing votes: during a poll, after cancellation, and after rejection, where only
+    winning votes with conviction stay locked, for `VoteLockingPeriod` times 1, 4 or 32
+  - `remove_other_vote`: refused while the poll runs and until the exact block the
+    vote's lock ends, then open to anyone
+  - Locks: one lock per class, the `pyconvot` balance lock equal to the largest, released
+    class by class with `unlock`, and enforced by the balances pallet on transfers
+  - Comprehensive failure mode testing:
+    - `InsufficientFunds`, `NotOngoing`, `AlreadyDelegating`, `MaxVotesReached`
+    - `Nonsense`, `BadClass`, `AlreadyVoting`, `NotDelegating`
+    - `ClassNeeded`, `NotVoter`, `NoPermission`, `NoPermissionYet`
+    - `BadOrigin` for every call when dispatched as Root
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
