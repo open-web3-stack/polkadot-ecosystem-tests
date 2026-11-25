@@ -334,8 +334,9 @@ These include:
     rejection of a signed account and of `StakingAdmin`
   - `dispatch_whitelisted_call`: dispatch by hash with exact length and weight witnesses, with
     the preimage either cleared or kept for its owner; `UnavailablePreImage` for a missing
-    preimage and for a wrong length, `UndecodableCall` for trailing bytes, and
-    `InvalidCallWeightWitness` for a witness one unit short
+    preimage and for a wrong length, `UndecodableCall` for trailing bytes,
+    `InvalidCallWeightWitness` for a witness one unit short, and rejection of a signed account
+    and of `StakingAdmin`
   - Tests whose outcome deferred dispatch changes skip themselves on a runtime that has it
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system

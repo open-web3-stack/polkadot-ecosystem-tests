@@ -93,6 +93,26 @@ exports[`Polkadot Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhit
 ]
 `;
 
+exports[`Polkadot Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall by a signed account - BadOrigin > signed dispatch by hash: ExtrinsicFailed event 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall of a preimage with trailing bytes - UndecodableCall > dispatch by hash of padded preimage: Dispatched event 1`] = `
 [
   {

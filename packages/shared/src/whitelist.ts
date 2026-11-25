@@ -25,6 +25,7 @@ import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-
 import type { Client, RootTestTree } from '@e2e-test/shared'
 
 import type { KeyringPair } from '@polkadot/keyring/types'
+import type { EventRecord } from '@polkadot/types/interfaces'
 import { u8aConcat, u8aToHex } from '@polkadot/util'
 import { blake2AsHex, encodeAddress } from '@polkadot/util-crypto'
 
@@ -33,7 +34,7 @@ import { assert, expect } from 'vitest'
 
 import {
   check,
-  checkSystemEvents,
+  checkEvents,
   getFreeFunds,
   getReservedFunds,
   nextSchedulableBlockNum,
@@ -175,6 +176,12 @@ async function preimageRequestCount(client: Client<any, any>, hash: string): Pro
   return status.unwrap().asRequested.count.toNumber()
 }
 
+/** The bytes `pallet_preimage` stores under `hash` and `length`, as hex, or `null` if it stores none. */
+async function storedPreimage(client: Client<any, any>, hash: string, length: number): Promise<string | null> {
+  const stored = await client.api.query.preimage.preimageFor([hash, length])
+  return stored.isSome ? u8aToHex(stored.unwrap().toU8a(true)) : null
+}
+
 /**
  * Assert that a `scheduler.Dispatched` record carries a failed result with the named `whitelist`
  * error.
@@ -203,13 +210,18 @@ function expectDispatchedBadOrigin(client: Client<any, any>, record: { event: an
 }
 
 /**
- * Assert that the head block holds exactly one failed extrinsic, and that it failed with
- * `BadOrigin`.
+ * Assert that the signed extrinsic `tx` failed with `BadOrigin`.
+ *
+ * Only the events `tx` itself emitted are read, as `sendTransaction` returns them, so another
+ * extrinsic in the same block can neither break this check nor satisfy it.
  */
-async function expectExtrinsicBadOrigin(client: Client<any, any>): Promise<void> {
-  const events = await client.api.query.system.events()
+async function expectExtrinsicBadOrigin(
+  client: Client<any, any>,
+  tx: Awaited<ReturnType<typeof sendTransaction>>,
+): Promise<void> {
+  const events = (await tx.events) as EventRecord[]
   const failures = events.filter(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  expect(failures, 'expected exactly one ExtrinsicFailed event').toHaveLength(1)
+  expect(failures, 'expected the extrinsic to fail').toHaveLength(1)
 
   const failure = failures[0].event
   assert(client.api.events.system.ExtrinsicFailed.is(failure))
@@ -396,14 +408,14 @@ async function signedWhitelistFails(client: Client<any, any>) {
   expect((await client.api.query.whitelist.whitelistedCall(callHash)).isNone).toBe(true)
 
   // 2. `whitelist_call` from a signed account
-  await sendTransaction(client.api.tx.whitelist.whitelistCall(callHash).signAsync(alice))
+  const tx = await sendTransaction(client.api.tx.whitelist.whitelistCall(callHash).signAsync(alice))
   await client.dev.newBlock()
 
   // 3. `BadOrigin`
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkEvents(tx, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'signed whitelist: ExtrinsicFailed event',
   )
-  await expectExtrinsicBadOrigin(client)
+  await expectExtrinsicBadOrigin(client, tx)
 
   // 4. Not listed, no preimage request
   expect((await client.api.query.whitelist.whitelistedCall(callHash)).isNone).toBe(true)
@@ -572,14 +584,14 @@ async function signedRemoveFails(client: Client<any, any>) {
   await fundAccounts(client, alice)
 
   // 2. `remove_whitelisted_call` from a signed account
-  await sendTransaction(client.api.tx.whitelist.removeWhitelistedCall(callHash).signAsync(alice))
+  const tx = await sendTransaction(client.api.tx.whitelist.removeWhitelistedCall(callHash).signAsync(alice))
   await client.dev.newBlock()
 
   // 3. `BadOrigin`
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkEvents(tx, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'signed remove: ExtrinsicFailed event',
   )
-  await expectExtrinsicBadOrigin(client)
+  await expectExtrinsicBadOrigin(client, tx)
   expect(await whitelistEvents(client)).toHaveLength(0)
 
   // 4. Still listed, one preimage request
@@ -965,16 +977,16 @@ async function signedDispatchWithPreimageFails(client: Client<any, any>, ctx: Te
   expect(balanceBefore).not.toBe(targetBalance(client))
 
   // 2. `dispatch_whitelisted_call_with_preimage` from a signed account
-  await sendTransaction(
+  const tx = await sendTransaction(
     client.api.tx.whitelist.dispatchWhitelistedCallWithPreimage(call.method.toHex()).signAsync(alice),
   )
   await client.dev.newBlock()
 
   // 3. `BadOrigin`
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkEvents(tx, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'signed dispatch with preimage: ExtrinsicFailed event',
   )
-  await expectExtrinsicBadOrigin(client)
+  await expectExtrinsicBadOrigin(client, tx)
   expect(await whitelistEvents(client)).toHaveLength(0)
 
   // 4. The inner call did not run
@@ -1284,7 +1296,7 @@ async function dispatchByHashWithoutPreimageFails(client: Client<any, any>) {
  * 2. Dispatch `dispatch_whitelisted_call` as `WhitelistedCaller`, with a length one byte too long
  * 3. Verify the dispatch failed with `UnavailablePreImage` and emitted no whitelist event
  * 4. Verify the target account's balance is unchanged
- * 5. Verify the hash is still listed and the preimage is still stored
+ * 5. Verify the hash is still listed with its preimage request, and the preimage is unchanged
  */
 async function dispatchByHashWithWrongLengthFails(client: Client<any, any>) {
   const { alice, bob } = testAccounts
@@ -1325,10 +1337,10 @@ async function dispatchByHashWithWrongLengthFails(client: Client<any, any>) {
   // 4. The inner call did not run
   expect(await getFreeFunds(client, bob.address)).toBe(balanceBefore)
 
-  // 5. Still listed; preimage still stored
+  // 5. Still listed, one preimage request, preimage unchanged
   expect((await client.api.query.whitelist.whitelistedCall(callHash)).isSome).toBe(true)
   expect(await preimageRequestCount(client, callHash)).toBe(1)
-  expect((await client.api.query.preimage.preimageFor([callHash, callBytes.length])).isSome).toBe(true)
+  expect(await storedPreimage(client, callHash, callBytes.length)).toBe(u8aToHex(callBytes))
 }
 
 /**
@@ -1342,7 +1354,7 @@ async function dispatchByHashWithWrongLengthFails(client: Client<any, any>) {
  * 2. Dispatch `dispatch_whitelisted_call` as `WhitelistedCaller`, with the padded length
  * 3. Verify the dispatch failed with `UndecodableCall` and emitted no whitelist event
  * 4. Verify the target account's balance is unchanged
- * 5. Verify the hash is still listed with its preimage request
+ * 5. Verify the hash is still listed with its preimage request, and the preimage is unchanged
  */
 async function dispatchByHashOfPaddedPreimageFails(client: Client<any, any>) {
   const { alice, bob } = testAccounts
@@ -1383,9 +1395,10 @@ async function dispatchByHashOfPaddedPreimageFails(client: Client<any, any>) {
   // 4. The inner call did not run
   expect(await getFreeFunds(client, bob.address)).toBe(balanceBefore)
 
-  // 5. Still listed, one preimage request
+  // 5. Still listed, one preimage request, preimage unchanged
   expect((await client.api.query.whitelist.whitelistedCall(paddedHash)).isSome).toBe(true)
   expect(await preimageRequestCount(client, paddedHash)).toBe(1)
+  expect(await storedPreimage(client, paddedHash, paddedBytes.length)).toBe(u8aToHex(paddedBytes))
 }
 
 /**
@@ -1401,7 +1414,7 @@ async function dispatchByHashOfPaddedPreimageFails(client: Client<any, any>) {
  *    unit of reference time
  * 3. Verify the dispatch failed with `InvalidCallWeightWitness` and emitted no whitelist event
  * 4. Verify the target account's balance is unchanged
- * 5. Verify the hash is still listed with its preimage request
+ * 5. Verify the hash is still listed with its preimage request, and the preimage is unchanged
  */
 async function dispatchByHashWithLowWeightWitnessFails(client: Client<any, any>) {
   const { alice, bob } = testAccounts
@@ -1446,9 +1459,10 @@ async function dispatchByHashWithLowWeightWitnessFails(client: Client<any, any>)
   // 4. The inner call did not run
   expect(await getFreeFunds(client, bob.address)).toBe(balanceBefore)
 
-  // 5. Still listed, one preimage request
+  // 5. Still listed, one preimage request, preimage unchanged
   expect((await client.api.query.whitelist.whitelistedCall(callHash)).isSome).toBe(true)
   expect(await preimageRequestCount(client, callHash)).toBe(1)
+  expect(await storedPreimage(client, callHash, callBytes.length)).toBe(u8aToHex(callBytes))
 }
 
 /**
@@ -1459,10 +1473,12 @@ async function dispatchByHashWithLowWeightWitnessFails(client: Client<any, any>)
  *
  * Skipped on a runtime with deferred dispatch, where this dispatch is deferred instead.
  *
- * 1. Have a signed account note the preimage, and verify the hash is not listed
+ * 1. Have a signed account note the preimage, verify the hash is not listed, and record the
+ *    preimage's request status
  * 2. Dispatch `dispatch_whitelisted_call` as `WhitelistedCaller`, with the exact length and weight
  * 3. Verify the dispatch failed with `CallIsNotWhitelisted` and emitted no whitelist event
  * 4. Verify the target account's balance is unchanged and the hash is still not listed
+ * 5. Verify the preimage and its request status are unchanged
  */
 async function dispatchUnlistedCallByHashFails(client: Client<any, any>, ctx: TestContext | undefined) {
   skipOnDeferredDispatch(client, ctx)
@@ -1473,10 +1489,12 @@ async function dispatchUnlistedCallByHashFails(client: Client<any, any>, ctx: Te
   const callBytes = call.method.toU8a()
   const callHash = call.method.hash.toHex()
 
-  // 1. Noted preimage, hash not listed
+  // 1. Noted preimage owned by its noter, hash not listed
   await fundAccounts(client, alice)
   await notePreimage(client, alice, callBytes)
   expect((await client.api.query.whitelist.whitelistedCall(callHash)).isNone).toBe(true)
+  const statusBefore = await client.api.query.preimage.requestStatusFor(callHash)
+  assert(statusBefore.unwrap().isUnrequested, `expected an unrequested preimage, got ${statusBefore.unwrap().type}`)
   const balanceBefore = await getFreeFunds(client, bob.address)
   expect(balanceBefore).not.toBe(targetBalance(client))
 
@@ -1502,9 +1520,67 @@ async function dispatchUnlistedCallByHashFails(client: Client<any, any>, ctx: Te
   expectDispatchedError(client, dispatched[0], 'CallIsNotWhitelisted')
   expect(await whitelistEvents(client)).toHaveLength(0)
 
-  // 4. Nothing changed
+  // 4. The inner call did not run; still not listed
   expect(await getFreeFunds(client, bob.address)).toBe(balanceBefore)
   expect((await client.api.query.whitelist.whitelistedCall(callHash)).isNone).toBe(true)
+
+  // 5. Preimage and request status unchanged
+  expect(await storedPreimage(client, callHash, callBytes.length)).toBe(u8aToHex(callBytes))
+  expect((await client.api.query.preimage.requestStatusFor(callHash)).toHex()).toBe(statusBefore.toHex())
+}
+
+/**
+ * A signed account cannot dispatch a whitelisted call by hash.
+ *
+ * The hash is listed, the preimage is noted and both witnesses are exact, so the origin is the
+ * only thing wrong. `DispatchWhitelistedOrigin` admits only Root and `WhitelistedCaller`, so an
+ * ordinary account is rejected with `BadOrigin`, and the listing and the preimage stay in place.
+ *
+ * Skipped on a runtime with deferred dispatch, where a signed dispatch fails with another error.
+ *
+ * 1. Whitelist the call's hash as Root, then have a signed account note the preimage
+ * 2. Send `dispatch_whitelisted_call` from the signer, with the exact length and weight
+ * 3. Verify the extrinsic failed with `BadOrigin` and emitted no whitelist event
+ * 4. Verify the target account's balance is unchanged
+ * 5. Verify the hash is still listed with its preimage request, and the preimage is unchanged
+ */
+async function signedDispatchByHashFails(client: Client<any, any>, ctx: TestContext | undefined) {
+  skipOnDeferredDispatch(client, ctx)
+
+  const { alice, bob } = testAccounts
+  const call = targetCall(client)
+  const callBytes = call.method.toU8a()
+  const callHash = call.method.hash.toHex()
+
+  // 1. Whitelist, then note the preimage
+  await whitelistAsRoot(client, callHash)
+  await fundAccounts(client, alice)
+  await notePreimage(client, alice, callBytes)
+  const balanceBefore = await getFreeFunds(client, bob.address)
+  expect(balanceBefore).not.toBe(targetBalance(client))
+
+  // 2. `dispatch_whitelisted_call` from a signed account, exact witnesses
+  const tx = await sendTransaction(
+    client.api.tx.whitelist
+      .dispatchWhitelistedCall(callHash, callBytes.length, await callWeight(client, call))
+      .signAsync(alice),
+  )
+  await client.dev.newBlock()
+
+  // 3. `BadOrigin`
+  await checkEvents(tx, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'signed dispatch by hash: ExtrinsicFailed event',
+  )
+  await expectExtrinsicBadOrigin(client, tx)
+  expect(await whitelistEvents(client)).toHaveLength(0)
+
+  // 4. The inner call did not run
+  expect(await getFreeFunds(client, bob.address)).toBe(balanceBefore)
+
+  // 5. Still listed, one preimage request, preimage unchanged
+  expect((await client.api.query.whitelist.whitelistedCall(callHash)).isSome).toBe(true)
+  expect(await preimageRequestCount(client, callHash)).toBe(1)
+  expect(await storedPreimage(client, callHash, callBytes.length)).toBe(u8aToHex(callBytes))
 }
 
 /**
@@ -1518,7 +1594,7 @@ async function dispatchUnlistedCallByHashFails(client: Client<any, any>, ctx: Te
  * 2. Dispatch `dispatch_whitelisted_call` as `StakingAdmin`, with the exact length and weight
  * 3. Verify the dispatch failed with `BadOrigin` and emitted no whitelist event
  * 4. Verify the target account's balance is unchanged
- * 5. Verify the hash is still listed with its preimage request
+ * 5. Verify the hash is still listed with its preimage request, and the preimage is unchanged
  */
 async function stakingAdminDispatchByHashFails(client: Client<any, any>) {
   const { alice, bob } = testAccounts
@@ -1559,9 +1635,10 @@ async function stakingAdminDispatchByHashFails(client: Client<any, any>) {
   // 4. The inner call did not run
   expect(await getFreeFunds(client, bob.address)).toBe(balanceBefore)
 
-  // 5. Still listed, one preimage request
+  // 5. Still listed, one preimage request, preimage unchanged
   expect((await client.api.query.whitelist.whitelistedCall(callHash)).isSome).toBe(true)
   expect(await preimageRequestCount(client, callHash)).toBe(1)
+  expect(await storedPreimage(client, callHash, callBytes.length)).toBe(u8aToHex(callBytes))
 }
 
 /// -------
@@ -1730,6 +1807,11 @@ export function whitelistE2ETests<
             kind: 'test',
             label: 'dispatchWhitelistedCall of an unlisted hash - CallIsNotWhitelisted',
             testFn: (ctx) => dispatchUnlistedCallByHashFails(client, ctx),
+          },
+          {
+            kind: 'test',
+            label: 'dispatchWhitelistedCall by a signed account - BadOrigin',
+            testFn: (ctx) => signedDispatchByHashFails(client, ctx),
           },
           {
             kind: 'test',
