@@ -1,0 +1,581 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall as Root - preimage noted by its owner survives the dispatch > dispatch by hash as Root: Dispatched, WhitelistedCallDispatched and BalanceSet events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "callHash": "0x52c3fc263f21109f8f62daec4bafb6be6c235fc2e54afc15043e40ce9422a244",
+      "result": {
+        "Ok": {
+          "actualWeight": null,
+          "paysFee": "Yes",
+        },
+      },
+    },
+    "method": "WhitelistedCallDispatched",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "free": "16,666,665",
+      "who": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "BalanceSet",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall as StakingAdmin - BadOrigin > dispatch by hash as StakingAdmin: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall as WhitelistedCaller - noted preimage dispatched with exact witnesses, preimage cleared > dispatch by hash: Dispatched, WhitelistedCallDispatched, BalanceSet and preimage Cleared events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "callHash": "0x52c3fc263f21109f8f62daec4bafb6be6c235fc2e54afc15043e40ce9422a244",
+      "result": {
+        "Ok": {
+          "actualWeight": null,
+          "paysFee": "Yes",
+        },
+      },
+    },
+    "method": "WhitelistedCallDispatched",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "free": "16,666,665",
+      "who": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "BalanceSet",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "hash_": "0x52c3fc263f21109f8f62daec4bafb6be6c235fc2e54afc15043e40ce9422a244",
+    },
+    "method": "Cleared",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall by a signed account - BadOrigin > signed dispatch by hash: ExtrinsicFailed event 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall of a preimage with trailing bytes - UndecodableCall > dispatch by hash of padded preimage: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": "94",
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall of an unlisted hash - CallIsNotWhitelisted > dispatch unlisted call by hash: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": "94",
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall with a weight witness below the call weight - InvalidCallWeightWitness > dispatch by hash with low weight witness: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x02000000",
+            "index": "94",
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall with a wrong length witness - UnavailablePreImage > dispatch by hash with wrong length: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": "94",
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call > dispatchWhitelistedCall without a noted preimage - UnavailablePreImage > dispatch by hash without preimage: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": "94",
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call_with_preimage > dispatchWhitelistedCallWithPreimage a second time - CallIsNotWhitelisted > second dispatch with preimage: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": "94",
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call_with_preimage > dispatchWhitelistedCallWithPreimage as Root - inner call runs as Root, hash consumed > dispatch with preimage: Dispatched, WhitelistedCallDispatched and BalanceSet events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "callHash": "0x52c3fc263f21109f8f62daec4bafb6be6c235fc2e54afc15043e40ce9422a244",
+      "result": {
+        "Ok": {
+          "actualWeight": null,
+          "paysFee": "Yes",
+        },
+      },
+    },
+    "method": "WhitelistedCallDispatched",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "free": "16,666,665",
+      "who": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "BalanceSet",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call_with_preimage > dispatchWhitelistedCallWithPreimage as StakingAdmin - BadOrigin > dispatch with preimage as StakingAdmin: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call_with_preimage > dispatchWhitelistedCallWithPreimage as WhitelistedCaller - inner call runs as Root, hash consumed > dispatch with preimage: Dispatched, WhitelistedCallDispatched and BalanceSet events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "callHash": "0x52c3fc263f21109f8f62daec4bafb6be6c235fc2e54afc15043e40ce9422a244",
+      "result": {
+        "Ok": {
+          "actualWeight": null,
+          "paysFee": "Yes",
+        },
+      },
+    },
+    "method": "WhitelistedCallDispatched",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "free": "16,666,665",
+      "who": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "BalanceSet",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call_with_preimage > dispatchWhitelistedCallWithPreimage by a signed account - BadOrigin > signed dispatch with preimage: ExtrinsicFailed event 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call_with_preimage > dispatchWhitelistedCallWithPreimage of a failing inner call - error reported in the event, hash consumed > dispatch failing call: Dispatched and WhitelistedCallDispatched events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "callHash": "0xfe4982eca90985243e42993bc63e27534f11411d15f8dbded320d55435566a7a",
+      "result": {
+        "Err": {
+          "error": "BadOrigin",
+          "postInfo": {
+            "actualWeight": null,
+            "paysFee": "Yes",
+          },
+        },
+      },
+    },
+    "method": "WhitelistedCallDispatched",
+    "section": "whitelist",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > dispatch_whitelisted_call_with_preimage > dispatchWhitelistedCallWithPreimage of an unlisted hash - CallIsNotWhitelisted > dispatch unlisted call with preimage: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": "94",
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > remove_whitelisted_call > removeWhitelistedCall as Root - WhitelistedCallRemoved, hash and preimage request cleared > remove as Root: Dispatched and WhitelistedCallRemoved events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "callHash": "0x52c3fc263f21109f8f62daec4bafb6be6c235fc2e54afc15043e40ce9422a244",
+    },
+    "method": "WhitelistedCallRemoved",
+    "section": "whitelist",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > remove_whitelisted_call > removeWhitelistedCall as WhitelistedCaller - BadOrigin > remove as WhitelistedCaller: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > remove_whitelisted_call > removeWhitelistedCall by a signed account - BadOrigin > signed remove: ExtrinsicFailed event 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > remove_whitelisted_call > removeWhitelistedCall of an unlisted hash - CallIsNotWhitelisted > remove unlisted hash: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": "94",
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > remove_whitelisted_call > removed hash can be whitelisted again > whitelist after removal: Dispatched and CallWhitelisted events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "callHash": "0x52c3fc263f21109f8f62daec4bafb6be6c235fc2e54afc15043e40ce9422a244",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > whitelist_call > whitelistCall as Root - CallWhitelisted, hash stored, preimage requested > whitelist as Root: Dispatched, CallWhitelisted and preimage Requested events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "callHash": "0x52c3fc263f21109f8f62daec4bafb6be6c235fc2e54afc15043e40ce9422a244",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "hash_": "0x52c3fc263f21109f8f62daec4bafb6be6c235fc2e54afc15043e40ce9422a244",
+    },
+    "method": "Requested",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > whitelist_call > whitelistCall as WhitelistedCaller - BadOrigin > whitelist as WhitelistedCaller: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > whitelist_call > whitelistCall by a signed account - BadOrigin > signed whitelist: ExtrinsicFailed event 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Whitelist > whitelist_call > whitelistCall of a listed hash - CallAlreadyWhitelisted > whitelist twice: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x04000000",
+            "index": "94",
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
