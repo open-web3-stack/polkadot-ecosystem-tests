@@ -1782,14 +1782,20 @@ async function depositSlashedEvents(client: Client<any, any>, who: string) {
  * The head block's events that move a slashed deposit: `balances.Slashed` from `who`,
  * `balances.Deposit` into the slash destination, and `treasury.Deposit`, which the treasury emits
  * where it is the destination.
+ *
+ * Only events in `phase` are kept. Pass the phase of the slash's own `DepositSlashed` event: the
+ * extrinsic's phase for a signed slash, block initialisation for one the scheduler dispatched.
+ * Other activity in the same block, such as the DAP pallet's hooks moving funds in and out of its
+ * staging account, then stays out.
  */
-async function slashTransferEvents(client: Client<any, any>, who: string, destination: string) {
+async function slashTransferEvents(client: Client<any, any>, who: string, destination: string, phase: any) {
   const events = await client.api.query.system.events()
   return events.filter(
-    ({ event }) =>
-      (client.api.events.balances.Slashed.is(event) && event.data.who.toString() === who) ||
-      (client.api.events.balances.Deposit.is(event) && event.data.who.toString() === destination) ||
-      client.api.events.treasury.Deposit.is(event),
+    (record) =>
+      record.phase.eq(phase) &&
+      ((client.api.events.balances.Slashed.is(record.event) && record.event.data.who.toString() === who) ||
+        (client.api.events.balances.Deposit.is(record.event) && record.event.data.who.toString() === destination) ||
+        client.api.events.treasury.Deposit.is(record.event)),
   )
 }
 
@@ -1903,7 +1909,8 @@ async function decisionCallsFitABlock(client: Client<any, any>): Promise<boolean
  * 3. Verify `DepositSlashed` names the submitter and the submission deposit
  * 4. Verify the deposit was slashed from the submitter and credited to the slash destination, next to
  *    the caller's fee where fees go to the same account
- * 5. Verify the submitter's reserved balance lost the deposit and its free balance did not change
+ * 5. Verify the submitter's reserved balance lost the deposit and its free balance did not change,
+ *    and that the caller's free balance went down by exactly the fee
  * 6. Verify the stored `TimedOut` record no longer holds the deposit
  * 7. Slash again, and verify the call failed with `NoDeposit` and slashed nothing
  */
@@ -1918,6 +1925,7 @@ async function thirdPartySlashesTimedOutDeposit(client: Client<any, any>, testCo
   const index = await submitReferendum(client, alice)
   const end = await finishWithSubmissionDeposit(client, index, 'TimedOut')
   const aliceFree = await getFreeFunds(client, alice.address)
+  const charlieFree = await getFreeFunds(client, charlie.address)
   expect(await getReservedFunds(client, alice.address), 'the deposit is reserved before the slash').toBe(
     submissionDeposit,
   )
@@ -1935,7 +1943,7 @@ async function thirdPartySlashesTimedOutDeposit(client: Client<any, any>, testCo
   expect(slash.data.amount.toBigInt()).toBe(submissionDeposit)
 
   // 4. Slashed from the submitter, credited to the slash destination, next to the caller's fee
-  const transferRecords = await slashTransferEvents(client, submitter, destination)
+  const transferRecords = await slashTransferEvents(client, submitter, destination, slashRecords[0].phase)
   const fee = await feePaidBy(client, addressOf(client, charlie))
   expectOneDepositMoved(client, testConfig, transferRecords, submissionDeposit, fee)
   // The fee credit is asserted above and left out of the snapshot: a fee changes with the block
@@ -1945,10 +1953,14 @@ async function thirdPartySlashesTimedOutDeposit(client: Client<any, any>, testCo
     .redact()
     .toMatchSnapshot('third party slash: deposit slashed and credited to the slash destination')
 
-  // 5. Gone from the submitter's reserved balance, free balance untouched, nothing reserved from the caller
+  // 5. Gone from the submitter's reserved balance, free balance untouched; the caller paid the fee
+  // and gained nothing
   expect(await getReservedFunds(client, alice.address)).toBe(0n)
   expect(await getFreeFunds(client, alice.address)).toBe(aliceFree)
   expect(await getReservedFunds(client, charlie.address)).toBe(0n)
+  expect(await getFreeFunds(client, charlie.address), 'the caller pays the fee and gains nothing').toBe(
+    charlieFree - fee,
+  )
 
   // 6. `TimedOut(end, no submission deposit, no decision deposit)`
   const info = await client.api.query.referenda.referendumInfoFor(index)
@@ -2026,7 +2038,7 @@ async function rootSlashesRejectedDeposit(client: Client<any, any>, testConfig: 
   expect(slash.data.amount.toBigInt()).toBe(submissionDeposit)
 
   // 4. Slashed from the submitter, credited to the slash destination
-  const transferRecords = await slashTransferEvents(client, submitter, destination)
+  const transferRecords = await slashTransferEvents(client, submitter, destination, slashRecords[0].phase)
   await check(transferRecords)
     .filterEvents()
     .redact()
@@ -2203,6 +2215,7 @@ async function slashUnknownReferendumFails(client: Client<any, any>) {
   // 4. Nothing reserved, no referendum created
   expect(await getReservedFunds(client, bob.address)).toBe(0n)
   expect((await client.api.query.referenda.referendumCount()).toNumber()).toBe(unknownIndex)
+  expect((await client.api.query.referenda.referendumInfoFor(unknownIndex)).isNone).toBe(true)
 }
 
 /**
@@ -2316,7 +2329,7 @@ async function rejectedReferendumSlashedThenRefunded(
   assert(client.api.events.referenda.DepositSlashed.is(slash))
   expect(slash.data.amount.toBigInt()).toBe(submissionDeposit)
 
-  const transferRecords = await slashTransferEvents(client, submitter, destination)
+  const transferRecords = await slashTransferEvents(client, submitter, destination, slashRecords[0].phase)
   const fee = await feePaidBy(client, submitter)
   expectOneDepositMoved(client, testConfig, transferRecords, submissionDeposit, fee)
   // The fee credit is asserted above and left out of the snapshot, as a fee is not a stable value.
