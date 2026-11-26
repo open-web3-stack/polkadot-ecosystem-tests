@@ -262,6 +262,20 @@ These include:
   - Merge-based seeding preserves the real electorate: new members are appended at
     the live `memberCount` per tier, keeping the ranked-collective index invariants
     intact so live members and their (rank, index) slots are untouched
+  - Submission origins: rank 3 on any track, the governance `AllowedProposers` list, and
+    the voice rule (a member may submit on voice tracks up to its own rank); rejected
+    signers, `NoTrack` and `PreimageStoredWithDifferentLength`
+  - Decision deposit: paid by anyone, prepare period, `DecisionStarted`, `HasDeposit`,
+    `NotOngoing` and `InsufficientBalance`
+  - Cancel and kill: `Architects` cancels and `Masters` kills, while Root and other voices
+    are rejected; a real `Architects` referendum enacts a cancel; killed deposits are
+    teleported to the relay treasury account; cancelling only frees a deciding slot when
+    the referendum was deciding
+  - Refunds, lifecycle and metadata: every refund branch and error, `TimedOut`,
+    `ConfirmStarted`, `ConfirmAborted`, `Confirmed` with its named enactment task,
+    `Rejected`, the deciding queue, the `Root`-only calls, and metadata set and clear
+  - Retention tracks: the minimum voting rank is the track id minus 8, and support is
+    counted against members at that rank
 - E2E test suite for the `referenda` pallet on Polkadot and Kusama Asset Hub, next to the
   governance suite's lifecycle tests:
   - Submission: `Submitted` with the deposit reserved and the timeout alarm set in relay blocks;
@@ -338,6 +352,15 @@ These include:
     `InvalidCallWeightWitness` for a witness one unit short, and rejection of a signed account
     and of `StakingAdmin`
   - Tests whose outcome deferred dispatch changes skip themselves on a runtime that has it
+- E2E test suite for the Ambassador referenda on Polkadot Collectives and the Fellowship
+  referenda on the Kusama relay, sharing the Fellowship tests that depend on runtime
+  configuration:
+  - Submission, decision deposit, cancel and kill origins, refunds, timeout, confirmation
+    and enactment, each against the instance's own origins, tracks and deposits
+  - Ambassador: Root, `HeadAmbassadors` and the Asset Hub `FellowshipAdmin` voice (over
+    real XCM) may cancel and kill; vote weights are 1, 5 and 10 by excess rank
+  - Kusama: `FellowshipExperts` cancels and `FellowshipMasters` kills, killed deposits go
+    to the treasury pot, and vote weights are geometric
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
