@@ -40,8 +40,8 @@
   "acala": [
     "wss://acala-rpc-3.aca-api.network/ws",
     "wss://acala-rpc.aca-api.network",
-    "wss://acala-rpc-1.aca-api.network",
     "wss://acala-rpc-0.aca-api.network",
+    "wss://acala-rpc-1.aca-api.network",
     "wss://rpc-acala.luckyfriday.io"
   ],
   "bifrostPolkadot": [
@@ -96,8 +96,8 @@
     "wss://rpc-karura.luckyfriday.io"
   ],
   "bifrostKusama": [
-    "wss://hk.bifrost-rpc.liebi.com/ws",
-    "wss://bifrost-rpc.liebi.com/ws"
+    "wss://bifrost-rpc.liebi.com/ws",
+    "wss://hk.bifrost-rpc.liebi.com/ws"
   ],
   "basilisk": [
     "wss://rpc.basilisk.cloud",

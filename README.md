@@ -156,6 +156,14 @@ These include:
     - Bounty closure restrictions (approved/pending payout states)
     - Non-curator attempting to accept curator role
     - Child bounty constraints preventing parent bounty closure
+  - Where slashed proposer bonds and curator deposits go on each runtime (treasury pot or DAP staging account)
+  - Curator unassignment by any account once the update deadline has passed
+  - `poke_deposit` against bonds taken at older deposit rates, and its error paths
+  - Origins and spend limits: Root, `SmallTipper` and `Treasurer` limits, signed and non-`Treasurer` origins rejected
+  - Curator unassignment by the curator or another account in each bounty state
+  - Closing a bounty that also holds USDT, one with a proposed curator, and one with an active child bounty
+  - Remaining errors: proposer cannot pay the bond, invalid curator fee, non-curator award and extension, full approval
+    queue
 - E2E test suite for child bounties infrastructure:
   - Child bounty creation, curator assignment, acceptance, awarding and claiming workflows
   - Child bounty closure and fund return to parent bounty
@@ -303,6 +311,30 @@ These include:
     - `Nonsense`, `BadClass`, `AlreadyVoting`, `NotDelegating`
     - `ClassNeeded`, `NotVoter`, `NoPermission`, `NoPermissionYet`
     - `BadOrigin` for every call when dispatched as Root
+- E2E test suite for the Ambassador and Secretary salary pallets on Polkadot Collectives. One
+  tree, parameterised by salary instance, runs for `AmbassadorSalary` and `SecretarySalary`:
+  - Cycle: `init` opens cycle 0 with the budget (Ambassador, which has never been started),
+    `bump` refuses one block before the cycle ends and starts the next cycle exactly at its end,
+    and every call fails with `NotStarted` before `init`
+  - Membership comes from each instance's own collective: a Fellow cannot induct or register
+    (`NotMember`), and a rank 0 candidate earns nothing (`ClaimZero`)
+  - Registration and payout windows tested at their exact boundaries (`TooLate`, `TooEarly`),
+    plus `NoClaim`, `NotInducted` and `AlreadyInducted`
+  - Cross-chain payment in USDT: `payout` and `payout_other` debit the paymaster sovereign on
+    Asset Hub (the Ambassador salary pallet's own, and the Fellowship salary pallet's for the
+    Secretary instance) and credit the member or beneficiary by exactly the salary
+  - Budget: pro rata payouts when registrations exceed the budget, `ClaimZero` for an
+    unregistered member once registrations use the budget, and a stale registration from the
+    previous cycle paid from the pot
+  - `check_payment` against real XCM responses: success clears the claim, a pending payment
+    is `Inconclusive`, a transfer that fails on Asset Hub rolls the claim back so a retry pays,
+    and a payment from an earlier cycle is `NotCurrent`
+  - `PayError` on the Secretary instance, when governance points the salary asset at a chain
+    with no channel from Collectives
+  - Account swap through the collective's `exchange_member` moves the claim (`Swapped`), and
+    leaves claims untouched when there is none to move or the target already has one
+  - Every call fails with `BadOrigin` as Root, successful calls are free (`Pays::No`), and
+    failed calls pay a fee
 - E2E test suite for the Ambassador referenda on Polkadot Collectives and the Fellowship
   referenda on the Kusama relay, sharing the Fellowship tests that depend on runtime
   configuration:
