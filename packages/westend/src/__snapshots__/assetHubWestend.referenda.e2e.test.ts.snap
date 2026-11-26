@@ -1,0 +1,160 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Asset Hub Referenda > Submission deposit slash > slash submission deposit from an admin origin - BadOrigin > admin origin slash: Dispatched event 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Referenda > Submission deposit slash > slash submission deposit of a rejected referendum from Root - DepositSlashed > Root slash: Dispatched and DepositSlashed events 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "amount": 30000000000,
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "DepositSlashed",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Referenda > Submission deposit slash > slash submission deposit of a rejected referendum from Root - DepositSlashed > Root slash: deposit slashed and credited to the slash destination 1`] = `
+[
+  {
+    "data": {
+      "amount": 30000000000,
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 30000000000,
+      "who": "5EYCAe5gKBMwLZyq5dw41Hw3V68nsCVTZQ2d4AYfbMb4kF29",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Referenda > Submission deposit slash > slash submission deposit of a timed-out referendum from a third party - slashed once, then NoDeposit > repeated slash: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 91,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Referenda > Submission deposit slash > slash submission deposit of a timed-out referendum from a third party - slashed once, then NoDeposit > third party slash: DepositSlashed event 1`] = `
+[
+  {
+    "data": {
+      "amount": 30000000000,
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "DepositSlashed",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Referenda > Submission deposit slash > slash submission deposit of a timed-out referendum from a third party - slashed once, then NoDeposit > third party slash: deposit slashed and credited to the slash destination 1`] = `
+[
+  {
+    "data": {
+      "amount": 30000000000,
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 30000000000,
+      "who": "5EYCAe5gKBMwLZyq5dw41Hw3V68nsCVTZQ2d4AYfbMb4kF29",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Referenda > Submission deposit slash > slash submission deposit of an ongoing, cancelled or killed referendum - BadStatus > slash while ongoing: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 91,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Referenda > Submission deposit slash > slash submission deposit of an unknown referendum - BadReferendum > slash on an unknown referendum: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 91,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": "(redacted)",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
