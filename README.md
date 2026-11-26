@@ -335,6 +335,23 @@ These include:
     leaves claims untouched when there is none to move or the target already has one
   - Every call fails with `BadOrigin` as Root, successful calls are free (`Pays::No`), and
     failed calls pay a fee
+- E2E test suite for the `whitelist` pallet on Polkadot and Kusama Asset Hub. Calls are dispatched
+  as Root and as governance origins through the scheduler; the Fellowship's XCM path is covered
+  by the Fellowship referenda and bridge suites:
+  - `whitelist_call`: `CallWhitelisted` with the preimage requested, `CallAlreadyWhitelisted`,
+    and rejection of a signed account and of `WhitelistedCaller`
+  - `remove_whitelisted_call`: `WhitelistedCallRemoved` with the preimage request given back,
+    `CallIsNotWhitelisted`, the same rejected origins, and whitelisting a removed hash again
+  - `dispatch_whitelisted_call_with_preimage`: both passing origins (`WhitelistedCaller` and
+    Root) running the inner call as Root; a hash that is not listed; a second dispatch of the
+    same call; a failing inner call that is reported in the event and still uses up the listing;
+    rejection of a signed account and of `StakingAdmin`
+  - `dispatch_whitelisted_call`: dispatch by hash with exact length and weight witnesses, with
+    the preimage either cleared or kept for its owner; `UnavailablePreImage` for a missing
+    preimage and for a wrong length, `UndecodableCall` for trailing bytes,
+    `InvalidCallWeightWitness` for a witness one unit short, and rejection of a signed account
+    and of `StakingAdmin`
+  - Tests whose outcome deferred dispatch changes skip themselves on a runtime that has it
 - E2E test suite for the Ambassador referenda on Polkadot Collectives and the Fellowship
   referenda on the Kusama relay, sharing the Fellowship tests that depend on runtime
   configuration:
