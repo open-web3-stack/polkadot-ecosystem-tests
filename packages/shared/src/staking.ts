@@ -719,6 +719,17 @@ async function setMinCommission<
  *
  *    2.1 The new global staking config values are checked.
  */
+
+/**
+ * Call `set_staking_configs` with the arity the runtime declares. pallet-staking-async added
+ * a ninth argument, `chill_inactive_threshold`, which reached Asset Hub Polkadot with 2.6.0;
+ * Asset Hub Kusama still takes eight. The ninth argument defaults to `Noop` where accepted.
+ */
+function setStakingConfigsWithArity(client: Client<any, any>, args: any[], ninth: any = { Noop: null }) {
+  const arity = (client.api.tx.staking.setStakingConfigs as any).meta.args.length
+  return (client.api.tx.staking.setStakingConfigs as any)(...(arity === 9 ? [...args, ninth] : args))
+}
+
 async function setStakingConfigsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -745,19 +756,21 @@ async function setStakingConfigsTest<
   const preAreNominatorsSlashable = (await client.api.query.staking.areNominatorsSlashable()).toPrimitive() as boolean
 
   const setStakingConfigsCall = (inc: number) => {
-    return (client.api.tx.staking.setStakingConfigs as any)(
-      { Set: preMinNominatorBond + inc },
-      { Set: preMinValidatorBond + inc },
-      { Set: preMaxNominatorsCount + inc },
-      { Set: preMaxValidatorsCount + inc },
-      { Set: preChillThreshold + inc },
-      { Set: preMinCommission + inc },
-      { Set: preMaxStakedRewards + inc },
-      { Set: !preAreNominatorsSlashable },
-      // `chill_inactive_threshold` joined `set_staking_configs` with pallet-staking-async on
-      // Asset Hub 2.6.0. The pallet weight-validates the value: `chill_inactive(threshold)`
-      // must fit in an extrinsic, so large values are refused. 2 is the smallest valid value;
-      // the round-trip assertions below cover the original eight fields only.
+    // The ninth field is weight-validated by the pallet: `chill_inactive(threshold)` must fit
+    // in an extrinsic, so large values are refused. 2 is the smallest valid value; the
+    // round-trip assertions below cover the original eight fields only.
+    return setStakingConfigsWithArity(
+      client,
+      [
+        { Set: preMinNominatorBond + inc },
+        { Set: preMinValidatorBond + inc },
+        { Set: preMaxNominatorsCount + inc },
+        { Set: preMaxValidatorsCount + inc },
+        { Set: preChillThreshold + inc },
+        { Set: preMinCommission + inc },
+        { Set: preMaxStakedRewards + inc },
+        { Set: !preAreNominatorsSlashable },
+      ],
       { Set: 2 },
     )
   }
@@ -905,7 +918,7 @@ async function forceApplyValidatorCommissionTest<
 
   const newCommission = minCommission.add(new BN(10e6))
 
-  const setStakingConfigsTx = (client.api.tx.staking.setStakingConfigs as any)(
+  const setStakingConfigsTx = setStakingConfigsWithArity(client, [
     { Noop: null },
     { Noop: null },
     { Noop: null },
@@ -914,8 +927,7 @@ async function forceApplyValidatorCommissionTest<
     { Set: newCommission },
     { Noop: null },
     { Noop: null },
-    { Noop: null },
-  )
+  ])
 
   await scheduleInlineCallWithOrigin(
     client,
@@ -1100,7 +1112,7 @@ async function chillOtherTest<
   /// Disregard staking configs pre-test-execution, excluding minumum validator/nominator bonds, which are not
   /// optional, and whose pre-test values can be used in the test.
 
-  const setStakingConfigsCall = (client.api.tx.staking.setStakingConfigs as any)(
+  const setStakingConfigsCall = setStakingConfigsWithArity(client, [
     { Noop: null },
     { Noop: null },
     { Remove: null },
@@ -1109,8 +1121,7 @@ async function chillOtherTest<
     { Noop: null },
     { Noop: null },
     { Noop: null },
-    { Noop: null },
-  )
+  ])
 
   await scheduleInlineCallWithOrigin(
     client,
@@ -1190,9 +1201,9 @@ async function chillOtherTest<
       [setNominatorCount, setValidatorCount],
     ]) {
       for (const chillThreshold of [remove, chillThresholdSet]) {
-        const args = [...bondLimits, ...countLimits, chillThreshold, noop, noop, noop, noop]
+        const args = [...bondLimits, ...countLimits, chillThreshold, noop, noop, noop]
 
-        setStakingConfigsCalls.push((client.api.tx.staking.setStakingConfigs as any)(...args))
+        setStakingConfigsCalls.push(setStakingConfigsWithArity(client, args))
       }
     }
   }
