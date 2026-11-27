@@ -395,7 +395,7 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT t
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 100000000)",
           },
         },
       },

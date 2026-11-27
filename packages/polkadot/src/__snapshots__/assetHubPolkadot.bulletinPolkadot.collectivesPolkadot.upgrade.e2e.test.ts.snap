@@ -75,14 +75,7 @@ exports[`asset hub & bulletin & collectives > Asset Hub authorizes Bulletin upgr
   {
     "data": {
       "id": null,
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x03000000",
-            "index": 64,
-          },
-        },
-      },
+      "result": "Ok",
       "task": "(redacted)",
     },
     "method": "Dispatched",

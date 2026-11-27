@@ -75,14 +75,7 @@ exports[`collectives & asset hub > Asset Hub authorizes Collectives upgrade via 
   {
     "data": {
       "id": null,
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x03000000",
-            "index": 64,
-          },
-        },
-      },
+      "result": "Ok",
       "task": "(redacted)",
     },
     "method": "Dispatched",
@@ -258,14 +251,7 @@ exports[`collectives & asset hub > Asset Hub authorizes upgrade for itself > eve
   {
     "data": {
       "id": null,
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x03000000",
-            "index": 64,
-          },
-        },
-      },
+      "result": "Ok",
       "task": "(redacted)",
     },
     "method": "Dispatched",

@@ -497,7 +497,7 @@ exports[`acala & astar > astar transfer ACA to acala > from chain hrmp messages 
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v4": [
           {
             "withdrawAsset": [
               {
@@ -505,17 +505,17 @@ exports[`acala & astar > astar transfer ACA to acala > from chain hrmp messages 
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalKey": {
                           "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
                           "length": 2,
                         },
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
             ],
@@ -530,17 +530,17 @@ exports[`acala & astar > astar transfer ACA to acala > from chain hrmp messages 
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalKey": {
                           "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
                           "length": 2,
                         },
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
               "weightLimit": {
@@ -557,12 +557,14 @@ exports[`acala & astar > astar transfer ACA to acala > from chain hrmp messages 
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
@@ -763,7 +765,7 @@ exports[`acala & astar > astar transfer DOT to acala > from chain hrmp messages 
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v4": [
           {
             "withdrawAsset": [
               {
@@ -771,12 +773,10 @@ exports[`acala & astar > astar transfer DOT to acala > from chain hrmp messages 
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -791,12 +791,10 @@ exports[`acala & astar > astar transfer DOT to acala > from chain hrmp messages 
                   "fungible": 500000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -813,9 +811,11 @@ exports[`acala & astar > astar transfer DOT to acala > from chain hrmp messages 
               },
               "dest": {
                 "interior": {
-                  "x1": {
-                    "parachain": 2000,
-                  },
+                  "x1": [
+                    {
+                      "parachain": 2000,
+                    },
+                  ],
                 },
                 "parents": 1,
               },
@@ -827,12 +827,10 @@ exports[`acala & astar > astar transfer DOT to acala > from chain hrmp messages 
                         "fungible": 500000000000,
                       },
                       "id": {
-                        "concrete": {
-                          "interior": {
-                            "here": null,
-                          },
-                          "parents": 1,
+                        "interior": {
+                          "here": null,
                         },
+                        "parents": 1,
                       },
                     },
                     "weightLimit": {
@@ -849,12 +847,14 @@ exports[`acala & astar > astar transfer DOT to acala > from chain hrmp messages 
                     },
                     "beneficiary": {
                       "interior": {
-                        "x1": {
-                          "accountId32": {
-                            "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                            "network": null,
+                        "x1": [
+                          {
+                            "accountId32": {
+                              "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                              "network": null,
+                            },
                           },
-                        },
+                        ],
                       },
                       "parents": 0,
                     },
