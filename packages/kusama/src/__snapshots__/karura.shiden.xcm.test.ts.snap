@@ -164,8 +164,8 @@ exports[`karura & shiden > karura transfer KSM to shiden > to chain xcm events 1
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 9000)",
-        "refTime": "(rounded 900000000)",
+        "proofSize": "(rounded 10000)",
+        "refTime": "(rounded 1000000000)",
       },
     },
     "method": "Processed",
@@ -435,7 +435,7 @@ exports[`karura & shiden > shiden transfer KSM to karura > tx events 1`] = `
         "Complete": {
           "used": {
             "proofSize": "(rounded 9000)",
-            "refTime": "(rounded 800000000)",
+            "refTime": "(rounded 900000000)",
           },
         },
       },

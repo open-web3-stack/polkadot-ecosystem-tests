@@ -30,7 +30,8 @@ const testConfig: RankedReferendaTestConfig = {
     rejected: [{ system: 'Root' }, { FellowshipOrigins: 'Architects' }, { FellowshipOrigins: 'Fellowship9Dan' }],
   },
   // `ToParentTreasury` teleports slashed deposits to the relay chain's treasury account.
-  slashDestination: 'relayTreasury',
+  // 2.6.0 routes collectives slashes through pallet-accumulate-and-forward (runtimes#1369).
+  slashDestination: 'dapStagingViaForward',
 }
 
 registerTestTree(fellowshipReferendaE2ETests(assetHubPolkadot, collectivesPolkadot, testConfig))

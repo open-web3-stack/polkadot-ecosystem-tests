@@ -113,9 +113,11 @@ export interface RankedReferendaTestConfig extends TestConfig {
   /**
    * Where `kill` sends slashed deposits, from the runtime's `Slash` handler:
    * - `relayTreasury`: teleported over XCM to the relay chain's treasury account (`ToParentTreasury`);
-   * - `treasury`: paid into the local treasury pot.
+   * - `treasury`: paid into the local treasury pot;
+   * - `dapStagingViaForward`: credited to the local `pallet-accumulate-and-forward` account and
+   *   teleported to the DAP staging account on Asset Hub, the 2.6.0 routing (runtimes#1369).
    */
-  slashDestination: 'relayTreasury' | 'treasury'
+  slashDestination: 'relayTreasury' | 'treasury' | 'dapStagingViaForward'
   /**
    * A vote weight check on one track, from the runtime's `MinRankOfClass` and `VoteWeight`: a member
    * at `belowRank` cannot vote there, and each voter's aye weighs `weight`. Set for the instances
@@ -1574,6 +1576,35 @@ export async function killByAcceptedOrigins(client: Client<any, any>, cfg: Ranke
     expect(deposits).toEqual(indices.map(() => deposit))
     const potAfter = (await client.api.query.system.account(client.api.consts.treasury.potAccount)).data.free.toBigInt()
     expect(potAfter - potBefore).toBe(deposits.reduce((sum, value) => sum + value, 0n))
+  } else if (cfg.slashDestination === 'dapStagingViaForward') {
+    // The slash lands on the accumulator account, and a teleport forwards the accumulated
+    // balance to Asset Hub when the forward period elapses; the probe builds blocks until it
+    // does. The forwarded figure includes whatever else the account accumulated (fees, dust),
+    // so the assertions cover the route and a lower bound, not an exact amount. No snapshot
+    // here: the accumulated total varies with the fork block.
+    const slashedTotal = BigInt(indices.length) * deposit
+    let forwarded: bigint | undefined
+    for (let i = 0; i < 4 && forwarded === undefined; i++) {
+      const blockEvents = (await client.api.query.system.events()).map(({ event }) => event)
+      const forward = blockEvents.find(
+        (event) => event.section === 'accumulateForward' && event.method === 'ForwardSucceeded',
+      )
+      if (forward) {
+        forwarded = ((forward.data as any)[0] as any).toBigInt()
+        const sent = blockEvents
+          .filter((event) => client.api.events.polkadotXcm.Sent.is(event))
+          .map((event) => event.data as any)
+        expect(sent.length).toBeGreaterThanOrEqual(1)
+        expect(sent[sent.length - 1].destination.toJSON()).toEqual({
+          parents: 1,
+          interior: { x1: [{ parachain: 1000 }] },
+        })
+      } else {
+        await client.dev.newBlock()
+      }
+    }
+    assert(forwarded !== undefined, 'no accumulateForward.ForwardSucceeded within 4 blocks of the kill')
+    expect(forwarded).toBeGreaterThanOrEqual(slashedTotal)
   } else {
     await checkSystemEvents(client, 'polkadotXcm')
       .redact({ hash: false, redactKeys: /^messageId$/ })

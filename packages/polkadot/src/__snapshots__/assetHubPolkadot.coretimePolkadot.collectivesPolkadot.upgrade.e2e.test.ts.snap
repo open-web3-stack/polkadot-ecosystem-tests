@@ -75,14 +75,7 @@ exports[`asset hub & coretime & collectives > Asset Hub authorizes Coretime upgr
   {
     "data": {
       "id": null,
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x03000000",
-            "index": 64,
-          },
-        },
-      },
+      "result": "Ok",
       "task": "(redacted)",
     },
     "method": "Dispatched",

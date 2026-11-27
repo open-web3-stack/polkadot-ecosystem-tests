@@ -754,6 +754,11 @@ async function setStakingConfigsTest<
       { Set: preMinCommission + inc },
       { Set: preMaxStakedRewards + inc },
       { Set: !preAreNominatorsSlashable },
+      // `chill_inactive_threshold` joined `set_staking_configs` with pallet-staking-async on
+      // Asset Hub 2.6.0. The pallet weight-validates the value: `chill_inactive(threshold)`
+      // must fit in an extrinsic, so large values are refused. 2 is the smallest valid value;
+      // the round-trip assertions below cover the original eight fields only.
+      { Set: 2 },
     )
   }
 
@@ -907,6 +912,7 @@ async function forceApplyValidatorCommissionTest<
     { Noop: null },
     { Noop: null },
     { Set: newCommission },
+    { Noop: null },
     { Noop: null },
     { Noop: null },
   )
@@ -1103,6 +1109,7 @@ async function chillOtherTest<
     { Noop: null },
     { Noop: null },
     { Noop: null },
+    { Noop: null },
   )
 
   await scheduleInlineCallWithOrigin(
@@ -1183,7 +1190,7 @@ async function chillOtherTest<
       [setNominatorCount, setValidatorCount],
     ]) {
       for (const chillThreshold of [remove, chillThresholdSet]) {
-        const args = [...bondLimits, ...countLimits, chillThreshold, noop, noop, noop]
+        const args = [...bondLimits, ...countLimits, chillThreshold, noop, noop, noop, noop]
 
         setStakingConfigsCalls.push((client.api.tx.staking.setStakingConfigs as any)(...args))
       }

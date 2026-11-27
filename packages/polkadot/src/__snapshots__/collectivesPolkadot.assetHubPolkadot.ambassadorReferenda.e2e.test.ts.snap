@@ -351,173 +351,6 @@ exports[`Polkadot Ambassador referenda > cancel and kill > kill - every accepted
 ]
 `;
 
-exports[`Polkadot Ambassador referenda > cancel and kill > kill - every accepted origin, Killed with deposits slashed > kill by accepted origins: slashed deposits teleported to the relay treasury 1`] = `
-[
-  {
-    "data": {
-      "outcome": {
-        "Complete": {
-          "used": {
-            "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 200000000)",
-          },
-        },
-      },
-    },
-    "method": "Attempted",
-    "section": "polkadotXcm",
-  },
-  {
-    "data": {
-      "destination": {
-        "interior": "Here",
-        "parents": 1,
-      },
-      "message": [
-        {
-          "ReceiveTeleportedAsset": [
-            {
-              "fun": {
-                "Fungible": 50000000000,
-              },
-              "id": {
-                "interior": "Here",
-                "parents": 0,
-              },
-            },
-          ],
-        },
-        "ClearOrigin",
-        {
-          "BuyExecution": {
-            "fees": {
-              "fun": {
-                "Fungible": 50000000000,
-              },
-              "id": {
-                "interior": "Here",
-                "parents": 0,
-              },
-            },
-            "weightLimit": "Unlimited",
-          },
-        },
-        {
-          "DepositAsset": {
-            "assets": {
-              "Wild": {
-                "AllCounted": 1,
-              },
-            },
-            "beneficiary": {
-              "interior": {
-                "X1": [
-                  {
-                    "AccountId32": {
-                      "id": "0x6d6f646c70792f74727372790000000000000000000000000000000000000000",
-                      "network": null,
-                    },
-                  },
-                ],
-              },
-              "parents": 0,
-            },
-          },
-        },
-      ],
-      "messageId": "(redacted)",
-      "origin": {
-        "interior": "Here",
-        "parents": 0,
-      },
-    },
-    "method": "Sent",
-    "section": "polkadotXcm",
-  },
-  {
-    "data": {
-      "outcome": {
-        "Complete": {
-          "used": {
-            "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 200000000)",
-          },
-        },
-      },
-    },
-    "method": "Attempted",
-    "section": "polkadotXcm",
-  },
-  {
-    "data": {
-      "destination": {
-        "interior": "Here",
-        "parents": 1,
-      },
-      "message": [
-        {
-          "ReceiveTeleportedAsset": [
-            {
-              "fun": {
-                "Fungible": 50000000000,
-              },
-              "id": {
-                "interior": "Here",
-                "parents": 0,
-              },
-            },
-          ],
-        },
-        "ClearOrigin",
-        {
-          "BuyExecution": {
-            "fees": {
-              "fun": {
-                "Fungible": 50000000000,
-              },
-              "id": {
-                "interior": "Here",
-                "parents": 0,
-              },
-            },
-            "weightLimit": "Unlimited",
-          },
-        },
-        {
-          "DepositAsset": {
-            "assets": {
-              "Wild": {
-                "AllCounted": 1,
-              },
-            },
-            "beneficiary": {
-              "interior": {
-                "X1": [
-                  {
-                    "AccountId32": {
-                      "id": "0x6d6f646c70792f74727372790000000000000000000000000000000000000000",
-                      "network": null,
-                    },
-                  },
-                ],
-              },
-              "parents": 0,
-            },
-          },
-        },
-      ],
-      "messageId": "(redacted)",
-      "origin": {
-        "interior": "Here",
-        "parents": 0,
-      },
-    },
-    "method": "Sent",
-    "section": "polkadotXcm",
-  },
-]
-`;
-
 exports[`Polkadot Ambassador referenda > cancel and kill > kill - other origins - BadOrigin > kill by rejected origins: Dispatched 1`] = `
 [
   {
@@ -701,7 +534,7 @@ exports[`Polkadot Ambassador referenda > submission > submit - below the minimum
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -721,7 +554,7 @@ exports[`Polkadot Ambassador referenda > submission > submit - below the minimum
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -762,7 +595,7 @@ exports[`Polkadot Ambassador referenda > submission > submit - proposal origin w
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },

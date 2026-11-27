@@ -75,14 +75,7 @@ exports[`asset hub & people & collectives > Asset Hub authorizes People upgrade 
   {
     "data": {
       "id": null,
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x03000000",
-            "index": 64,
-          },
-        },
-      },
+      "result": "Ok",
       "task": "(redacted)",
     },
     "method": "Dispatched",

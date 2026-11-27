@@ -349,7 +349,7 @@ exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove a vote t
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -399,7 +399,7 @@ exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove other vo
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -437,7 +437,7 @@ exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove other vo
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -462,7 +462,7 @@ exports[`Polkadot Asset Hub Conviction Voting > Removing votes > remove other vo
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },

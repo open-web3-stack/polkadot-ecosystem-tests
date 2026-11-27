@@ -30,7 +30,8 @@ const testConfig: RankedReferendaTestConfig = {
     rejected: [{ AmbassadorOrigins: 'SeniorAmbassadors' }],
   },
   // `ToParentTreasury` teleports slashed deposits to the relay chain's treasury account.
-  slashDestination: 'relayTreasury',
+  // 2.6.0 routes collectives slashes through pallet-accumulate-and-forward (runtimes#1369).
+  slashDestination: 'dapStagingViaForward',
   // Ambassador `VoteWeight`: excess rank 0 weighs 1, and every further rank 5 more. `MinRankOfClass`
   // is the identity, so on track 1 a rank-0 candidate is below the minimum.
   voteWeights: {

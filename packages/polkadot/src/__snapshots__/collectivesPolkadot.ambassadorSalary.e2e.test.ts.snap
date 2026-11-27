@@ -271,7 +271,7 @@ exports[`Polkadot Collectives Ambassador Salary > Induction > induct - twice - A
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -296,7 +296,7 @@ exports[`Polkadot Collectives Ambassador Salary > Induction > induct and registe
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -321,7 +321,7 @@ exports[`Polkadot Collectives Ambassador Salary > Induction > induct and registe
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -420,7 +420,7 @@ exports[`Polkadot Collectives Ambassador Salary > Payment status > check_payment
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -445,7 +445,7 @@ exports[`Polkadot Collectives Ambassador Salary > Payment status > check_payment
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -508,7 +508,7 @@ exports[`Polkadot Collectives Ambassador Salary > Payment status > check_payment
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -656,7 +656,7 @@ exports[`Polkadot Collectives Ambassador Salary > Registration > register - firs
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -681,7 +681,7 @@ exports[`Polkadot Collectives Ambassador Salary > Registration > register - in t
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -706,7 +706,7 @@ exports[`Polkadot Collectives Ambassador Salary > Registration > register - rank
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
