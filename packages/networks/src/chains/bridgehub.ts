@@ -11,14 +11,20 @@ const custom = {
   bridgeHubKusama: {
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
   },
+  bridgeHubWestend: {
+    wnd: { Concrete: { parents: 1, interior: 'Here' } },
+  },
 }
 
-const getInitStorages = (_config: typeof custom.bridgeHubPolkadot | typeof custom.bridgeHubKusama) => ({
+const getInitStorages = (
+  _config: typeof custom.bridgeHubPolkadot | typeof custom.bridgeHubKusama | typeof custom.bridgeHubWestend,
+  free = 1000e10,
+) => ({
   System: {
     account: [
-      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[testAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free } }],
+      [[defaultAccounts.alice.address], { providers: 1, data: { free } }],
+      [[testAccounts.alice.address], { providers: 1, data: { free } }],
     ],
   },
 })
@@ -48,6 +54,23 @@ export const bridgeHubKusama = defineChain({
   initStorages: getInitStorages(custom.bridgeHubKusama),
   properties: {
     addressEncoding: 2,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
+    relayBlocksPerParaBlock: 2,
+    feeExtractor: standardFeeExtractor,
+  },
+})
+
+export const bridgeHubWestend = defineChain({
+  name: 'bridgeHubWestend',
+  endpoint: endpoints.bridgeHubWestend,
+  paraId: 1002,
+  networkGroup: 'westend',
+  custom: custom.bridgeHubWestend,
+  // See peopleWestend: Westend fee levels ask for a larger float on the dev accounts.
+  initStorages: getInitStorages(custom.bridgeHubWestend, 100_000e10),
+  properties: {
+    addressEncoding: 42,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'NonLocal',
     relayBlocksPerParaBlock: 2,

@@ -112,5 +112,21 @@
   ],
   "shiden": [
     "wss://shiden-rpc.n.dwellir.com"
+  ],
+  "westend": [
+    "wss://westend-rpc.n.dwellir.com",
+    "wss://westend-rpc.polkadot.io"
+  ],
+  "peopleWestend": [
+    "wss://people-westend-rpc.n.dwellir.com",
+    "wss://westend-people-rpc.polkadot.io"
+  ],
+  "coretimeWestend": [
+    "wss://coretime-westend-rpc.n.dwellir.com",
+    "wss://westend-coretime-rpc.polkadot.io"
+  ],
+  "bridgeHubWestend": [
+    "wss://bridge-hub-westend-rpc.n.dwellir.com",
+    "wss://westend-bridge-hub-rpc.polkadot.io"
   ]
 }

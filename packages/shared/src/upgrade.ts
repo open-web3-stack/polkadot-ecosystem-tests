@@ -963,22 +963,38 @@ export function governanceChainUpgradesOtherChainViaRootReferendumSuite<
   governanceChain: Chain<TCustomRelay, TInitStoragesRelay>,
   toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>,
   testConfig: TestConfig,
+  options?: {
+    /**
+     * Omit the tests that drive governance through a real referendum, stating why.
+     *
+     * The guard tests and any scheduler-driven tests still run: the reason covers only the
+     * referendum path, for chains where referenda cannot run (for example, a runtime whose
+     * `placeDecisionDeposit` declares more weight than an extrinsic may carry).
+     */
+    skipRootReferendumTests?: string
+  },
 ): RootTestTree {
+  const referendumTests = options?.skipRootReferendumTests
+    ? []
+    : [
+        {
+          kind: 'test' as const,
+          label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via Root referendum)`,
+          testFn: async (ctx?: { skip: (reason?: string) => void }) =>
+            await authorizeUpgradeWithoutChecksViaRootReferendumTests(governanceChain, toBeUpgradedChain, ctx),
+        },
+        {
+          kind: 'test' as const,
+          label: `authorize_upgrade doesnt allow upgrade to the same wasm (via Root referendum)`,
+          testFn: async () => await authorizeUpgradeViaRootReferendumTests(governanceChain, toBeUpgradedChain),
+        },
+      ]
+
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      {
-        kind: 'test',
-        label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via Root referendum)`,
-        testFn: async (ctx) =>
-          await authorizeUpgradeWithoutChecksViaRootReferendumTests(governanceChain, toBeUpgradedChain, ctx),
-      },
-      {
-        kind: 'test',
-        label: `authorize_upgrade doesnt allow upgrade to the same wasm (via Root referendum)`,
-        testFn: async () => await authorizeUpgradeViaRootReferendumTests(governanceChain, toBeUpgradedChain),
-      },
+      ...referendumTests,
       {
         kind: 'test',
         label: `applyAuthorizedUpgrade blocked by overlapping pending validation code`,

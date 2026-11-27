@@ -11,6 +11,9 @@ const custom = {
   kusama: {
     ksm: { Concrete: { parents: 0, interior: 'Here' } },
   },
+  westend: {
+    wnd: { Concrete: { parents: 0, interior: 'Here' } },
+  },
 }
 
 const getInitStorages = () => ({
@@ -54,6 +57,38 @@ export const kusama = defineChain({
   networkGroup: 'kusama',
   properties: {
     addressEncoding: 2,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
+    feeExtractor: standardFeeExtractor,
+  },
+})
+
+// The DMP queues are cleared by `createNetwork` in whichever layout the runtime has, as for
+// the other relays. The larger float covers megabyte-scale extrinsic fees; see the
+// peopleWestend definition.
+const getWestendInitStorages = () => ({
+  System: {
+    Account: [
+      [[defaultAccounts.alice.address], { providers: 1, data: { free: 100_000e10 } }],
+      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 100_000e10 } }],
+      [[testAccounts.alice.address], { providers: 1, data: { free: 100_000e10 } }],
+    ],
+  },
+  ParasDisputes: {
+    // these can makes block building super slow
+    $removePrefix: ['disputes'],
+  },
+})
+
+export const westend = defineChain({
+  name: 'westend',
+  endpoint: endpoints.westend,
+  custom: custom.westend,
+  initStorages: getWestendInitStorages(),
+  isRelayChain: true,
+  networkGroup: 'westend',
+  properties: {
+    addressEncoding: 42,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
     feeExtractor: standardFeeExtractor,
