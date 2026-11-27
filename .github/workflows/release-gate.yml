@@ -86,10 +86,12 @@ jobs:
         with:
           repository: open-web3-stack/polkadot-ecosystem-tests
           ref: ${{ inputs.gate_ref }}
+      # No dependency cache: the jobs execute code from `gate_ref`, and a writable cache
+      # would let that code leave artifacts behind for later runs in the caller's repo.
+      # The install costs the difference.
       - uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
       - run: yarn --immutable
       - run: yarn update-known-good
       - name: Upload pins
@@ -198,10 +200,12 @@ jobs:
           NETWORK_UPPER=$(echo "${{ inputs.environment }}" | tr '[:lower:]' '[:upper:]')
           cat "KNOWN_GOOD_BLOCK_NUMBERS_${NETWORK_UPPER}.env" >> "$GITHUB_ENV"
 
+      # No dependency cache: the jobs execute code from `gate_ref`, and a writable cache
+      # would let that code leave artifacts behind for later runs in the caller's repo.
+      # The install costs the difference.
       - uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
       - run: yarn --immutable
 
       # Flags, same rationale as CI's test job:
