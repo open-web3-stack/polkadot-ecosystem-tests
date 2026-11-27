@@ -63,9 +63,9 @@ export const kusama = defineChain({
   },
 })
 
-// Westend tracks polkadot-sdk master: `Dmp.downwardMessageQueues` is gone, so clearing it
-// would fail storage resolution. The larger float covers megabyte-scale extrinsic fees; see
-// the peopleWestend definition.
+// The DMP queues are cleared by `createNetwork` in whichever layout the runtime has, as for
+// the other relays. The larger float covers megabyte-scale extrinsic fees; see the
+// peopleWestend definition.
 const getWestendInitStorages = () => ({
   System: {
     Account: [

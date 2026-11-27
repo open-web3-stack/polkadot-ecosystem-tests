@@ -13,6 +13,10 @@ name: Test - release gate self-run
 
 on:
   workflow_dispatch: {}
+  # Temporary: dispatch cannot see a workflow that is not on the default branch yet.
+  # Remove this trigger when the file reaches master.
+  push:
+    branches: [release-gate]
 
 permissions:
   contents: read
