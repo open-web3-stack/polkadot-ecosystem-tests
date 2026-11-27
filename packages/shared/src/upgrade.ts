@@ -27,6 +27,7 @@ import {
   getXcmRoute,
   nextSchedulableBlockNum,
   scheduleInlineCallWithOrigin,
+  scheduleLookupCallWithOrigin,
   type TestConfig,
 } from './helpers/index.js'
 
@@ -328,15 +329,38 @@ export async function authorizeUpgradeViaCollectives(
  * @param track - The origin track (e.g., { system: 'Root' } or { Origins: 'WhitelistedCaller' })
  * @returns The referendum index
  */
-async function createAndFastTrackReferendum(
+export async function createAndFastTrackReferendum(
   client: Client,
   call: SubmittableExtrinsic<'promise'>,
   track: { system: string } | { Origins: string },
   blockProvider: BlockProvider,
+  options?: {
+    /**
+     * Approve by storage write and dispatch the proposal directly through the scheduler,
+     * instead of driving the referendum through deposit, deciding and confirmation.
+     *
+     * On Asset Hub Westend, every referenda call that touches two `Scheduler::Agenda`
+     * entries (`place_decision_deposit`, `nudge_referendum`) declares more proofSize than
+     * an extrinsic may carry and more than the scheduler's block budget, so the state
+     * machine cannot progress at all
+     * (https://github.com/paritytech/polkadot-sdk/issues/13900). This mode keeps what still
+     * works and is worth testing: the real submitted referendum, the real preimage, the
+     * real scheduler dispatch under the track's origin. It skips the vote-counting that the
+     * runtime has made unreachable.
+     */
+    approvalViaStorage?: boolean
+  },
 ): Promise<number> {
   const alice = devAccounts.alice
 
-  // Fund Alice for preimage and deposits
+  // Fund Alice for the preimage and the deposits. The decision deposit is a per-track
+  // constant and differs by orders of magnitude between chains (Asset Hub Westend's root
+  // track asks 100,000 WND), so the float comes from the track constant instead of a guess.
+  const trackName = 'system' in track ? track.system.toLowerCase() : 'whitelisted_caller'
+  const trackInfo = (client.api.consts.referenda.tracks as any).find(
+    ([, info]: [any, any]) => info.name.toString() === trackName,
+  )
+  const decisionDeposit = trackInfo ? trackInfo[1].decisionDeposit.toBigInt() : 0n
   await client.dev.setStorage({
     // It may happen that real referendum preimage is still in place and since we are basically
     // upgrading to the same WASM it will yield the same preimage and test can fail due to preimage
@@ -345,7 +369,7 @@ async function createAndFastTrackReferendum(
       $removePrefix: ['preimageFor', 'statusFor', 'requestStatusFor'],
     },
     System: {
-      account: [[[alice.address], { providers: 1, data: { free: 100000 * 1e10 } }]],
+      account: [[[alice.address], { providers: 1, data: { free: decisionDeposit + 100_000n * 10n ** 10n } }]],
     },
   })
 
@@ -383,6 +407,29 @@ async function createAndFastTrackReferendum(
   }
 
   const referendumIndex = submittedEvent.event.data.index.toNumber()
+
+  // In approval-via-storage mode the referendum cannot progress through the pallet (see
+  // the option's documentation), so: mark it approved in storage, schedule the proposal
+  // itself under the track's origin, and let the real scheduler and preimage lookup do the
+  // dispatch.
+  if (options?.approvalViaStorage) {
+    const currentBlock = await getBlockNumber(client.api, blockProvider)
+    const refMeta = client.api.query.referenda.referendumInfoFor.creator.meta
+    const refValueType = client.api.registry.lookup.getTypeDef(refMeta.type.asMap.value).type
+    const approved = client.api.registry.createType(refValueType, {
+      approved: [currentBlock, { who: alice.address, amount: 1 }, null],
+    })
+    const referendumKey = client.api.query.referenda.referendumInfoFor.key(referendumIndex)
+    await client.api.rpc('dev_setStorage', [[referendumKey, approved.toHex()]])
+    await scheduleLookupCallWithOrigin(
+      client,
+      { hash: preimageHash.toHex(), len: preimageCall.encodedLength },
+      proposalOrigin,
+      blockProvider,
+    )
+    await client.dev.newBlock({ count: 1 })
+    return referendumIndex
+  }
 
   // Step 3: Place decision deposit to move to decision phase
   const placeDecisionDepositTx = client.api.tx.referenda.placeDecisionDeposit(referendumIndex)
