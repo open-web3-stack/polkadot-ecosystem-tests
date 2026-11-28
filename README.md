@@ -190,6 +190,15 @@ These include:
   - child bounties: parent-curated and separately curated children, payout and refund accounting
     against the parent, the active child limit, and the parent curator's powers over children
   - increase value: deposit re-pricing, and the top-up an increase needs before it can be paid
+- E2E test suite for the treasury on the Asset Hubs (Polkadot, Kusama, Westend):
+  - `spend` by each origin arm: Root, Spender tracks at and over their limits, limits after
+    `AssetRate` conversion and summed within one batch, signed origins rejected
+  - `payout`, `check_status` and `void_spend` across the spend lifecycle, including early, expired,
+    repeated and unfunded payouts, the fee refund on `check_status`, and the reject origin arms
+  - the legacy `spend_local` queue: the spend period hook (`Spending`, `Awarded`, `Rollover`),
+    `remove_approval`, and the `MaxApprovals` limit
+  - pot accounting: `UpdatedInactive`, and on Kusama slashed funds (`Deposit`) and the dynamic
+    burn (`Burnt`)
 - E2E test suite for the PSM (Peg Stability Module), covering mint/redeem
   swaps between pUSD and three external stablecoins: USDT (1984, 6 dec), USDX (1338, 2 dec), DAI
   (1339, 18 dec). PSM storage and extrinsics are keyed by XCM V5 location rather than asset ID.
